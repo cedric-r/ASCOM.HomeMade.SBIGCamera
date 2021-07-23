@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGCamera", "ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera.csproj", "{64308775-BD4A-469C-BCAB-3ED830B811AF}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SbigSharp", "SbigSharp\SbigSharp.csproj", "{3BE45310-83C8-4294-A30B-585CE4996940}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGCameraTests", "ASCOM.HomeMade.SBIGCameraTests\ASCOM.HomeMade.SBIGCameraTests.csproj", "{BCEC2661-CC74-486F-8944-D1F9384404DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BE45310-83C8-4294-A30B-585CE4996940}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BE45310-83C8-4294-A30B-585CE4996940}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BE45310-83C8-4294-A30B-585CE4996940}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BE45310-83C8-4294-A30B-585CE4996940}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCEC2661-CC74-486F-8944-D1F9384404DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCEC2661-CC74-486F-8944-D1F9384404DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCEC2661-CC74-486F-8944-D1F9384404DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCEC2661-CC74-486F-8944-D1F9384404DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

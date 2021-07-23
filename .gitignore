@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/ASCOM.HomeMade.SBIGCamera/v16
+/ASCOM.HomeMade.SBIGCamera/bin/Debug
+/ASCOM.HomeMade.SBIGCamera/obj
+/ASCOM.HomeMade.SBIGCameraTests/bin/Debug
+/ASCOM.HomeMade.SBIGCameraTests/obj/Debug
+/SbigSharp/bin/Debug
+/SbigSharp/obj

@@ -25,7 +25,7 @@ namespace ASCOM.HomeMade
             // Place any validation constraint checks here
             // Update the state variables with results from the dialogue
             Camera.comPort = (string)comboBoxComPort.SelectedItem;
-            Camera.tl.Enabled = chkTrace.Checked;
+            Debug.TraceEnabled = chkTrace.Checked;
         }
 
         private void cmdCancel_Click(object sender, EventArgs e) // Cancel button event handler
@@ -52,7 +52,7 @@ namespace ASCOM.HomeMade
 
         private void InitUI()
         {
-            chkTrace.Checked = Camera.tl.Enabled;
+            chkTrace.Checked = Debug.TraceEnabled;
             // set the list of com ports to those that are currently available
             comboBoxComPort.Items.Clear();
             comboBoxComPort.Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());      // use System.IO because it's static
