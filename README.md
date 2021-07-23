@@ -1,0 +1,1 @@
+# ASCOM.HomeMade.SBIGCamera
