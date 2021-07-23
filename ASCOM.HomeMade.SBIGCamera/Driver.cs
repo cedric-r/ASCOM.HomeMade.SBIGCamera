@@ -62,7 +62,7 @@ namespace ASCOM.HomeMade
     [ClassInterface(ClassInterfaceType.None)]
     [ProgId(Camera.driverID)]
 
-    public class Camera : ICameraV2
+    public class Camera : ICameraV2, IFilterWheelV2
     {
         /// <summary>
         /// ASCOM DeviceID (COM ProgID) for this driver.
@@ -346,12 +346,15 @@ namespace ASCOM.HomeMade
                                     break;
                                 case SBIG.FILTER_TYPE.FW_VANE:
                                     Debug.LogMessage("Connected Set", $"    Vane");
+                                    FilterWheelPresent = true;
                                     break;
                                 case SBIG.FILTER_TYPE.FW_EXTERNAL:
                                     Debug.LogMessage("Connected Set", $"    External");
+                                    FilterWheelPresent = true;
                                     break;
                                 case SBIG.FILTER_TYPE.FW_FILTER_WHEEL:
                                     Debug.LogMessage("Connected Set", $"    Standard");
+                                    FilterWheelPresent = true;
                                     break;
                                 default:
                                     Debug.LogMessage("Connected Set", $"    Unexpected");
@@ -431,6 +434,23 @@ namespace ASCOM.HomeMade
                                      request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
                                  },
                                 out Cooling);
+
+                            var fwresults = GetFWData();
+                            if (fwresults.cfwError == SBIG.CFW_ERROR.CFWE_NONE)
+                            {
+                                string model = GetFWType(fwresults);
+                                Debug.LogMessage("Connected", "FW is " + model);
+
+                                string status = GetFWStatus(fwresults);
+                                Debug.LogMessage("Connected", "FW status is " + status);
+
+                                string filter = GetFWPosition(fwresults);
+                                Debug.LogMessage("Connected", "FW filter is " + filter);
+                            }
+                            else
+                            {
+                                Debug.LogMessage("Connected", "Error querying FW: "+ fwresults.cfwError);
+                            }
                         }
                     }
                     else
@@ -541,6 +561,7 @@ namespace ASCOM.HomeMade
         private bool HasMechanicalShutter = false;
         private short CameraGain = 0;
         private CameraStates CurrentCameraState = CameraStates.cameraIdle;
+        private bool FilterWheelPresent = false;
 
         private SBIG.StartExposureParams2 exposureParams2;
 
@@ -1368,6 +1389,165 @@ namespace ASCOM.HomeMade
                 return connectedState;
             }
         }
+
+        private SBIG.CFWResults GetFWData()
+        {
+            try
+            {
+                var fwresults = new SBIG.CFWResults();
+                SBIG.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_CFW,
+                    new SBIG.CFWParams
+                    {
+                        cfwCommand = SBIG.CFW_COMMAND.CFWC_GET_INFO
+                    },
+                    out fwresults);
+                return fwresults;
+            }
+            catch (Exception e)
+            {
+                Debug.LogMessage("GetFWData", "Error: " + e.Message + "\n" + e.StackTrace);
+                throw new ASCOM.DriverException("Error getting DW data");
+            }
+        }
+
+        private string GetFWType(SBIG.CFWResults fwresults)
+        {
+            string model = "";
+            if (fwresults.cfwError == SBIG.CFW_ERROR.CFWE_NONE)
+            {
+                switch (fwresults.cfwModel)
+                {
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW2:
+                        model = "CFWSEL_CFW2";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW5:
+                        model = "CFWSEL_CFW5";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW8:
+                        model = "CFWSEL_CFW8";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFWL:
+                        model = "CFWSEL_CFWL";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW402:
+                        model = "CFWSEL_CFW402";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO:
+                        model = "CFWSEL_AUTO";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW6A:
+                        model = "CFWSEL_CFW6A";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW10:
+                        model = "CFWSEL_CFW10";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW10_SERIAL:
+                        model = "CFWSEL_CFW10_SERIAL";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW9:
+                        model = "CFWSEL_CFW9";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFWL8:
+                        model = "CFWSEL_CFWL8";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFWL8G:
+                        model = "CFWSEL_CFWL8G";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_CFW1603:
+                        model = "CFWSEL_CFW1603";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_FW5_STX:
+                        model = "CFWSEL_FW5_STX";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_FW5_8300:
+                        model = "CFWSEL_FW5_8300";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_FW8_8300:
+                        model = "CFWSEL_FW8_8300";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_FW7_STX:
+                        model = "CFWSEL_FW7_STX";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_FW8_STT:
+                        model = "CFWSEL_FW8_STT";
+                        break;
+                    case SBIG.CFW_MODEL_SELECT.CFWSEL_FW5_STF_DETENT:
+                        model = "CFWSEL_FW5_STF_DETENT";
+                        break;
+                    default:
+                        model = "Unknown";
+                        break;
+                }
+            }
+            return model;
+        }
+
+        private string GetFWStatus(SBIG.CFWResults fwresults)
+        {
+            string status = "";
+            switch (fwresults.cfwStatus)
+            {
+                case SBIG.CFW_STATUS.CFWS_IDLE:
+                    status = "Idle";
+                    break;
+                case SBIG.CFW_STATUS.CFWS_BUSY:
+                    status = "Busy";
+                    break;
+                default:
+                    status = "Unknown";
+                    break;
+            }
+            return status;
+        }
+
+        private string GetFWPosition(SBIG.CFWResults fwresults)
+        {
+            string filter = "";
+            switch (fwresults.cfwPosition)
+            {
+                case SBIG.CFW_POSITION.CFWP_1:
+                    filter = "Filter 1";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_2:
+                    filter = "Filter 2";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_3:
+                    filter = "Filter 3";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_4:
+                    filter = "Filter 4";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_5:
+                    filter = "Filter 5";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_6:
+                    filter = "Filter 6";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_7:
+                    filter = "Filter 7";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_8:
+                    filter = "Filter 8";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_9:
+                    filter = "Filter 9";
+                    break;
+                case SBIG.CFW_POSITION.CFWP_10:
+                    filter = "Filter 10";
+                    break;
+                default:
+                    filter = "Unknown";
+                    break;
+            }
+            return filter;
+        }
+
+        public int[] FocusOffsets => throw new System.NotImplementedException();
+
+        public string[] Names => throw new System.NotImplementedException();
+
+        public short Position { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
         /// <summary>
         /// Use this function to throw an exception if we aren't connected to the hardware
