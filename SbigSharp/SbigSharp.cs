@@ -5113,12 +5113,16 @@ namespace SbigSharp
         /// <exception cref="FailedOperationException">
         ///     An error has occurred. See also <seealso cref="PAR_ERROR"/> enum.
         /// </exception>
+        private static object _UnivDrvCommandLock = new object();
         private static void _UnivDrvCommand(
             PAR_COMMAND command, IntPtr Params, IntPtr pResults)
         {
-            PAR_ERROR errorCode = SBIGUnivDrvCommand(command, Params, pResults);
-            if (PAR_ERROR.CE_NO_ERROR != errorCode)
-                throw new FailedOperationException(errorCode);
+            lock (_UnivDrvCommandLock)
+            {
+                PAR_ERROR errorCode = SBIGUnivDrvCommand(command, Params, pResults);
+                if (PAR_ERROR.CE_NO_ERROR != errorCode)
+                    throw new FailedOperationException(errorCode);
+            }
         }
 
         /// <summary>
@@ -5488,14 +5492,14 @@ namespace SbigSharp
         /// </summary>
         /// <param name="sep2">See also <seealso cref="StartExposureParams2"/> struct.</param>
         /// <returns>2D UInt16 array of Data.</returns>
-        public static UInt16[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
+        public static ushort[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
         {
             WaitExposure();
 
-            var data = new UInt16[sep2.height, sep2.width];
+            var data = new ushort[sep2.height, sep2.width];
             _ReadoutData(sep2, ref data);
 
-            return data as UInt16[,];
+            return data as ushort[,];
         }
 
         #endregion // Extension

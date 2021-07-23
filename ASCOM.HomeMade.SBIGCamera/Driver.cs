@@ -104,6 +104,7 @@ namespace ASCOM.HomeMade
         public Camera(bool test = false)
         {
             Debug.FileName = @"c:\temp\Focuser.log";
+            Debug.TraceEnabled = true;
             if (!test) ReadProfile(); // Read device configuration from the ASCOM Profile store
 
             Debug.LogMessage("Camera", "Starting initialisation");
@@ -126,7 +127,7 @@ namespace ASCOM.HomeMade
             while (true)
             {
                 GetCoolingInfo();
-                Thread.Sleep(100);
+                Thread.Sleep(500);
             }
         }
 
@@ -282,33 +283,17 @@ namespace ASCOM.HomeMade
                             Debug.LogMessage("Connected Set", $"Camera type: {gcir0.cameraType}");
                             Debug.LogMessage("Connected Set", $"Camera name: {gcir0.name}");
                             Debug.LogMessage("Connected Set", $"Readout modes: {gcir0.readoutModes}");
+                            Binning = SBIG.READOUT_BINNING_MODE.RM_1X1;
                             for (int i = 0; i < gcir0.readoutModes; i++)
                             {
                                 SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
-                                Debug.LogMessage("Connected Set", $"Binning mode: {ri.mode}");
-                                if (ri.mode == SBIG.READOUT_BINNING_MODE.RM_1X1) Binning = 1;
-                                else
-                                if (ri.mode == SBIG.READOUT_BINNING_MODE.RM_1X1_VOFFCHIP) Binning = 1;
-                                else
-                                if (ri.mode == SBIG.READOUT_BINNING_MODE.RM_2X2) Binning = 2;
-                                else
-                                if (ri.mode == SBIG.READOUT_BINNING_MODE.RM_2X2_VOFFCHIP) Binning = 2;
-                                else
-                                if (ri.mode == SBIG.READOUT_BINNING_MODE.RM_3X3) Binning = 3;
-                                else
-                                if (ri.mode == SBIG.READOUT_BINNING_MODE.RM_3X3_VOFFCHIP) Binning = 3;
-                                else
-                                    Debug.LogMessage("Connected Set", $"Unknown binning mode");
-                                Debug.LogMessage("Connected Set", $"Binning " + Binning);
-                                Debug.LogMessage("Connected Set", $"Width: {ri.width}");
-                                ccdWidth = ri.width;
-                                Debug.LogMessage("Connected Set", $"Height: {ri.height}");
-                                ccdHeight = ri.height;
-                                Debug.LogMessage("Connected Set", $"Gain: {ri.gain >> 8}.{ri.gain & 0xFF} e-/ADU");
-                                CameraGain = Convert.ToInt16(ri.gain);
-                                Debug.LogMessage("Connected Set", $"Pixel width: {ri.pixel_width}");
-                                Debug.LogMessage("Connected Set", $"Pixel height: {ri.pixel_height}");
-                                pixelSize = ri.pixel_width; // We assume square pixels
+                                ReadoutModeList.Add(ri);
+                                Debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
+                                Debug.LogMessage("Connected Set", $"    Width: {ri.width}");
+                                Debug.LogMessage("Connected Set", $"    Height: {ri.height}");
+                                Debug.LogMessage("Connected Set", $"    Gain: {ri.gain >> 8}.{ri.gain & 0xFF} e-/ADU");
+                                Debug.LogMessage("Connected Set", $"    Pixel width: {ri.pixel_width}");
+                                Debug.LogMessage("Connected Set", $"    Pixel height: {ri.pixel_height}");
                             }
 
                             // get extended info
@@ -327,7 +312,7 @@ namespace ASCOM.HomeMade
                                 $"{gcir2.columns[2]}, { gcir2.columns[3]}");
                             Debug.LogMessage("Connected Set", $"ABG: {gcir2.imagingABG}");
                             Debug.LogMessage("Connected Set", $"Serial number: {gcir2.serialNumber}");
-
+                            /*
                             // get extended info
                             var gcir3 = new SBIG.GetCCDInfoResults3();
                             SBIG.UnivDrvCommand(
@@ -360,7 +345,7 @@ namespace ASCOM.HomeMade
                                     Debug.LogMessage("Connected Set", $"    Unexpected");
                                     break;
                             }
-
+                            */
                             // get extended info
                             var gcir4 = new SBIG.GetCCDInfoResults4();
                             SBIG.UnivDrvCommand(
@@ -434,22 +419,29 @@ namespace ASCOM.HomeMade
                                      request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
                                  },
                                 out Cooling);
+                            Debug.LogMessage("Connected", "CCD temperature is " + Cooling.imagingCCDTemperature);
+                            Debug.LogMessage("Connected", "CCD power is " + Cooling.imagingCCDPower);
+                            Debug.LogMessage("Connected", "CCD cooler is " + Cooling.coolingEnabled.value.ToString());
 
                             var fwresults = GetFWData();
                             if (fwresults.cfwError == SBIG.CFW_ERROR.CFWE_NONE)
                             {
                                 string model = GetFWType(fwresults);
                                 Debug.LogMessage("Connected", "FW is " + model);
+                                if (model != "Unknown") FilterWheelPresent = true;
 
                                 string status = GetFWStatus(fwresults);
                                 Debug.LogMessage("Connected", "FW status is " + status);
+
+                                Debug.LogMessage("Connected", "FW has " + fwresults.cfwResult2 + " positions");
+                                FWPositions = (int)fwresults.cfwResult2;
 
                                 string filter = GetFWPosition(fwresults);
                                 Debug.LogMessage("Connected", "FW filter is " + filter);
                             }
                             else
                             {
-                                Debug.LogMessage("Connected", "Error querying FW: "+ fwresults.cfwError);
+                                Debug.LogMessage("Connected", "Error querying FW: " + fwresults.cfwError);
                             }
                         }
                     }
@@ -470,7 +462,7 @@ namespace ASCOM.HomeMade
                         // TODO disconnect from the device
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Debug.LogMessage("Connected Set", "Error: " + e.Message + "\n" + e.StackTrace);
                 }
@@ -537,24 +529,11 @@ namespace ASCOM.HomeMade
         private const double MAX_EXPOSURE_TIME = 167777.16;
         private const double MIN_EXPOSURE_TIME = 0; // This is camera dependent. So requesting a shorter exposure than the camera can do will result in minimum allowed exposure
         private const double EXPOSURE_RESOLTION = 0.0;
-        private static int ccdWidth = 0; // Constants to define the ccd pixel dimenstions
-        private static int ccdHeight = 0;
-        private static double pixelSize = 0; // Constant for the pixel physical dimension
-
-        private int cameraNumX = ccdWidth; // Initialise variables to hold values required for functionality tested by Conform
-        private int cameraNumY = ccdHeight;
-        private int cameraStartX = 0;
-        private int cameraStartY = 0;
-        private DateTime exposureStart = DateTime.MinValue;
-        private double cameraLastExposureDuration = 0.0;
-        private bool cameraImageReady = false;
-        private ushort[,] cameraImageArray;
-        private object[,] cameraImageArrayVariant;
 
         private SBIG.CAMERA_TYPE CameraType;
         private bool ColorCamera = false;
         private bool RequiresExposureParams2 = true;
-        private short Binning = 1;
+        private SBIG.READOUT_BINNING_MODE Binning = 0;
         private SBIG.QueryTemperatureStatusResults2 Cooling;
         private double CCDTempTarget = 0;
         private bool CCDTempTargetSet = false;
@@ -562,6 +541,21 @@ namespace ASCOM.HomeMade
         private short CameraGain = 0;
         private CameraStates CurrentCameraState = CameraStates.cameraIdle;
         private bool FilterWheelPresent = false;
+        private int FWPositions = 0;
+        private List<SBIG.READOUT_INFO> ReadoutModeList = new List<SBIG.READOUT_INFO>();
+        private int ccdWidth { get { return ReadoutModeList.Find(r => r.mode == Binning).width; } }
+        private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == Binning).height; } }
+        private double pixelSize { get { return ReadoutModeList.Find(r => r.mode == Binning).pixel_height; } } // We assume square pixels
+
+        private int cameraNumX = 0;
+        private int cameraNumY = 0;
+        private int cameraStartX = 0;
+        private int cameraStartY = 0;
+        private DateTime exposureStart = DateTime.MinValue;
+        private double cameraLastExposureDuration = 0.0;
+        private bool cameraImageReady = false;
+        private ushort[,] cameraImageArray;
+        private object[,] cameraImageArrayVariant;
 
         private SBIG.StartExposureParams2 exposureParams2;
 
@@ -607,14 +601,11 @@ namespace ASCOM.HomeMade
             get
             {
                 Debug.LogMessage("BinX Get", Binning.ToString());
-                return Binning;
+                return ConvertReadoutToBinning(Binning);
             }
             set
             {
-                Debug.LogMessage("BinX Set", value.ToString());
-                if (value <= 3) Binning = value;
-                else
-                    throw new ASCOM.InvalidValueException("BinX", value.ToString(), "1-3"); // Only 1 is valid in this simple template
+                throw new ASCOM.PropertyNotImplementedException("BinX", false);
             }
         }
 
@@ -623,14 +614,11 @@ namespace ASCOM.HomeMade
             get
             {
                 Debug.LogMessage("BinY Get", Binning.ToString());
-                return Binning;
+                return ConvertReadoutToBinning(Binning);
             }
             set
             {
-                Debug.LogMessage("BinY Set", value.ToString());
-                if (value <= 3) Binning = value;
-                else
-                    throw new ASCOM.InvalidValueException("BinX", value.ToString(), "1-3"); // Only 1 is valid in this simple template
+                throw new ASCOM.PropertyNotImplementedException("BinY", false);
             }
         }
 
@@ -766,8 +754,8 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("CoolerOn Get", "Cooler is "+ Cooling.coolingEnabled.ToString());
-                return Cooling.coolingEnabled;
+                Debug.LogMessage("CoolerOn Get", "Cooler is " + Cooling.coolingEnabled.value.ToString());
+                return Cooling.coolingEnabled.value == 0 ? false : true;
             }
             set
             {
@@ -786,7 +774,8 @@ namespace ASCOM.HomeMade
                         tparams.ccdSetpoint = Cooling.ambientTemperature;
                     }
                     SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_SET_TEMPERATURE_REGULATION2, tparams);
-                    Debug.LogMessage("CoolerOn Set", "Coller On at " + tparams.ccdSetpoint);
+                    if (value) Debug.LogMessage("CoolerOn Set", "Coller On at " + tparams.ccdSetpoint);
+                    else Debug.LogMessage("CoolerOn Set", "Coller Off");
                 }
                 catch (Exception e)
                 {
@@ -802,7 +791,7 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("CoolerPower Get", "Cooler power is "+ Cooling.imagingCCDPower.ToString());
+                Debug.LogMessage("CoolerPower Get", "Cooler power is " + Cooling.imagingCCDPower.ToString());
                 return Cooling.imagingCCDPower;
             }
         }
@@ -878,7 +867,7 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("Gain Get", "Camera gain is"+ CameraGain.ToString());
+                Debug.LogMessage("Gain Get", "Camera gain is" + CameraGain.ToString());
                 return CameraGain;
             }
             set
@@ -934,8 +923,8 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("HeatSinkTemperature Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("HeatSinkTemperature", false);
+                Debug.LogMessage("HeatSinkTemperature Get", "Heatsink temperature is " + Cooling.heatsinkTemperature.ToString());
+                return Cooling.heatsinkTemperature;
             }
         }
 
@@ -1121,13 +1110,13 @@ namespace ASCOM.HomeMade
         {
             get
             {
-                Debug.LogMessage("ReadoutMode Get", "Binning is "+ Binning);
-                return Binning;
+                Debug.LogMessage("ReadoutMode Get", "Binning is " + Binning);
+                return (short)Binning;
             }
             set
             {
-                Debug.LogMessage("ReadoutMode Set", "Setting binning to "+value);
-                Binning = value;
+                Debug.LogMessage("ReadoutMode Set", "Setting binning to " + value);
+                Binning = (SBIG.READOUT_BINNING_MODE)value;
             }
         }
 
@@ -1135,8 +1124,13 @@ namespace ASCOM.HomeMade
         {
             get
             {
-                Debug.LogMessage("ReadoutModes Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("ReadoutModes", false);
+                Debug.LogMessage("ReadoutModes Get", "Returning readout modes");
+                ArrayList list = new ArrayList();
+                foreach (var readoutmode in ReadoutModeList)
+                {
+                    list.Add(readoutmode.mode);
+                }
+                return list;
             }
         }
 
@@ -1162,14 +1156,14 @@ namespace ASCOM.HomeMade
         {
             get
             {
-                Debug.LogMessage("SetCCDTemperature Get", "CCD temperature target is"+ CCDTempTarget);
+                Debug.LogMessage("SetCCDTemperature Get", "CCD temperature target is " + CCDTempTarget);
                 return CCDTempTarget;
             }
             set
             {
                 CCDTempTarget = value;
                 CCDTempTargetSet = true;
-                Debug.LogMessage("SetCCDTemperature Set", "CCD temperature target is" + CCDTempTarget);
+                Debug.LogMessage("SetCCDTemperature Set", "CCD temperature target is " + CCDTempTarget);
             }
         }
 
@@ -1195,22 +1189,20 @@ namespace ASCOM.HomeMade
                     ccd = SBIG.CCD_REQUEST.CCD_IMAGING,
                     abgState = SBIG.ABG_STATE7.ABG_LOW7,
                     openShutter = Light ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
-                    readoutMode = GetBinning(),
+                    readoutMode = Binning,
                     exposureTime = Convert.ToUInt32(Duration),
-                    width = Convert.ToUInt16(ccdWidth), // This is in binned pixels. Check is this is right
-                    height = Convert.ToUInt16(ccdHeight),
-                    left = 0,
-                    top = 0
+                    width = Convert.ToUInt16(cameraNumX), // This is in binned pixels. Check is this is right
+                    height = Convert.ToUInt16(cameraNumY),
+                    left = (ushort)cameraStartX,
+                    top = (ushort)cameraStartY
                 };
 
                 CurrentCameraState = CameraStates.cameraExposing;
-                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_START_EXPOSURE, exposureParams2);
+                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_START_EXPOSURE2, exposureParams2);
 
                 // read out the image
                 CurrentCameraState = CameraStates.cameraReading;
                 cameraImageArray = SBIG.WaitEndAndReadoutExposure(exposureParams2);
-                //FitsUtil.WriteFitsImage("simcam.fits", img);
-                //SBIG.SaveImageToVernacularFormat(sep, img, "foo.gif", ImageFormat.Gif);
 
                 CurrentCameraState = CameraStates.cameraIdle;
                 Debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
@@ -1336,40 +1328,20 @@ namespace ASCOM.HomeMade
 
         #endregion
 
-        private SBIG.READOUT_BINNING_MODE GetBinning()
-        {
-            if (Binning == 1)
-            {
-                if (CameraType == SBIG.CAMERA_TYPE.STF_CAMERA) return SBIG.READOUT_BINNING_MODE.RM_NX1;
-                else return SBIG.READOUT_BINNING_MODE.RM_1X1;
-            }
-            if (Binning == 2)
-            {
-                if (CameraType == SBIG.CAMERA_TYPE.STF_CAMERA) return SBIG.READOUT_BINNING_MODE.RM_NX2;
-                else return SBIG.READOUT_BINNING_MODE.RM_2X2;
-            }
-            if (Binning == 3)
-            {
-                if (CameraType == SBIG.CAMERA_TYPE.STF_CAMERA) return SBIG.READOUT_BINNING_MODE.RM_NX3;
-                else return SBIG.READOUT_BINNING_MODE.RM_3X3;
-            }
-            return SBIG.READOUT_BINNING_MODE.RM_1X1;
-        }
-
         private void GetCoolingInfo()
         {
             if (IsConnected)
             {
-                try { 
-                Debug.LogMessage("Camera", "Getting cooling information");
-                // query temperature
-                SBIG.UnivDrvCommand(
-                    SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
-                     new SBIG.QueryTemperatureStatusParams()
-                     {
-                         request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
-                     },
-                    out Cooling);
+                try {
+                    Debug.LogMessage("Camera", "Getting cooling information");
+                    // query temperature
+                    SBIG.UnivDrvCommand(
+                        SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
+                         new SBIG.QueryTemperatureStatusParams()
+                         {
+                             request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
+                         },
+                        out Cooling);
                 }
                 catch (Exception e)
                 {
@@ -1390,7 +1362,7 @@ namespace ASCOM.HomeMade
             }
         }
 
-        private SBIG.CFWResults GetFWData()
+        private SBIG.CFWResults FWCommand(SBIG.CFWParams command)
         {
             try
             {
@@ -1399,10 +1371,100 @@ namespace ASCOM.HomeMade
                     SBIG.PAR_COMMAND.CC_CFW,
                     new SBIG.CFWParams
                     {
-                        cfwCommand = SBIG.CFW_COMMAND.CFWC_GET_INFO
+                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                        cfwCommand = SBIG.CFW_COMMAND.CFWC_OPEN_DEVICE
                     },
                     out fwresults);
-                return fwresults;
+
+                var fwresultsToReturn = new SBIG.CFWResults();
+                SBIG.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_CFW,
+                    command,
+                    out fwresultsToReturn);
+
+                fwresults = new SBIG.CFWResults();
+                SBIG.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_CFW,
+                    new SBIG.CFWParams
+                    {
+                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                        cfwCommand = SBIG.CFW_COMMAND.CFWC_CLOSE_DEVICE
+                    },
+                    out fwresults);
+
+                return fwresultsToReturn;
+            }
+            catch (Exception e)
+            {
+                Debug.LogMessage("FWCommand", "Error: " + e.Message + "zn" + e.StackTrace);
+                return new SBIG.CFWResults();
+            }
+
+        }
+
+        private SBIG.CFWResults GetFWData()
+        {
+            try
+            {
+                return FWCommand(new SBIG.CFWParams
+                {
+                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                    cfwCommand = SBIG.CFW_COMMAND.CFWC_GET_INFO
+                });
+            }
+            catch (Exception e)
+            {
+                Debug.LogMessage("GetFWData", "Error: " + e.Message + "\n" + e.StackTrace);
+                throw new ASCOM.DriverException("Error getting DW data");
+            }
+        }
+
+        private void WaitFWIdle()
+        {
+            SBIG.CFWResults results = new SBIG.CFWResults();
+            while (results.cfwStatus != SBIG.CFW_STATUS.CFWS_IDLE)
+            {
+                results = FWCommand(new SBIG.CFWParams
+                {
+                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                    cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
+                });
+            }
+        }
+
+        private SBIG.CFWResults GetFWPosition()
+        {
+            try
+            {
+                WaitFWIdle();
+                SBIG.CFWResults results = FWCommand(new SBIG.CFWParams
+                {
+                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                    cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
+                });
+                return results;
+            }
+            catch (Exception e)
+            {
+                Debug.LogMessage("GetFWData", "Error: " + e.Message + "\n" + e.StackTrace);
+                throw new ASCOM.DriverException("Error getting DW data");
+            }
+        }
+
+        private SBIG.CFWResults SetFWPosition(short position)
+        {
+            try
+            {
+                WaitFWIdle();
+                SBIG.CFWResults results = FWCommand(
+                    new SBIG.CFWParams
+                    {
+                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                        cfwCommand = SBIG.CFW_COMMAND.CFWC_GOTO,
+                        cfwParam1 = (uint)position
+                    });
+                WaitFWIdle();
+                return results;
             }
             catch (Exception e)
             {
@@ -1543,11 +1605,87 @@ namespace ASCOM.HomeMade
             return filter;
         }
 
-        public int[] FocusOffsets => throw new System.NotImplementedException();
+        private short ConvertReadoutToBinning(SBIG.READOUT_BINNING_MODE binning)
+        {
+            short bin = 0;
+            switch (binning)
+            {
+                case SBIG.READOUT_BINNING_MODE.RM_1X1:
+                    bin = 1;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_1X1_VOFFCHIP:
+                    bin = 1;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_2X2:
+                    bin = 2;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_2X2_VOFFCHIP:
+                    bin = 2;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_3X3:
+                    bin = 3;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_3X3_VOFFCHIP:
+                    bin = 3;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_9X9:
+                    bin = 9;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_NX1:
+                    bin = 1;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_NX2:
+                    bin = 2;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_NX3:
+                    bin = 3;
+                    break;
+                default:
+                    bin = 0;
+                    break;
+            }
+            return bin;
+        }
 
-        public string[] Names => throw new System.NotImplementedException();
+        public int[] FocusOffsets // Fake implementation of offsets. Who uses FW-provided offsets?
+        {
+            get
+            {
+                List<int> offsets = new List<int>();
+                for (int i = 1; i <= FWPositions; i++)
+                {
+                    offsets.Add(0);
+                }
+                return offsets.ToArray();
+            }
 
-        public short Position { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        }
+
+        public string[] Names  // Fake implementation of Names. Set the names in your application.
+        {
+            get
+            {
+                List<string> positions = new List<string>();
+                for (int i=1; i <= FWPositions; i++)
+                {
+                    positions.Add("Filter "+i);
+                }
+                return positions.ToArray();
+            }
+        }
+
+        public short Position 
+        { 
+            get {
+                SBIG.CFWResults fwresults = GetFWPosition();
+                Debug.LogMessage("Position", "FW position is " + fwresults.cfwPosition);
+                return (short)fwresults.cfwPosition;
+             }
+            set {
+                Debug.LogMessage("Position", "Set FW position to " + value);
+                SetFWPosition(value);
+            }
+        }
 
         /// <summary>
         /// Use this function to throw an exception if we aren't connected to the hardware
