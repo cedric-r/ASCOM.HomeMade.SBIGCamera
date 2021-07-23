@@ -12,6 +12,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
         {
             Camera camera = new Camera(true);
             camera.Connected = true;
+            camera.StartExposure(1.0, true);
         }
     }
 }
