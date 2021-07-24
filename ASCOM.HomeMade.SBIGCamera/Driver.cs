@@ -1,30 +1,21 @@
-//tabs=4
-// --------------------------------------------------------------------------------
-// TODO fill in this information for your driver, then remove this line!
-//
-// ASCOM Camera driver for HomeMade
-//
-// Description:	Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam 
-//				nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam 
-//				erat, sed diam voluptua. At vero eos et accusam et justo duo 
-//				dolores et ea rebum. Stet clita kasd gubergren, no sea takimata 
-//				sanctus est Lorem ipsum dolor sit amet.
-//
-// Implements:	ASCOM Camera interface version: <To be completed by driver developer>
-// Author:		(XXX) Your N. Here <your@email.here>
-//
-// Edit Log:
-//
-// Date			Who	Vers	Description
-// -----------	---	-----	-------------------------------------------------------
-// dd-mmm-yyyy	XXX	6.0.0	Initial edit, created from ASCOM driver template
-// --------------------------------------------------------------------------------
-//
-
-
-// This is used to define code in the template that is specific to one class implementation
-// unused code canbe deleted and this definition removed.
-#define Camera
+/**
+ * ASCOM.HomeMade.SBIGCamera - SBIG camera driver
+ * Copyright (C) 2021 Cedric Raguenaud [cedric@raguenaud.earth]
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 using ASCOM;
 using ASCOM.Astrometry;
@@ -44,17 +35,6 @@ using System.Threading;
 
 namespace ASCOM.HomeMade
 {
-    //
-    // Your driver's DeviceID is ASCOM.HomeMade.Camera
-    //
-    // The Guid attribute sets the CLSID for ASCOM.HomeMade.Camera
-    // The ClassInterface/None addribute prevents an empty interface called
-    // _HomeMade from being created and used as the [default] interface
-    //
-    // TODO Replace the not implemented exceptions with code to implement the function or
-    // throw the appropriate ASCOM exception.
-    //
-
     /// <summary>
     /// ASCOM Camera Driver for HomeMade.
     /// </summary>
@@ -73,7 +53,7 @@ namespace ASCOM.HomeMade
         /// <summary>
         /// Driver description that displays in the ASCOM Chooser.
         /// </summary>
-        private static string driverDescription = "ASCOM HomeMade SBIG Camera Driver.";
+        private static string driverDescription = "ASCOM SBIG Camera Driver.";
 
         internal static string comPortProfileName = "COM Port"; // Constants used for Profile persistence
         internal static string comPortDefault = "COM1";
@@ -97,15 +77,16 @@ namespace ASCOM.HomeMade
         /// </summary>
         private AstroUtils astroUtilities;
 
+        protected Camera _instance = null;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
         /// Must be public for COM registration.
         /// </summary>
-        public Camera(bool test = false)
+        public Camera()
         {
             Debug.FileName = @"c:\temp\Focuser.log";
-            Debug.TraceEnabled = true;
-            if (!test) ReadProfile(); // Read device configuration from the ASCOM Profile store
+            if (!Debug.Testing) ReadProfile(); // Read device configuration from the ASCOM Profile store
 
             Debug.LogMessage("Camera", "Starting initialisation");
 
@@ -287,6 +268,8 @@ namespace ASCOM.HomeMade
                             for (int i = 0; i < gcir0.readoutModes; i++)
                             {
                                 SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
+                                ri.pixel_height = (uint)ConvertReadoutModeToBinning(ri.mode);
+                                ri.pixel_width = (uint)ConvertReadoutModeToBinning(ri.mode);
                                 ReadoutModeList.Add(ri);
                                 Debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
                                 Debug.LogMessage("Connected Set", $"    Width: {ri.width}");
@@ -538,7 +521,6 @@ namespace ASCOM.HomeMade
         private double CCDTempTarget = 0;
         private bool CCDTempTargetSet = false;
         private bool HasMechanicalShutter = false;
-        private short CameraGain = 0;
         private CameraStates CurrentCameraState = CameraStates.cameraIdle;
         private bool FilterWheelPresent = false;
         private int FWPositions = 0;
@@ -554,7 +536,7 @@ namespace ASCOM.HomeMade
         private DateTime exposureStart = DateTime.MinValue;
         private double cameraLastExposureDuration = 0.0;
         private bool cameraImageReady = false;
-        private ushort[,] cameraImageArray;
+        private Int32[,] cameraImageArray;
         private object[,] cameraImageArrayVariant;
 
         private SBIG.StartExposureParams2 exposureParams2;
@@ -600,12 +582,14 @@ namespace ASCOM.HomeMade
         {
             get
             {
-                Debug.LogMessage("BinX Get", Binning.ToString());
+                Debug.LogMessage("BinX Get", "Bin size is "+ ConvertReadoutToBinning(Binning));
                 return ConvertReadoutToBinning(Binning);
             }
             set
             {
-                throw new ASCOM.PropertyNotImplementedException("BinX", false);
+                Debug.LogMessage("BinX Set", value.ToString());
+                Binning = ConvertBinningToReadout(value);
+
             }
         }
 
@@ -613,12 +597,13 @@ namespace ASCOM.HomeMade
         {
             get
             {
-                Debug.LogMessage("BinY Get", Binning.ToString());
+                Debug.LogMessage("BinY Get", "Bin size is " + ConvertReadoutToBinning(Binning));
                 return ConvertReadoutToBinning(Binning);
             }
             set
             {
-                throw new ASCOM.PropertyNotImplementedException("BinY", false);
+                Debug.LogMessage("BinY Set", value.ToString());
+                Binning = ConvertBinningToReadout(value);
             }
         }
 
@@ -867,14 +852,14 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("Gain Get", "Camera gain is" + CameraGain.ToString());
-                return CameraGain;
+                SBIG.READOUT_INFO ri = ReadoutModeList.Find(r => r.mode == Binning);
+                Debug.LogMessage("Gain Get", "Camera gain is " + ri.gain.ToString());
+                return (short)ri.gain;
             }
             set
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("Gain Set", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("Gain", true);
+                Debug.LogMessage("Gain Set", "Do nothing");
             }
         }
 
@@ -883,8 +868,14 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("GainMax Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("GainMax", false);
+                short maxgain = 0;
+                foreach (var ri in ReadoutModeList)
+                {
+                    if (ri.gain > maxgain) maxgain = (short)ri.gain;
+                }
+
+                Debug.LogMessage("GainMax Get", "Max gain is " + maxgain);
+                return maxgain;
             }
         }
 
@@ -893,8 +884,14 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("GainMin Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("GainMin", true);
+                short mingain = 0;
+                foreach (var ri in ReadoutModeList)
+                {
+                    if (ri.gain < mingain) mingain = (short)ri.gain;
+                }
+
+                Debug.LogMessage("GainMax Get", "Min gain is " + mingain);
+                return mingain;
             }
         }
 
@@ -903,8 +900,13 @@ namespace ASCOM.HomeMade
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Debug.LogMessage("Gains Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("Gains", true);
+                ArrayList list = new ArrayList();
+                foreach(var ri in ReadoutModeList)
+                {
+                    if (!list.Contains(ri.gain)) list.Add(ri.gain);
+                }
+                Debug.LogMessage("Gains Get", "Returning existing gains");
+                return list;
             }
         }
 
@@ -1278,6 +1280,19 @@ namespace ASCOM.HomeMade
                     P.Unregister(driverID);
                 }
             }
+
+            using (var P = new ASCOM.Utilities.Profile())
+            {
+                P.DeviceType = "FilterWheel";
+                if (bRegister)
+                {
+                    P.Register(driverID, driverDescription);
+                }
+                else
+                {
+                    P.Unregister(driverID);
+                }
+            }
         }
 
         /// <summary>
@@ -1605,7 +1620,7 @@ namespace ASCOM.HomeMade
             return filter;
         }
 
-        private short ConvertReadoutToBinning(SBIG.READOUT_BINNING_MODE binning)
+        private short ConvertReadoutModeToBinning(SBIG.READOUT_BINNING_MODE binning)
         {
             short bin = 0;
             switch (binning)
@@ -1645,6 +1660,19 @@ namespace ASCOM.HomeMade
                     break;
             }
             return bin;
+        }
+
+
+        private short ConvertReadoutToBinning(SBIG.READOUT_BINNING_MODE binning)
+        {
+            short bin = (short)ReadoutModeList.Find(r => r.mode == Binning).pixel_width;
+            return bin;
+        }
+
+        private SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short binning)
+        {
+            SBIG.READOUT_BINNING_MODE readout = ReadoutModeList.Find(r => r.pixel_width == binning).mode;
+            return readout;
         }
 
         public int[] FocusOffsets // Fake implementation of offsets. Who uses FW-provided offsets?

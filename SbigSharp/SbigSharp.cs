@@ -5492,14 +5492,14 @@ namespace SbigSharp
         /// </summary>
         /// <param name="sep2">See also <seealso cref="StartExposureParams2"/> struct.</param>
         /// <returns>2D UInt16 array of Data.</returns>
-        public static ushort[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
+        public static Int32[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
         {
             WaitExposure();
 
-            var data = new ushort[sep2.height, sep2.width];
+            var data = new Int32[sep2.height, sep2.width];
             _ReadoutData(sep2, ref data);
 
-            return data as ushort[,];
+            return data as Int32[,];
         }
 
         #endregion // Extension
