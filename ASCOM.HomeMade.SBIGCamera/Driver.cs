@@ -65,7 +65,7 @@ namespace ASCOM.HomeMade
         /// <summary>
         /// Private variable to hold the connected state
         /// </summary>
-        private bool connectedState;
+        internal static int connections = 0;
 
         /// <summary>
         /// Private variable to hold an ASCOM Utilities object
@@ -74,10 +74,9 @@ namespace ASCOM.HomeMade
 
         /// <summary>
         /// Private variable to hold an ASCOM AstroUtilities object to provide the Range method
+        /// Private variable to hold an ASCOM AstroUtilities object to provide the Range method
         /// </summary>
         private AstroUtils astroUtilities;
-
-        protected Camera _instance = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -85,15 +84,16 @@ namespace ASCOM.HomeMade
         /// </summary>
         public Camera()
         {
-            Debug.FileName = @"c:\temp\Focuser.log";
+            Debug.FileName = @"c:\temp\SBIGCamera.log";
             if (!Debug.Testing) ReadProfile(); // Read device configuration from the ASCOM Profile store
 
             Debug.LogMessage("Camera", "Starting initialisation");
 
-            connectedState = false; // Initialise connected to false
             utilities = new Util(); //Initialise util object
             astroUtilities = new AstroUtils(); // Initialise astro utilities object
             //TODO: Implement your additional construction here
+
+            if (IsConnected) return; // No need to connect several times, e.g. when camera then FW are connected
 
             Debug.LogMessage("Camera", "Starting background worker");
             BackgroundWorker bw = new BackgroundWorker();
@@ -207,6 +207,7 @@ namespace ASCOM.HomeMade
                 try
                 {
                     Debug.LogMessage("Connected", "Set {0}", value);
+
                     if (value == IsConnected)
                         return;
 
@@ -234,7 +235,6 @@ namespace ASCOM.HomeMade
                         if (!cameraFound)
                         {
                             Debug.LogMessage("Connected Set", $"No USB camera found");
-                            connectedState = false;
                             throw new DriverException("No suitable camera found");
                         }
                         else
@@ -246,7 +246,7 @@ namespace ASCOM.HomeMade
                                     deviceType = SBIG.SBIG_DEVICE_TYPE.DEV_USB
                                 });
                             CameraType = SBIG.EstablishLink();
-                            connectedState = true;
+                            connections++;
                             Debug.LogMessage("Connected Set", $"Connected to USB camera");
 
                             Debug.LogMessage("Connected Set", $"Getting camera info");
@@ -409,18 +409,19 @@ namespace ASCOM.HomeMade
                             var fwresults = GetFWData();
                             if (fwresults.cfwError == SBIG.CFW_ERROR.CFWE_NONE)
                             {
-                                string model = GetFWType(fwresults);
+                                string model = GetFWTypeName(fwresults);
                                 Debug.LogMessage("Connected", "FW is " + model);
                                 if (model != "Unknown") FilterWheelPresent = true;
 
-                                string status = GetFWStatus(fwresults);
+                                SBIG.CFWResults fwstatus = GetFWStatus();
+                                string status = GetFWStatusName(fwstatus);
                                 Debug.LogMessage("Connected", "FW status is " + status);
 
                                 Debug.LogMessage("Connected", "FW has " + fwresults.cfwResult2 + " positions");
                                 FWPositions = (int)fwresults.cfwResult2;
 
-                                string filter = GetFWPosition(fwresults);
-                                Debug.LogMessage("Connected", "FW filter is " + filter);
+                                SBIG.CFWResults fwfilter = GetFWPosition();
+                                Debug.LogMessage("Connected", "FW position is " + GetFWFilterName(fwfilter));
                             }
                             else
                             {
@@ -430,7 +431,8 @@ namespace ASCOM.HomeMade
                     }
                     else
                     {
-                        if (connectedState)
+                        connections--;
+                        if (!IsConnected)
                         {
                             try
                             {
@@ -440,7 +442,6 @@ namespace ASCOM.HomeMade
                             }
                             catch (Exception) { }
                         }
-                        connectedState = false;
                         LogMessage("Connected Set", "Disconnecting camera");
                         // TODO disconnect from the device
                     }
@@ -1373,7 +1374,7 @@ namespace ASCOM.HomeMade
             get
             {
                 // TODO check that the driver hardware connection exists and is connected to the hardware
-                return connectedState;
+                return connections>0;
             }
         }
 
@@ -1411,7 +1412,7 @@ namespace ASCOM.HomeMade
             }
             catch (Exception e)
             {
-                Debug.LogMessage("FWCommand", "Error: " + e.Message + "zn" + e.StackTrace);
+                Debug.LogMessage("FWCommand", "Error: " + e.Message + "\n" + e.StackTrace);
                 return new SBIG.CFWResults();
             }
 
@@ -1445,6 +1446,18 @@ namespace ASCOM.HomeMade
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
                 });
             }
+        }
+
+        private SBIG.CFWResults GetFWStatus()
+        {
+            SBIG.CFWResults results = new SBIG.CFWResults();
+            results = FWCommand(new SBIG.CFWParams
+            {
+                cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
+            });
+
+            return results;
         }
 
         private SBIG.CFWResults GetFWPosition()
@@ -1488,7 +1501,7 @@ namespace ASCOM.HomeMade
             }
         }
 
-        private string GetFWType(SBIG.CFWResults fwresults)
+        private string GetFWTypeName(SBIG.CFWResults fwresults)
         {
             string model = "";
             if (fwresults.cfwError == SBIG.CFW_ERROR.CFWE_NONE)
@@ -1560,7 +1573,7 @@ namespace ASCOM.HomeMade
             return model;
         }
 
-        private string GetFWStatus(SBIG.CFWResults fwresults)
+        private string GetFWStatusName(SBIG.CFWResults fwresults)
         {
             string status = "";
             switch (fwresults.cfwStatus)
@@ -1578,7 +1591,7 @@ namespace ASCOM.HomeMade
             return status;
         }
 
-        private string GetFWPosition(SBIG.CFWResults fwresults)
+        private string GetFWFilterName(SBIG.CFWResults fwresults)
         {
             string filter = "";
             switch (fwresults.cfwPosition)
@@ -1707,11 +1720,11 @@ namespace ASCOM.HomeMade
             get {
                 SBIG.CFWResults fwresults = GetFWPosition();
                 Debug.LogMessage("Position", "FW position is " + fwresults.cfwPosition);
-                return (short)fwresults.cfwPosition;
+                return (short)(fwresults.cfwPosition-1);
              }
             set {
-                Debug.LogMessage("Position", "Set FW position to " + value);
-                SetFWPosition(value);
+                Debug.LogMessage("Position", "Set FW position to " + value+1);
+                SetFWPosition((short)(value+1));
             }
         }
 
