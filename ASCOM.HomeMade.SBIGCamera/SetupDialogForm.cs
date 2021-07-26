@@ -43,7 +43,6 @@ namespace ASCOM.HomeMade
         {
             // Place any validation constraint checks here
             // Update the state variables with results from the dialogue
-            Camera.comPort = (string)comboBoxComPort.SelectedItem;
             Debug.TraceEnabled = chkTrace.Checked;
         }
 
@@ -71,15 +70,8 @@ namespace ASCOM.HomeMade
 
         private void InitUI()
         {
-            //chkTrace.Checked = Debug.TraceEnabled;
+            chkTrace.Checked = Debug.TraceEnabled;
             // set the list of com ports to those that are currently available
-            comboBoxComPort.Items.Clear();
-            comboBoxComPort.Items.AddRange(System.IO.Ports.SerialPort.GetPortNames());      // use System.IO because it's static
-            // select the current port if possible
-            if (comboBoxComPort.Items.Contains(Camera.comPort))
-            {
-                comboBoxComPort.SelectedItem = Camera.comPort;
-            }
         }
     }
 }

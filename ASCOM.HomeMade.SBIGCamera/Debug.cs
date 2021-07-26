@@ -26,19 +26,19 @@ using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade
 {
-    public static class Debug
+    public class Debug
     {
         public static bool Testing = false;
         public static bool TraceEnabled = false;
-        public static string FileName = "";
-        internal static void LogMessage(string identifier, string message, params object[] args)
+        public string FileName = "";
+        internal void LogMessage(string identifier, string message, params object[] args)
         {
             var msg = string.Format(message, args);
             LogMessage(DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString() + ": " + identifier + ": " + msg);
         }
 
-        static readonly object fileLockObject = new object();
-        internal static void LogMessage(string message)
+        readonly object fileLockObject = new object();
+        internal void LogMessage(string message)
         {
             lock (fileLockObject)
             {

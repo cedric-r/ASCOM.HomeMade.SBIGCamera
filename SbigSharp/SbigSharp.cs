@@ -5113,16 +5113,12 @@ namespace SbigSharp
         /// <exception cref="FailedOperationException">
         ///     An error has occurred. See also <seealso cref="PAR_ERROR"/> enum.
         /// </exception>
-        private static object _UnivDrvCommandLock = new object();
         private static void _UnivDrvCommand(
             PAR_COMMAND command, IntPtr Params, IntPtr pResults)
         {
-            lock (_UnivDrvCommandLock)
-            {
-                PAR_ERROR errorCode = SBIGUnivDrvCommand(command, Params, pResults);
-                if (PAR_ERROR.CE_NO_ERROR != errorCode)
-                    throw new FailedOperationException(errorCode);
-            }
+            PAR_ERROR errorCode = SBIGUnivDrvCommand(command, Params, pResults);
+            if (PAR_ERROR.CE_NO_ERROR != errorCode)
+                throw new FailedOperationException(errorCode);
         }
 
         /// <summary>
@@ -5400,20 +5396,6 @@ namespace SbigSharp
         }
 
         /// <summary>
-        /// Abort exposure.
-        /// </summary>
-        /// <param name="sep2"><seealso cref="StartExposureParams2"/></param>
-        public static void AbortExposure(StartExposureParams sep)
-        {
-            UnivDrvCommand(
-                PAR_COMMAND.CC_END_EXPOSURE,
-                new EndExposureParams()
-                {
-                    ccd = sep.ccd
-                });
-        }
-
-        /// <summary>
         /// Read data into the buffer.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -5492,14 +5474,35 @@ namespace SbigSharp
         /// </summary>
         /// <param name="sep2">See also <seealso cref="StartExposureParams2"/> struct.</param>
         /// <returns>2D UInt16 array of Data.</returns>
-        public static Int32[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
+        public static UInt16[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
         {
             WaitExposure();
 
-            var data = new Int32[sep2.height, sep2.width];
+            var data = new UInt16[sep2.height, sep2.width];
             _ReadoutData(sep2, ref data);
 
-            return data as Int32[,];
+            return data as UInt16[,];
+        }
+
+        /// <summary>
+        /// Waits for any exposure in progress to complete, ends it, 
+        /// and reads it out into a 2D UInt16 array.
+        /// </summary>
+        /// <param name="sep2">See also <seealso cref="StartExposureParams2"/> struct.</param>
+        /// <returns>2D UInt16 array of Data.</returns>
+        public static UInt32[,] WaitEndAndReadoutExposure32(StartExposureParams2 sep2)
+        {
+            WaitExposure();
+
+            var data = new UInt16[sep2.height, sep2.width];
+            _ReadoutData(sep2, ref data);
+
+            var data32 = new UInt32[sep2.height, sep2.width];
+            for (int i = 0; i < sep2.height; i++)
+                for (int j = 0; j < sep2.width; j++)
+                    data32[i, j] = data[i, j];
+
+            return data32;
         }
 
         #endregion // Extension
