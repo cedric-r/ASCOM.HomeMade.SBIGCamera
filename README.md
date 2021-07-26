@@ -13,4 +13,6 @@ For information, I've tested only with an STF-8300M with FW8 using SGP. I found 
 - Cooling management.
 - FW access.
 
+Note that the software hasn't been through any certification (ASCOM or otherwise).
+
 This work uses SbigSharp code written by eliotg (https://github.com/eliotg/SbigSharp).
