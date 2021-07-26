@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -90,7 +91,14 @@ namespace ASCOM.HomeMade
         /// </summary>
         public Camera()
         {
-            debug.FileName = @"c:\temp\SBIGCamera_"+ DateTime.Now.Year+ DateTime.Now.Month+ DateTime.Now.Day+ DateTime.Now.Hour+ DateTime.Now.Minute+ DateTime.Now.Second+ DateTime.Now.Millisecond+".log";
+            string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+            strPath = Path.Combine(strPath, driverID);
+            try
+            {
+                System.IO.Directory.CreateDirectory(strPath);
+            } catch(Exception) { }
+            debug.FileName = Path.Combine(strPath, "SBIGCamera_"+ DateTime.Now.Year+ DateTime.Now.Month+ DateTime.Now.Day+ DateTime.Now.Hour+ DateTime.Now.Minute+ DateTime.Now.Second+ DateTime.Now.Millisecond+".log");
+
             if (!Debug.Testing) ReadProfile(); // Read device configuration from the ASCOM Profile store
 
             debug.LogMessage("Camera", "Starting initialisation");
