@@ -6,7 +6,7 @@ As SBIG was bought by Diffraction Limited a few years ago, DL have decided not t
 
 So I decided to build my own. 
 
-This codebase is my first attempt over a weekend. Consider it alpha software and don't even expect it to work. But if you try it, please tell me and tell me if anything doesn't work. To do so, please activate trace logging in the ASCOM driver options so I can see what happens.
+This codebase is my first attempt over a weekend. Consider it alpha software and don't even expect it to work. But if you try it, please tell me and tell me if anything doesn't work. To do so, please activate trace logging in the ASCOM driver options so I can see what happens. The log file lives in your AppData\Local\ASCOM.HomeMade.SBIGCamera\ folder.
 
 For information, I've tested only with an STF-8300M with FW8 using SGP. I found that everything seems to be working:
 - Camera access.
