@@ -1,6 +1,6 @@
 # ASCOM.HomeMade.SBIGCamera
 
-This is an ASCOM driver for SBIG cameras. My main target camera is STF-8300, so it might not work for anything else.
+This is an ASCOM driver for SBIG USB cameras. My main target camera is STF-8300, so it might not work for anything else.
 
 As SBIG was bought by Diffraction Limited a few years ago, DL have decided not to invest time to develop ASCOM drivers for old cameras, and SBIG owners have been left out in the cold. We're limited to the software that natively understands SBIG cameras, which exclude most recent software (e.g. Voyager, NINA).
 
