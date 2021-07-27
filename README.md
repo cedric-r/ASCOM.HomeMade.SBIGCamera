@@ -18,3 +18,7 @@ If you jsut want to install the drivers and test them, run the installer: https:
 Note that the software hasn't been through any certification (ASCOM or otherwise).
 
 This work uses SbigSharp code written by eliotg (https://github.com/eliotg/SbigSharp).
+
+Task list:
+- Provide access to guiding camera of the STT.
+- Support netwoek cameras, not just USB.
