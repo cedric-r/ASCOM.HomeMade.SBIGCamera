@@ -647,7 +647,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("FullWellCapacity Get", "Not implemented");
                 throw new ASCOM.PropertyNotImplementedException("FullWellCapacity", false);
             }
@@ -850,7 +849,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("MaxADU Get", "50000");
+                debug.LogMessage("MaxADU Get", "60000");
                 return 50000;
             }
         }
@@ -1174,20 +1173,24 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             if (IsConnected)
             {
-                try {
-                    debug.LogMessage("Camera", "Getting cooling information");
-                    // query temperature
-                    server.UnivDrvCommand(
-                        SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
-                         new SBIG.QueryTemperatureStatusParams()
-                         {
-                             request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
-                         },
-                        out Cooling);
-                }
-                catch (Exception e)
+                if (CurrentCameraState == CameraStates.cameraIdle) // SBIG quirk: you can't access the cooler during exposures.
                 {
-                    debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
+                    try
+                    {
+                        debug.LogMessage("Camera", "Getting cooling information");
+                        // query temperature
+                        server.UnivDrvCommand(
+                            SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
+                             new SBIG.QueryTemperatureStatusParams()
+                             {
+                                 request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
+                             },
+                            out Cooling);
+                    }
+                    catch (Exception e)
+                    {
+                        debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
+                    }
                 }
             }
         }
