@@ -954,10 +954,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 debug.LogMessage("ReadoutModes Get", "Returning readout modes");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 ArrayList list = new ArrayList();
                 foreach (var readoutmode in ReadoutModeList)
                 {
-                    list.Add(readoutmode.mode);
+                    list.Add(readoutmode.mode.ToString());
                 }
                 return list;
             }
