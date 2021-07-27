@@ -67,6 +67,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private AstroUtils astroUtilities;
 
         private ASCOM.HomeMade.SBIGCommon.Debug debug = null;
+        private bool connectionState = false;
 
         private SBIGServer server = new SBIGServer(driverID);
         private BackgroundWorker bw = null;
@@ -206,7 +207,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 }
                 if (!value && !IsConnected)
                 {
-                    debug.LogMessage("Connected", "Not connected connected yet");
+                    debug.LogMessage("Connected", "Not connected yet");
 
                     return;
                 }
@@ -216,9 +217,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
                     if (value)
                     {
-                        bool connected = server.Connect();
+                        connectionState = server.Connect();
 
-                        if (!connected)
+                        if (!connectionState)
                         { 
                             debug.LogMessage("Connected Set", $"No USB camera found");
                             throw new DriverException("No suitable camera found");
@@ -320,6 +321,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private const double EXPOSURE_RESOLTION = 0.0;
 
         private SBIG.CAMERA_TYPE CameraType;
+        private string CameraName;
         private bool ColorCamera = false;
         private bool RequiresExposureParams2 = true;
         private SBIG.READOUT_BINNING_MODE Binning = 0;
@@ -965,8 +967,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("SensorName Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("SensorName", false);
+                debug.LogMessage("SensorName Get", "Camera name is "+CameraName);
+                return CameraName;
             }
         }
 
@@ -974,8 +976,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("SensorType Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("SensorType", false);
+                debug.LogMessage("SensorType Get", "Camera type is "+ColorCamera.ToString());
+                if (ColorCamera) return SensorType.RGGB; // Guessing here
+                else return SensorType.Monochrome;
             }
         }
 
@@ -1202,8 +1205,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("IsConnected", "connectionState=" + server.IsConnected.ToString());
-                return server.IsConnected;
+                debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
+                return connectionState;
             }
         }
 
@@ -1289,7 +1292,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             // now print it out
             debug.LogMessage("Connected Set", $"Firmware version: {gcir0.firmwareVersion >> 8}.{gcir0.firmwareVersion & 0xFF}");
             debug.LogMessage("Connected Set", $"Camera type: {gcir0.cameraType}");
+            CameraType = gcir0.cameraType;
             debug.LogMessage("Connected Set", $"Camera name: {gcir0.name}");
+            CameraName = gcir0.name;
             debug.LogMessage("Connected Set", $"Readout modes: {gcir0.readoutModes}");
             Binning = SBIG.READOUT_BINNING_MODE.RM_1X1;
             for (int i = 0; i < gcir0.readoutModes; i++)

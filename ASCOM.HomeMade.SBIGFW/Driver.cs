@@ -51,6 +51,7 @@ namespace ASCOM.HomeMade.SBIGFW
         public static string driverDescription = "ASCOM SBIG FilterWheel Driver.";
 
         private SBIGCommon.Debug debug = null;
+        private bool connectionState = false;
 
         private SBIGServer server = new SBIGServer(driverID);
 
@@ -183,9 +184,9 @@ namespace ASCOM.HomeMade.SBIGFW
 
                     if (value)
                     {
-                        bool connected = server.Connect();
+                        connectionState = server.Connect();
 
-                        if (!connected)
+                        if (!connectionState)
                         {
                             debug.LogMessage("Connected Set", $"No USB FW found");
                             throw new DriverException("No suitable camera found");
@@ -660,8 +661,8 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             get
             {
-                debug.LogMessage("IsConnected", "connectionState=" + server.IsConnected.ToString());
-                return server.IsConnected;
+                debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
+                return connectionState;
             }
         }
 
