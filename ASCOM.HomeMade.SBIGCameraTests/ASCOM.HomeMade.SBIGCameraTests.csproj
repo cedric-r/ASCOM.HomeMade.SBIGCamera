@@ -50,9 +50,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera.csproj">
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGCommon\ASCOM.HomeMade.SBIGCommon.csproj">
+      <Project>{13cdac16-2b3b-4691-9607-e8f6b695cf7d}</Project>
+      <Name>ASCOM.HomeMade.SBIGCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGFW\ASCOM.HomeMade.SBIGFW.csproj">
+      <Project>{8c0ecd13-13c4-4d0d-83b2-1d967e87e30f}</Project>
+      <Name>ASCOM.HomeMade.SBIGFW</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGImagingCamera\ASCOM.HomeMade.SBIGImagingCamera.csproj">
       <Project>{64308775-bd4a-469c-bcab-3ed830b811af}</Project>
-      <Name>ASCOM.HomeMade.SBIGCamera</Name>
+      <Name>ASCOM.HomeMade.SBIGImagingCamera</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

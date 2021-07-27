@@ -12,4 +12,14 @@
     <DocumentationFile>bin\Release\netstandard2.0\SbigSharp.xml</DocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="SBIGUDrv.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="SBIGUDrv.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
 </Project>

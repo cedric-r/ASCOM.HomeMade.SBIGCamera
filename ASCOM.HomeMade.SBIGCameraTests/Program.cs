@@ -17,13 +17,9 @@
  *
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using ASCOM.HomeMade.SBIGFW;
+using ASCOM.HomeMade.SBIGImagingCamera;
 
 namespace ASCOM.HomeMade.SBIGCameraTests
 {
@@ -31,18 +27,22 @@ namespace ASCOM.HomeMade.SBIGCameraTests
     {
         static void Main(string[] args)
         {
-            Debug.Testing = true;
-            Debug.TraceEnabled = true;
+            SBIGCommon.Debug.Testing = true;
+            SBIGCommon.Debug.TraceEnabled = true;
+
             Camera camera = new Camera();
             System.Console.WriteLine("Connecting camera");
             camera.Connected = true;
+
+            FilterWheel fw = new FilterWheel();
+            fw.Connected = true;
+
+            fw.Position = 2;
+
             System.Console.WriteLine("Setting CCD temperature to 20");
             camera.SetCCDTemperature= 20.0;
             System.Console.WriteLine("Setting cooler on");
             camera.CoolerOn = true;
-            System.Console.WriteLine("Setting filter 1");
-            camera.Position = 2;
-            System.Console.WriteLine("Current FW position is "+camera.Position);
             camera.NumX = camera.CameraXSize;
             camera.NumY = camera.CameraYSize;
             camera.StartX = 0;

@@ -10,3 +10,9 @@
 /SbigSharp/bin/Debug
 /SbigSharp/obj
 /.vs/ASCOM.HomeMade.SBIGCamera/DesignTimeBuild/.dtbcache.v2
+/ASCOM.HomeMade.SBIGCommon/bin/Debug
+/ASCOM.HomeMade.SBIGCommon/obj/Debug
+/ASCOM.HomeMade.SBIGFW/bin/Debug
+/ASCOM.HomeMade.SBIGFW/obj
+/ASCOM.HomeMade.SBIGImagingCamera/bin/Debug
+/ASCOM.HomeMade.SBIGImagingCamera/obj
