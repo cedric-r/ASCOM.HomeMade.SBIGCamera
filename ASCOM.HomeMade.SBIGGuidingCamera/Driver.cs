@@ -735,6 +735,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                     throw new ASCOM.InvalidOperationException("Call to ImageArray before the first image has been taken!");
                 }
 
+                debug.LogMessage("ImageArray Get", "Returning image array");
+
                 return cameraImageArray;
             }
         }
@@ -749,6 +751,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                     debug.LogMessage("ImageArrayVariant Get", "Throwing InvalidOperationException because of a call to ImageArrayVariant before the first image has been taken!");
                     throw new ASCOM.InvalidOperationException("Call to ImageArrayVariant before the first image has been taken!");
                 }
+                debug.LogMessage("ImageArrayVariant Get", "Returning image array");
+
                 cameraImageArrayVariant = new object[cameraNumX, cameraNumY];
                 for (int i = 0; i < cameraImageArray.GetLength(1); i++)
                 {
