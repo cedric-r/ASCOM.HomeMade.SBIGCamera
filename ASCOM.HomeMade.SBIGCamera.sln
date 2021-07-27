@@ -11,7 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGCommon",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGFW", "ASCOM.HomeMade.SBIGFW\ASCOM.HomeMade.SBIGFW.csproj", "{8C0ECD13-13C4-4D0D-83B2-1D967E87E30F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGImagingCamera", "ASCOM.HomeMade.SBIGImagingCamera\ASCOM.HomeMade.SBIGImagingCamera.csproj", "{2609754F-4652-4012-92BF-53D03BE6A7F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGImagingCamera", "ASCOM.HomeMade.SBIGImagingCamera\ASCOM.HomeMade.SBIGImagingCamera.csproj", "{64308775-BD4A-469C-BCAB-3ED830B811AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGGuidingCamera", "ASCOM.HomeMade.SBIGGuidingCamera\ASCOM.HomeMade.SBIGGuidingCamera.csproj", "{E8259190-D17B-4601-B0E2-B8290AD7E467}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +37,14 @@ Global
 		{8C0ECD13-13C4-4D0D-83B2-1D967E87E30F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C0ECD13-13C4-4D0D-83B2-1D967E87E30F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C0ECD13-13C4-4D0D-83B2-1D967E87E30F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2609754F-4652-4012-92BF-53D03BE6A7F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2609754F-4652-4012-92BF-53D03BE6A7F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2609754F-4652-4012-92BF-53D03BE6A7F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2609754F-4652-4012-92BF-53D03BE6A7F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64308775-BD4A-469C-BCAB-3ED830B811AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8259190-D17B-4601-B0E2-B8290AD7E467}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8259190-D17B-4601-B0E2-B8290AD7E467}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8259190-D17B-4601-B0E2-B8290AD7E467}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8259190-D17B-4601-B0E2-B8290AD7E467}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
