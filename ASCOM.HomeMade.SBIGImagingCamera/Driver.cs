@@ -344,6 +344,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private bool cameraImageReady = false;
         private UInt32[,] cameraImageArray;
         private object[,] cameraImageArrayVariant;
+        private bool FastReadoutRequested = false;
 
         private SBIG.StartExposureParams2 exposureParams2;
 
@@ -483,9 +484,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                // At the moment we say no although some cameras, e.g. STF-8300 can
-                debug.LogMessage("CanFastReadout Get", false.ToString());
-                return false;
+                bool fr = CameraName.Contains("STF-8300"); // Only STF-8300 can use fastreadout
+                debug.LogMessage("CanFastReadout Get", fr.ToString());
+                return fr;
             }
         }
 
@@ -634,14 +635,28 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("FastReadout Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("FastReadout", false);
+                if (CanFastReadout)
+                {
+                    debug.LogMessage("FastReadout Get", "FastReadout=" + FastReadoutRequested.ToString());
+                    return FastReadoutRequested;
+                }
+                else
+                {
+                    throw new ASCOM.PropertyNotImplementedException("FastReadout", false);
+                }
             }
             set
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("FastReadout Set", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("FastReadout", true);
+                if (CanFastReadout)
+                {
+                    debug.LogMessage("FastReadout Set", "FastReadout=" + value.ToString());
+                    FastReadoutRequested = value;
+                }
+                else
+                {
+                    throw new ASCOM.PropertyNotImplementedException("FastReadout", false);
+                }
             }
         }
 
@@ -1028,7 +1043,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     abgState = SBIG.ABG_STATE7.ABG_LOW7,
                     openShutter = Light ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
                     readoutMode = Binning,
-                    exposureTime = Convert.ToUInt32(Duration),
+                    exposureTime = FastReadoutRequested ? Convert.ToUInt32(Duration) | SBIG.EXP_FAST_READOUT : Convert.ToUInt32(Duration),
                     width = Convert.ToUInt16(cameraNumX), // This is in binned pixels. Check is this is right
                     height = Convert.ToUInt16(cameraNumY),
                     left = (ushort)cameraStartX,
@@ -1315,10 +1330,10 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 ReadoutModeList.Add(ri);
                 debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
                 debug.LogMessage("Connected Set", $"    Width: {ri.width}");
-                debug.LogMessage("Connected Set", $"    Height: {ri.height}");
+                debug.LogMessage("Connected Set", $"    Height: {ri.height}"); // Don't trust this, there is at least 1 bug in the STF-8300 that reports a height of 0 for mode RM_NX1
                 debug.LogMessage("Connected Set", $"    Gain: {ri.gain >> 8}.{ri.gain & 0xFF} e-/ADU");
-                debug.LogMessage("Connected Set", $"    Pixel width: {ri.pixel_width}");
-                debug.LogMessage("Connected Set", $"    Pixel height: {ri.pixel_height}");
+                debug.LogMessage("Connected Set", $"    Pixel width: {ri.pixel_width}"); // The SBIG documentation is wrong: this isn't pixel size in microns, this is pixel binning size
+                debug.LogMessage("Connected Set", $"    Pixel height: {ri.pixel_height}"); // The SBIG documentation is wrong: this isn't pixel size in microns, this is pixel binning size
             }
 
             // get extended info
