@@ -274,7 +274,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
                 // TODO customise this driver description
-                string driverInfo = "Information about the driver itself. Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverInfo = "Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
                 debug.LogMessage("DriverInfo Get", driverInfo);
                 return driverInfo;
             }
@@ -386,8 +386,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("BinX Get", "Bin size is "+ ConvertReadoutToBinning(Binning));
-                return ConvertReadoutToBinning(Binning);
+                debug.LogMessage("BinX Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_width);
+                return (short)GetCurrentReadoutMode(Binning).pixel_width;
             }
             set
             {
@@ -401,8 +401,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("BinY Get", "Bin size is " + ConvertReadoutToBinning(Binning));
-                return ConvertReadoutToBinning(Binning);
+                debug.LogMessage("BinY Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_height);
+                return (short)GetCurrentReadoutMode(Binning).pixel_height;
             }
             set
             {
@@ -973,6 +973,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             try
             {
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
                 if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
                 if (cameraNumX > ccdWidth) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
@@ -1179,6 +1180,11 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 debug.LogMessage("IsConnected", "connectionState=" + server.IsConnected.ToString());
                 return server.IsConnected;
             }
+        }
+
+        private SBIG.READOUT_INFO GetCurrentReadoutMode(SBIG.READOUT_BINNING_MODE binning)
+        {
+            return ReadoutModeList.Find(r => r.mode == Binning);
         }
 
         private short ConvertReadoutModeToBinning(SBIG.READOUT_BINNING_MODE binning)
