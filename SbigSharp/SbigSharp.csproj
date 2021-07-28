@@ -12,6 +12,10 @@
     <DocumentationFile>bin\Release\netstandard2.0\SbigSharp.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="SBIGUDrv.dll" />
   </ItemGroup>
