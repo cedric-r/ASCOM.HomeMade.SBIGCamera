@@ -230,7 +230,7 @@ namespace ASCOM.HomeMade.SBIGFW
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
                 // TODO customise this driver description
-                string driverInfo = "Information about the driver itself. Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverInfo = "Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
                 debug.LogMessage("DriverInfo Get", driverInfo);
                 return driverInfo;
             }
