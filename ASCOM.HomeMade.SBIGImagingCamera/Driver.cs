@@ -1035,7 +1035,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
                 if (!RequiresExposureParams2)
                 {
-                    throw new InvalidOperationException("This driver does not support legacy calls");
+                    debug.LogMessage("StartExposure", "This driver does not support legacy calls. Using new call anyway");
+                    //throw new InvalidOperationException("This driver does not support legacy calls");
                 }
                 exposureParams2 = new SBIG.StartExposureParams2
                 {
