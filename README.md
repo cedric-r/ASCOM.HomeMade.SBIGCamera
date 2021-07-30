@@ -17,7 +17,7 @@ If you just want to install the drivers and test them, run the installer: https:
 
 Note that the software hasn't been through any certification (ASCOM or otherwise).
 
-Note also that only the 32 bits driver can be used, so your application (SGP, NINA, etc) will have to be the 32 bits version. This is due to the fact that the DLL released by DL only supports 32 bits.
+Note also that the 64 bits driver uses an unofficial version of the SBIG library released by DL for Prism but isn't part of their official distribution (it officially doesn't exist).
 
 This work uses SbigSharp code written by eliotg (https://github.com/eliotg/SbigSharp).
 

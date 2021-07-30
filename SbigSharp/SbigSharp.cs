@@ -5099,9 +5099,10 @@ namespace SbigSharp
         /// <param name="Params">Params pointer to a command-specific structure containing the relevant command parameters.</param>
         /// <param name="pResults">pResults pointer to a comand-specific results structure containing the results of the command.</param>
         /// <returns>See also <seealso cref="PAR_ERROR"/> enum.</returns>
-        [DllImport("SBIGUDrv.dll", CallingConvention = CallingConvention.StdCall)]
-        private static extern PAR_ERROR SBIGUnivDrvCommand(
-            PAR_COMMAND command, IntPtr Params, IntPtr pResults);
+        private static PAR_ERROR SBIGUnivDrvCommand(PAR_COMMAND command, IntPtr Params, IntPtr pResults)
+        {
+            return SBIGDLL.SBIGUnivDrvCommand(command, Params, pResults);
+        }
 
         /// <summary>
         /// Command function: Supports Parallel, USB and Ethernet based cameras.
@@ -5312,8 +5313,10 @@ namespace SbigSharp
         /// <param name="pStr">pointer to an array of characters, null-terminated, which should be written to the log file.</param>
         /// <param name="length">unsigned int of buffer's length in bytes.</param>
         /// <returns></returns>
-        [DllImport("SBIGUDrv.dll", CallingConvention = CallingConvention.StdCall)]
-        private static extern Int16 SBIGLogDebugMsg(UIntPtr pStr, UInt16 length);
+        private static Int16 SBIGLogDebugMsg(UIntPtr pStr, UInt16 length)
+        {
+            return SBIGDLL.SBIGLogDebugMsg(pStr, length);
+        }
 
         #endregion // SBIG C language header file "sbigudrv.h"
 

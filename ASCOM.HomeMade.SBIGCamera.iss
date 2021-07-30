@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 0.16.15
-AppVersion=0.16.15
+AppVerName=ASCOM HomeMade SBig Camera Driver 0.16.17
+AppVersion=0.16.17
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=0.16.15
+VersionInfoVersion=0.16.17
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes
@@ -50,7 +50,8 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\Microsoft.Win32.Primitives.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\netstandard.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\SbigSharp.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\SBIGUDrv.dll"; DestDir: "{app}"
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\x86\HomeMade.SBIGUDrv.dll"; DestDir: "{app}\x86\"
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\x64\HomeMade.SBIGUDrv.dll"; DestDir: "{app}\x64\"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.AppContext.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Collections.Concurrent.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Collections.dll"; DestDir: "{app}"
@@ -150,10 +151,10 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 [Run]
 ; Only for .NET assembly/in-proc drivers
 Filename: "{dotnet4032}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGImagingCamera.dll"""; Flags: runhidden 32bit
-; Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGImagingCamera.dll"""; Flags: runhidden 64bit; Check: IsWin64
+ Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGImagingCamera.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
 Filename: "{dotnet4032}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 32bit
-; Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
+ Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
 
 ; Only if driver is .NET
@@ -161,13 +162,13 @@ Filename: "{dotnet4032}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMa
 ; Only for .NET assembly/in-proc drivers
 Filename: "{dotnet4032}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGImagingCamera.dll"""; Flags: runhidden 32bit
 ; This helps to give a clean uninstall
-; Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGImagingCamera.dll"""; Flags: runhidden 64bit; Check: IsWin64
-; Filename: "{dotnet4064}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGImgaingCamera.dll"""; Flags: runhidden 64bit; Check: IsWin64
+ Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGImagingCamera.dll"""; Flags: runhidden 64bit; Check: IsWin64
+ Filename: "{dotnet4064}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGImgaingCamera.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
 Filename: "{dotnet4032}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 32bit
 ; This helps to give a clean uninstall
-; Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
-; Filename: "{dotnet4064}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
+ Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
+ Filename: "{dotnet4064}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
 
 [CODE]

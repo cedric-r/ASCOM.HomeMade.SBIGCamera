@@ -13,17 +13,21 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="SBIGUDrv.dll" />
+    <None Remove="x64\HomeMade.SBIGUDrv.dll" />
+    <None Remove="x86\HomeMade.SBIGUDrv.dll" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="SBIGUDrv.dll">
+    <Content Include="x64\HomeMade.SBIGUDrv.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
+    <Content Include="x86\HomeMade.SBIGUDrv.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
