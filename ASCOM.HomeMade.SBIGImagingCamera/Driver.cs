@@ -43,7 +43,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
     [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2991")]
     [ClassInterface(ClassInterfaceType.None)]
     [ProgId(Camera.driverID)]
-    public class Camera : ICameraV2
+    public class Camera : ICameraV3
     {
         /// <summary>
         /// ASCOM DeviceID (COM ProgID) for this driver.
@@ -1113,6 +1113,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             AbortExposure();
         }
+        public int OffsetMin { get { throw new ASCOM.PropertyNotImplementedException("OffsetMin", false); } }
+        public int OffsetMax { get { throw new ASCOM.PropertyNotImplementedException("OffsetMax", false); } }
+        public int Offset { get { throw new ASCOM.PropertyNotImplementedException("Offset", false); } set { throw new ASCOM.PropertyNotImplementedException("Offset", false); } }
+        public ArrayList Offsets { get { throw new ASCOM.PropertyNotImplementedException("Offsets", false); } }
+        public double SubExposureDuration { get { throw new ASCOM.PropertyNotImplementedException("SubExposureDuration", false); } set { throw new ASCOM.PropertyNotImplementedException("SubExposureDuration", false); } }
 
         #endregion
 
