@@ -8,12 +8,12 @@ So I decided to build my own.
 
 This codebase is my first attempt over a weekend. Consider it alpha software and don't even expect it to work. But if you try it, please tell me and tell me if anything doesn't work. To do so, please activate trace logging in the ASCOM driver options so I can see what happens. The log file lives in your AppData\Local\ASCOM.HomeMade.SBIGCamera\ folder.
 
-For information, I've tested only with an STF-8300M with FW8 using SGP. I found that everything seems to be working:
+For information, I've tested only with an STF-8300M with FW8 using SGP, NINA, and Voyager. I found that everything seems to be working:
 - Camera access.
 - Cooling management.
 - FW access.
 
-If you jsut want to install the drivers and test them, run the installer: https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera/blob/main/HomeMade%20SBIG%20Camera%20Setup.exe
+If you just want to install the drivers and test them, run the installer: https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera/blob/main/HomeMade%20SBIG%20Camera%20Setup.exe
 
 Note that the software hasn't been through any certification (ASCOM or otherwise).
 
