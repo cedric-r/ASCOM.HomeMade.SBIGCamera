@@ -296,8 +296,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             // set by the driver wizard
             get
             {
-                debug.LogMessage("InterfaceVersion Get", "2");
-                return Convert.ToInt16("2");
+                debug.LogMessage("InterfaceVersion Get", "3");
+                return Convert.ToInt16("3");
             }
         }
 
