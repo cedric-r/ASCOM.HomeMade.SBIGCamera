@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGCommon
@@ -189,7 +190,10 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void WaitExposure()
         {
             // wait for the exposure to be done
-            while (ExposureInProgress()) ;
+            while (ExposureInProgress())
+            {
+                Thread.Sleep(100);
+            }
         }
 
         public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[] data)

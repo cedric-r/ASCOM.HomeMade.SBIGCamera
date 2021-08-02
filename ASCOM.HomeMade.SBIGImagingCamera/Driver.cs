@@ -1044,7 +1044,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     abgState = SBIG.ABG_STATE7.ABG_LOW7,
                     openShutter = Light ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
                     readoutMode = Binning,
-                    exposureTime = FastReadoutRequested ? Convert.ToUInt32(Duration) | SBIG.EXP_FAST_READOUT : Convert.ToUInt32(Duration),
+                    exposureTime = FastReadoutRequested ? Convert.ToUInt32(Duration * 100) | SBIG.EXP_FAST_READOUT : Convert.ToUInt32(Duration * 100),
                     width = Convert.ToUInt16(cameraNumX), // This is in binned pixels. Check is this is right
                     height = Convert.ToUInt16(cameraNumY),
                     left = (ushort)cameraStartX,
