@@ -43,7 +43,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
     [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2991")]
     [ClassInterface(ClassInterfaceType.None)]
     [ProgId(Camera.driverID)]
-    public class Camera : ICameraV3
+    public class Camera : ICameraV3, ICameraV2
     {
         /// <summary>
         /// ASCOM DeviceID (COM ProgID) for this driver.
@@ -353,7 +353,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             if (RequiresExposureParams2)
             {
                 debug.LogMessage("AbortExposure", "Aborting...");
-                SBIG.AbortExposure(exposureParams2);
+                server.AbortExposure(exposureParams2);
             }
             else
             {
@@ -1010,10 +1010,10 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 CurrentCameraState = CameraStates.cameraReading;
 
                 //cameraImageArray = SBIG.WaitEndAndReadoutExposure32(exposureParams2);
-                SBIG.WaitExposure();
+                server.WaitExposure();
 
                 var data = new UInt16[exposureParams2.height, exposureParams2.width];
-                SBIG.ReadoutData(exposureParams2, ref data);
+                server.ReadoutData(exposureParams2, ref data);
 
                 cameraImageArray = new UInt32[exposureParams2.height, exposureParams2.width];
                 for (int i = 0; i < exposureParams2.height; i++)

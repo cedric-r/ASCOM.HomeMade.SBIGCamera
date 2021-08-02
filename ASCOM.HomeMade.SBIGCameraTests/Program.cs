@@ -31,6 +31,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             SBIGCommon.Debug.TraceEnabled = true;
 
             Camera camera = new Camera();
+            var binx = camera.BinX;
             System.Console.WriteLine("Connecting camera");
             camera.Connected = true;
 

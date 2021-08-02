@@ -5099,9 +5099,13 @@ namespace SbigSharp
         /// <param name="Params">Params pointer to a command-specific structure containing the relevant command parameters.</param>
         /// <param name="pResults">pResults pointer to a comand-specific results structure containing the results of the command.</param>
         /// <returns>See also <seealso cref="PAR_ERROR"/> enum.</returns>
+        private static object _CameraLock = new object();
         private static PAR_ERROR SBIGUnivDrvCommand(PAR_COMMAND command, IntPtr Params, IntPtr pResults)
         {
-            return SBIGDLL.SBIGUnivDrvCommand(command, Params, pResults);
+            lock (_CameraLock)
+            {
+                return SBIGDLL.SBIGUnivDrvCommand(command, Params, pResults);
+            }
         }
 
         /// <summary>

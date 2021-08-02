@@ -16,7 +16,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         protected static int connections = 0;
 
-        public bool IsConnected { get { return connections>0; } }
+        public bool IsConnected { get { return connections > 0; } }
 
         public SBIGServer(string device)
         {
@@ -92,7 +92,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void Disconnect()
         {
             debug.LogMessage("Disconnect", "Disconnection requested");
-            if (connections>0)
+            if (connections > 0)
             {
                 connections--;
                 if (connections < 0) connections = 0; // some software start with a disconnect
@@ -131,7 +131,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void UnivDrvCommand<TParams>(SBIG.PAR_COMMAND command, TParams Params)
             where TParams : SBIG.IParams
         {
-            lock(lockSBIGAccess)
+            lock (lockSBIGAccess)
             {
                 SBIG.UnivDrvCommand<TParams>(command, Params);
             }
@@ -140,7 +140,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void UnivDrvCommand<TResults>(SBIG.PAR_COMMAND command, out TResults pResults)
             where TResults : SBIG.IResults
         {
-            lock(lockSBIGAccess)
+            lock (lockSBIGAccess)
             {
                 SBIG.UnivDrvCommand<TResults>(command, out pResults);
             }
@@ -161,6 +161,50 @@ namespace ASCOM.HomeMade.SBIGCommon
             lock (lockSBIGAccess)
             {
                 SBIG.UnivDrvCommand<TParams, TResults>(command, Params, out pResults);
+            }
+        }
+
+        public void AbortExposure(SBIG.StartExposureParams2 sep2)
+        {
+            lock (lockSBIGAccess)
+            {
+                UnivDrvCommand(
+                SBIG.PAR_COMMAND.CC_END_EXPOSURE,
+                new SBIG.EndExposureParams()
+                {
+                    ccd = sep2.ccd
+                });
+            }
+        }
+
+        public bool ExposureInProgress()
+        {
+            lock (lockSBIGAccess)
+            {
+                return SBIG.ExposureInProgress();
+            }
+        }
+
+
+        public void WaitExposure()
+        {
+            // wait for the exposure to be done
+            while (ExposureInProgress()) ;
+        }
+
+        public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[] data)
+        {
+            lock (lockSBIGAccess)
+            {
+                SBIG.ReadoutData(sep2, ref data);
+            }
+        }
+
+        public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
+        {
+            lock (lockSBIGAccess)
+            {
+                SBIG.ReadoutData(sep2, ref data);
             }
         }
     }
