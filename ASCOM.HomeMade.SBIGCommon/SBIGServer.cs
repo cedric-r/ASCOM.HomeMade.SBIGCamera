@@ -17,6 +17,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         protected static int connections = 0;
 
+        public static object lockCameraImaging = new object();
         public bool IsConnected { get { return connections > 0; } }
 
         public SBIGServer(string device)

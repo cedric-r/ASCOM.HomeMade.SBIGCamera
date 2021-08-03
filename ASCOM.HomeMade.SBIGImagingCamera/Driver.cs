@@ -1056,20 +1056,30 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 server.UnivDrvCommand(SBIG.PAR_COMMAND.CC_START_EXPOSURE2, exposureParams2);
 
                 // read out the image
-                debug.LogMessage("StartExposure", "Reading");
+                debug.LogMessage("StartExposure", "Waiting");
                 CurrentCameraState = CameraStates.cameraReading;
 
                 //cameraImageArray = SBIG.WaitEndAndReadoutExposure32(exposureParams2);
                 server.WaitExposure();
 
-                var data = new UInt16[exposureParams2.height, exposureParams2.width];
-                server.ReadoutData(exposureParams2, ref data);
+                lock (SBIGServer.lockCameraImaging)
+                {
+                    debug.LogMessage("StartExposure", "Reading");
+                    var data = new UInt16[exposureParams2.height, exposureParams2.width];
+                    server.ReadoutData(exposureParams2, ref data);
 
-                cameraImageArray = new UInt32[exposureParams2.height, exposureParams2.width];
-                for (int i = 0; i < exposureParams2.height; i++)
-                    for (int j = 0; j < exposureParams2.width; j++)
-                        cameraImageArray[i, j] = data[i, j];
+                    cameraImageArray = new UInt32[exposureParams2.height, exposureParams2.width];
+                    for (int i = 0; i < exposureParams2.height; i++)
+                        for (int j = 0; j < exposureParams2.width; j++)
+                            cameraImageArray[i, j] = data[i, j];
 
+                    debug.LogMessage("StartExposure", "Finishing readout");
+                    server.UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
+                        new SBIG.EndReadoutParams()
+                        {
+                            ccd = SBIG.CCD_REQUEST.CCD_IMAGING
+                        });
+                }
                 CurrentCameraState = CameraStates.cameraIdle;
                 debug.LogMessage("StartExposure", "Done");
                 cameraImageReady = true;
