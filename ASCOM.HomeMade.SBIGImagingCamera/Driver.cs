@@ -71,6 +71,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         private SBIGServer server = new SBIGServer(driverID);
         private BackgroundWorker bw = null;
+        private BackgroundWorker imagingWorker = null;
         private bool Shutdown = false;
 
         /// <summary>
@@ -238,12 +239,13 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                         debug.LogMessage("Connected Set", "Disconnection requested");
                         if (IsConnected)
                         {
-                            server.Disconnect();
+                            AbortExposure();
 
                             if (bw!=null)
                             {
                                 debug.LogMessage("Connected Set", "Shutting down background worker");
                                 Shutdown = true;
+                                server.stopExposure = true;
                                 try
                                 {
                                     bw.CancelAsync();
@@ -251,6 +253,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                                 catch (Exception) { }
                                 bw = null;
                             }
+
+                            server.Disconnect();
                         }
                     }
                 }
@@ -337,6 +341,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == Binning).height; } }
         private double pixelSize { get { return ReadoutModeList.Find(r => r.mode == Binning).pixel_height; } } // We assume square pixels
 
+        private double durationRequest = 0;
+        private bool lightRequest = false;
+
         private int cameraNumX = 0;
         private int cameraNumY = 0;
         private int cameraStartX = 0;
@@ -354,17 +361,22 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             if (!IsConnected) throw new NotConnectedException("Camera is not connected");
 
+            // I removed the check that the camera requires StartExposureParams2
+            debug.LogMessage("AbortExposure", "Aborting...");
             CurrentCameraState = CameraStates.cameraIdle;
-            if (RequiresExposureParams2)
+
+            server.AbortExposure(exposureParams2);
+
+            server.stopExposure = true;
+            try
             {
-                debug.LogMessage("AbortExposure", "Aborting...");
-                server.AbortExposure(exposureParams2);
+                if (imagingWorker != null) imagingWorker.CancelAsync();
             }
-            else
-            {
-                debug.LogMessage("AbortExposure", "AbortExposure is not supported");
-                throw new InvalidOperationException("This driver does not support legacy calls");
-            }
+            catch (Exception) { }
+            imagingWorker = null;
+
+            debug.LogMessage("AbortExposure", "Finishing readout");
+            server.EndReadout();
         }
 
         public short BayerOffsetX
@@ -460,16 +472,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                if (RequiresExposureParams2)
-                {
-                    debug.LogMessage("CanAbortExposure Get", true.ToString());
-                    return true;
-                }
-                else
-                {
-                    debug.LogMessage("CanAbortExposure Get", false.ToString());
-                    return false;
-                }
+                // I removed the check that the camera requires StartExposureParams2
+                debug.LogMessage("CanAbortExposure Get", true.ToString());
+                return true;
             }
         }
 
@@ -1022,78 +1027,104 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         public void StartExposure(double Duration, bool Light)
         {
+            if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+            debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
+            if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
+            if (cameraNumX > ccdWidth) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
+            if (cameraNumY > ccdHeight) throw new InvalidValueException("StartExposure", cameraNumY.ToString(), ccdHeight.ToString());
+            if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
+            if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
+
+            durationRequest = Duration;
+            lightRequest = Light;
+            server.stopExposure = false;
+            imagingWorker = new BackgroundWorker();
+            imagingWorker.DoWork += bw_TakeImage;
+            imagingWorker.RunWorkerAsync();
+        }
+
+        private void bw_TakeImage(object sender, DoWorkEventArgs e)
+        {
+            TakeImage();
+        }
+
+        private void TakeImage()
+        {
             try
             {
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
-                if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
-                if (cameraNumX > ccdWidth) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
-                if (cameraNumY > ccdHeight) throw new InvalidValueException("StartExposure", cameraNumY.ToString(), ccdHeight.ToString());
-                if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
-                if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
-
-                cameraLastExposureDuration = Duration;
+                debug.LogMessage("TakeImage", "Starting imaging worker");
+                cameraLastExposureDuration = durationRequest;
                 exposureStart = DateTime.Now;
+
+                if (server.stopExposure) return;
 
                 if (!RequiresExposureParams2)
                 {
-                    debug.LogMessage("StartExposure", "This driver does not support legacy calls. Using new call anyway");
+                    debug.LogMessage("TakeImage", "This driver does not support legacy calls. Using new call anyway");
                     //throw new InvalidOperationException("This driver does not support legacy calls");
                 }
                 exposureParams2 = new SBIG.StartExposureParams2
                 {
                     ccd = SBIG.CCD_REQUEST.CCD_IMAGING,
                     abgState = SBIG.ABG_STATE7.ABG_LOW7,
-                    openShutter = Light ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
+                    openShutter = lightRequest ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
                     readoutMode = Binning,
-                    exposureTime = FastReadoutRequested ? Convert.ToUInt32(Duration * 100) | SBIG.EXP_FAST_READOUT : Convert.ToUInt32(Duration * 100),
+                    exposureTime = FastReadoutRequested ? Convert.ToUInt32(durationRequest * 100) | SBIG.EXP_FAST_READOUT : Convert.ToUInt32(durationRequest * 100),
                     width = Convert.ToUInt16(cameraNumX), // This is in binned pixels. Check is this is right
                     height = Convert.ToUInt16(cameraNumY),
                     left = (ushort)cameraStartX,
                     top = (ushort)cameraStartY
                 };
 
-                debug.LogMessage("StartExposure", "Exposing");
+                debug.LogMessage("TakeImage", "Exposing");
                 CurrentCameraState = CameraStates.cameraExposing;
                 server.UnivDrvCommand(SBIG.PAR_COMMAND.CC_START_EXPOSURE2, exposureParams2);
 
+                if (server.stopExposure) return;
+
                 // read out the image
-                debug.LogMessage("StartExposure", "Waiting");
+                debug.LogMessage("TakeImage", "Waiting");
                 CurrentCameraState = CameraStates.cameraReading;
+
+                if (server.stopExposure) return;
 
                 //cameraImageArray = SBIG.WaitEndAndReadoutExposure32(exposureParams2);
                 server.WaitExposure();
 
+                if (server.stopExposure) return;
+
                 lock (SBIGServer.lockCameraImaging)
                 {
-                    debug.LogMessage("StartExposure", "Reading");
+                    debug.LogMessage("TakeImage", "Reading");
                     var data = new UInt16[exposureParams2.height, exposureParams2.width];
                     server.ReadoutData(exposureParams2, ref data);
+
+                    if (server.stopExposure) return;
 
                     cameraImageArray = new UInt32[exposureParams2.height, exposureParams2.width];
                     for (int i = 0; i < exposureParams2.height; i++)
                         for (int j = 0; j < exposureParams2.width; j++)
                             cameraImageArray[i, j] = data[i, j];
 
-                    debug.LogMessage("StartExposure", "Finishing readout");
-                    server.UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
-                        new SBIG.EndReadoutParams()
-                        {
-                            ccd = SBIG.CCD_REQUEST.CCD_IMAGING
-                        });
+                    debug.LogMessage("TakeImage", "Finishing readout");
+
+                    if (server.stopExposure) return;
+
+                    server.EndReadout();
                 }
                 CurrentCameraState = CameraStates.cameraIdle;
-                debug.LogMessage("StartExposure", "Done");
+                debug.LogMessage("TakeImage", "Done");
                 cameraImageReady = true;
             }
             catch (Exception e)
             {
-                debug.LogMessage("StartExposure", "Error: " + Utils.DisplayException(e));
+                debug.LogMessage("TakeImage", "Error: " + Utils.DisplayException(e));
                 throw;
             }
-        }
 
-        public int StartX
+    }
+
+    public int StartX
         {
             get
             {
@@ -1215,24 +1246,21 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             if (IsConnected)
             {
-                if (CurrentCameraState == CameraStates.cameraIdle) // SBIG quirk: you can't access the cooler during exposures.
+                try
                 {
-                    try
-                    {
-                        debug.LogMessage("Camera", "Getting cooling information");
-                        // query temperature
-                        server.UnivDrvCommand(
-                            SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
-                             new SBIG.QueryTemperatureStatusParams()
-                             {
-                                 request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
-                             },
-                            out Cooling);
-                    }
-                    catch (Exception e)
-                    {
-                        debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
-                    }
+                    debug.LogMessage("Camera", "Getting cooling information");
+                    // query temperature
+                    server.UnivDrvCommand(
+                        SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
+                            new SBIG.QueryTemperatureStatusParams()
+                            {
+                                request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
+                            },
+                        out Cooling);
+                }
+                catch (Exception e)
+                {
+                    debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
                 }
             }
         }

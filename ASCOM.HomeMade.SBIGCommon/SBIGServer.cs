@@ -38,6 +38,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public static object lockCameraImaging = new object();
         public bool IsConnected { get { return connections > 0; } }
+        public bool stopExposure = false;
 
         public SBIGServer(string device)
         {
@@ -198,6 +199,18 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
         }
 
+        public void EndReadout()
+        {
+            lock (lockSBIGAccess)
+            {
+                UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
+                new SBIG.EndReadoutParams()
+                {
+                    ccd = SBIG.CCD_REQUEST.CCD_IMAGING
+                });
+            }
+        }
+
         public bool ExposureInProgress()
         {
             lock (lockSBIGAccess)
@@ -210,7 +223,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void WaitExposure()
         {
             // wait for the exposure to be done
-            while (ExposureInProgress())
+            while (ExposureInProgress() && !stopExposure)
             {
                 Thread.Sleep(100);
             }
