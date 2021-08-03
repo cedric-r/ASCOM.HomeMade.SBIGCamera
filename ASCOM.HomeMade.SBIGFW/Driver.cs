@@ -74,6 +74,8 @@ namespace ASCOM.HomeMade.SBIGFW
 
             debug.LogMessage("FW", "Starting initialisation");
 
+            debug.LogMessage(driverID + " " + DriverInfo);
+
             debug.LogMessage("FW", "Completed initialisation");
         }
 
@@ -230,7 +232,7 @@ namespace ASCOM.HomeMade.SBIGFW
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
                 // TODO customise this driver description
-                string driverInfo = "Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverInfo = "Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}", version.Major, version.Minor, version.Build);
                 debug.LogMessage("DriverInfo Get", driverInfo);
                 return driverInfo;
             }

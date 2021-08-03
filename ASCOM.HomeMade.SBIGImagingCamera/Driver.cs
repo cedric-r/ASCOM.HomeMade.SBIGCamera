@@ -94,6 +94,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             utilities = new Util(); //Initialise util object
             astroUtilities = new AstroUtils(); // Initialise astro utilities object
 
+            debug.LogMessage(driverID + " " + DriverInfo);
+
             debug.LogMessage("Camera", "Completed initialisation");
         }
 
@@ -275,7 +277,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
                 // TODO customise this driver description
-                string driverInfo = "Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverInfo = "Version: " + String.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}", version.Major, version.Minor, version.Build);
                 debug.LogMessage("DriverInfo Get", driverInfo);
                 return driverInfo;
             }
