@@ -58,6 +58,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public bool Connect()
         {
             debug.LogMessage("Connect", "Connection request");
+            debug.LogMessage("Connect", "connections=" + connections);
             if (connections > 0)
             {
                 connections++;
@@ -199,14 +200,14 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
         }
 
-        public void EndReadout()
+        public void EndReadout(SBIG.CCD_REQUEST ccd)
         {
             lock (lockSBIGAccess)
             {
                 UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
                 new SBIG.EndReadoutParams()
                 {
-                    ccd = SBIG.CCD_REQUEST.CCD_IMAGING
+                    ccd = ccd
                 });
             }
         }

@@ -40,7 +40,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
     /// <summary>
     /// ASCOM Camera Driver for HomeMade.
     /// </summary>
-    [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2991")]
+    [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2992")]
     [ClassInterface(ClassInterfaceType.None)]
     [ProgId(Camera.driverID)]
     public class Camera : ICameraV3, ICameraV2
@@ -67,9 +67,11 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private AstroUtils astroUtilities;
 
         private ASCOM.HomeMade.SBIGCommon.Debug debug = null;
+        private bool connectionState = false;
 
         private SBIGServer server = new SBIGServer(driverID);
         private BackgroundWorker bw = null;
+        private BackgroundWorker GuidingWorker = null;
         private bool Shutdown = false;
 
         /// <summary>
@@ -83,7 +85,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             try
             {
                 System.IO.Directory.CreateDirectory(strPath);
-            } catch(Exception) { }
+            }
+            catch (Exception) { }
             debug = new ASCOM.HomeMade.SBIGCommon.Debug(driverID, Path.Combine(strPath, "SBIGGuidingCamera_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
 
             if (!ASCOM.HomeMade.SBIGCommon.Debug.Testing) ReadProfile(); // Read device configuration from the ASCOM Profile store
@@ -93,7 +96,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             utilities = new Util(); //Initialise util object
             astroUtilities = new AstroUtils(); // Initialise astro utilities object
 
-            debug.LogMessage(driverID + " " + DriverInfo);
+            debug.LogMessage(driverID + " v" + DriverVersion);
 
             debug.LogMessage("Camera", "Completed initialisation");
         }
@@ -208,7 +211,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 }
                 if (!value && !IsConnected)
                 {
-                    debug.LogMessage("Connected", "Not connected connected yet");
+                    debug.LogMessage("Connected", "Not connected yet");
 
                     return;
                 }
@@ -218,10 +221,10 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
                     if (value)
                     {
-                        bool connected = server.Connect();
+                        connectionState = server.Connect();
 
-                        if (!connected)
-                        { 
+                        if (!connectionState)
+                        {
                             debug.LogMessage("Connected Set", $"No USB camera found");
                             throw new DriverException("No suitable camera found");
                         }
@@ -237,12 +240,13 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                         debug.LogMessage("Connected Set", "Disconnection requested");
                         if (IsConnected)
                         {
-                            server.Disconnect();
+                            AbortExposure();
 
-                            if (bw!=null)
+                            if (bw != null)
                             {
                                 debug.LogMessage("Connected Set", "Shutting down background worker");
                                 Shutdown = true;
+                                server.stopExposure = true;
                                 try
                                 {
                                     bw.CancelAsync();
@@ -250,6 +254,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                                 catch (Exception) { }
                                 bw = null;
                             }
+
+                            server.Disconnect();
                         }
                     }
                 }
@@ -287,7 +293,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}", version.Major, version.Minor, version.Build);
                 debug.LogMessage("DriverVersion Get", driverVersion);
                 return driverVersion;
             }
@@ -317,11 +323,12 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
         #region ICamera Implementation
 
-        private const double MAX_EXPOSURE_TIME = 167777.16;
+        private const double MAX_EXPOSURE_TIME = 655.35;
         private const double MIN_EXPOSURE_TIME = 0; // This is camera dependent. So requesting a shorter exposure than the camera can do will result in minimum allowed exposure
         private const double EXPOSURE_RESOLTION = 0.0;
 
         private SBIG.CAMERA_TYPE CameraType;
+        private string CameraName;
         private bool ColorCamera = false;
         private bool RequiresExposureParams2 = true;
         private SBIG.READOUT_BINNING_MODE Binning = 0;
@@ -335,6 +342,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == Binning).height; } }
         private double pixelSize { get { return ReadoutModeList.Find(r => r.mode == Binning).pixel_height; } } // We assume square pixels
 
+        private double durationRequest = 0;
+        private bool lightRequest = false;
+
         private int cameraNumX = 0;
         private int cameraNumY = 0;
         private int cameraStartX = 0;
@@ -344,6 +354,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private bool cameraImageReady = false;
         private UInt32[,] cameraImageArray;
         private object[,] cameraImageArrayVariant;
+        private bool FastReadoutRequested = false;
 
         private SBIG.StartExposureParams2 exposureParams2;
 
@@ -351,17 +362,22 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             if (!IsConnected) throw new NotConnectedException("Camera is not connected");
 
+            // I removed the check that the camera requires StartExposureParams2
+            debug.LogMessage("AbortExposure", "Aborting...");
             CurrentCameraState = CameraStates.cameraIdle;
-            if (RequiresExposureParams2)
+
+            server.AbortExposure(exposureParams2);
+
+            server.stopExposure = true;
+            try
             {
-                debug.LogMessage("AbortExposure", "Aborting...");
-                server.AbortExposure(exposureParams2);
+                if (GuidingWorker != null) GuidingWorker.CancelAsync();
             }
-            else
-            {
-                debug.LogMessage("AbortExposure", "AbortExposure is not supported");
-                throw new InvalidOperationException("This driver does not support legacy calls");
-            }
+            catch (Exception) { }
+            GuidingWorker = null;
+
+            debug.LogMessage("AbortExposure", "Finishing readout");
+            server.EndReadout(exposureParams2.ccd);
         }
 
         public short BayerOffsetX
@@ -389,7 +405,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("BinX Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_width);
-                return (short)GetCurrentReadoutMode(Binning).pixel_width;
+                return (short)GetCurrentReadoutMode(Binning).pixel_width == 0 ? (short)1 : (short)GetCurrentReadoutMode(Binning).pixel_width;
             }
             set
             {
@@ -404,7 +420,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("BinY Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_height);
-                return (short)GetCurrentReadoutMode(Binning).pixel_height;
+                return (short)GetCurrentReadoutMode(Binning).pixel_height == 0 ? (short)1 : (short)GetCurrentReadoutMode(Binning).pixel_height;
             }
             set
             {
@@ -457,16 +473,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                if (RequiresExposureParams2)
-                {
-                    debug.LogMessage("CanAbortExposure Get", true.ToString());
-                    return true;
-                }
-                else
-                {
-                    debug.LogMessage("CanAbortExposure Get", false.ToString());
-                    return false;
-                }
+                // I removed the check that the camera requires StartExposureParams2
+                debug.LogMessage("CanAbortExposure Get", true.ToString());
+                return true;
             }
         }
 
@@ -483,9 +492,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                // At the moment we say no although some cameras, e.g. STF-8300 can
-                debug.LogMessage("CanFastReadout Get", false.ToString());
-                return false;
+                bool fr = false; // Not for guiding camera
+                debug.LogMessage("CanFastReadout Get", fr.ToString());
+                return fr;
             }
         }
 
@@ -502,8 +511,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("CanPulseGuide Get", true.ToString());
-                return true;
+                debug.LogMessage("CanPulseGuide Get", false.ToString());
+                return false;
             }
         }
 
@@ -511,8 +520,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("CanSetCCDTemperature Get", false.ToString());
-                return false;
+                debug.LogMessage("CanSetCCDTemperature Get", true.ToString());
+                return true;
             }
         }
 
@@ -538,13 +547,44 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("CoolerOn Get", "Cooler is not implemented by this driver");
-                throw new ASCOM.ActionNotImplementedException("Action " + CoolerOn + " is not implemented by this driver");
+                debug.LogMessage("CoolerOn Get", "Cooler is " + Cooling.coolingEnabled.value.ToString());
+                return Cooling.coolingEnabled.value == 0 ? false : true;
             }
             set
             {
-                debug.LogMessage("CoolerOn Set", "Cooler is not implemented by this driver");
-                throw new ASCOM.ActionNotImplementedException("Action " + CoolerOn + " is not implemented by this driver");
+                try
+                {
+                    if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                    var tparams = new SBIG.SetTemperatureRegulationParams2();
+                    if (value) tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_ON;
+                    else tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_OFF;
+                    if (CCDTempTargetSet)
+                    {
+                        tparams.ccdSetpoint = CCDTempTarget;
+                    }
+                    else
+                    {
+                        tparams.ccdSetpoint = Cooling.ambientTemperature;
+                    }
+                    server.UnivDrvCommand(SBIG.PAR_COMMAND.CC_SET_TEMPERATURE_REGULATION2, tparams);
+                    if (value) debug.LogMessage("CoolerOn Set", "Coller On at " + tparams.ccdSetpoint);
+                    else debug.LogMessage("CoolerOn Set", "Coller Off");
+
+                    if (bw == null)
+                    {
+                        debug.LogMessage("Camera", "Starting background worker");
+                        Shutdown = false;
+                        bw = new BackgroundWorker();
+                        bw.DoWork += bw_DoWork;
+                        bw.RunWorkerAsync();
+                    }
+                }
+                catch (Exception e)
+                {
+                    debug.LogMessage("CoolerOn Set", "Error: " + Utils.DisplayException(e));
+                    throw;
+                }
+
             }
         }
 
@@ -603,14 +643,28 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("FastReadout Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("FastReadout", false);
+                if (CanFastReadout)
+                {
+                    debug.LogMessage("FastReadout Get", "FastReadout=" + FastReadoutRequested.ToString());
+                    return FastReadoutRequested;
+                }
+                else
+                {
+                    throw new ASCOM.PropertyNotImplementedException("FastReadout", false);
+                }
             }
             set
             {
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("FastReadout Set", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("FastReadout", true);
+                if (CanFastReadout)
+                {
+                    debug.LogMessage("FastReadout Set", "FastReadout=" + value.ToString());
+                    FastReadoutRequested = value;
+                }
+                else
+                {
+                    throw new ASCOM.PropertyNotImplementedException("FastReadout", false);
+                }
             }
         }
 
@@ -941,8 +995,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("SensorName Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("SensorName", false);
+                debug.LogMessage("SensorName Get", "Camera name is " + CameraName);
+                return CameraName;
             }
         }
 
@@ -950,8 +1004,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("SensorType Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("SensorType", false);
+                debug.LogMessage("SensorType Get", "Camera type is " + ColorCamera.ToString());
+                if (ColorCamera) return SensorType.RGGB; // Guessing here
+                else return SensorType.Monochrome;
             }
         }
 
@@ -973,64 +1028,99 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
         public void StartExposure(double Duration, bool Light)
         {
+            if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+            debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
+            if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
+            if (cameraNumX > ccdWidth) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
+            if (cameraNumY > ccdHeight) throw new InvalidValueException("StartExposure", cameraNumY.ToString(), ccdHeight.ToString());
+            if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
+            if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
+
+            durationRequest = Duration;
+            lightRequest = Light;
+            server.stopExposure = false;
+            GuidingWorker = new BackgroundWorker();
+            GuidingWorker.DoWork += bw_TakeImage;
+            GuidingWorker.RunWorkerAsync();
+        }
+
+        private void bw_TakeImage(object sender, DoWorkEventArgs e)
+        {
+            TakeImage();
+        }
+
+        private void TakeImage()
+        {
             try
             {
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
-                if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
-                if (cameraNumX > ccdWidth) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
-                if (cameraNumY > ccdHeight) throw new InvalidValueException("StartExposure", cameraNumY.ToString(), ccdHeight.ToString());
-                if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
-                if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
-
-                cameraLastExposureDuration = Duration;
+                debug.LogMessage("TakeImage", "Starting Guiding worker");
+                cameraLastExposureDuration = durationRequest;
                 exposureStart = DateTime.Now;
 
                 if (!RequiresExposureParams2)
                 {
-                    throw new InvalidOperationException("This driver does not support legacy calls");
+                    debug.LogMessage("TakeImage", "This driver does not support legacy calls. Using new call anyway");
+                    //throw new InvalidOperationException("This driver does not support legacy calls");
                 }
                 exposureParams2 = new SBIG.StartExposureParams2
                 {
                     ccd = SBIG.CCD_REQUEST.CCD_TRACKING,
                     abgState = SBIG.ABG_STATE7.ABG_LOW7,
-                    openShutter = Light ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
+                    openShutter = lightRequest ? SBIG.SHUTTER_COMMAND.SC_OPEN_SHUTTER : SBIG.SHUTTER_COMMAND.SC_CLOSE_SHUTTER,
                     readoutMode = Binning,
-                    exposureTime = Convert.ToUInt32(Duration * 100),
+                    exposureTime = FastReadoutRequested ? Convert.ToUInt32(durationRequest * 100) | SBIG.EXP_FAST_READOUT : Convert.ToUInt32(durationRequest * 100),
                     width = Convert.ToUInt16(cameraNumX), // This is in binned pixels. Check is this is right
                     height = Convert.ToUInt16(cameraNumY),
                     left = (ushort)cameraStartX,
                     top = (ushort)cameraStartY
                 };
 
-                debug.LogMessage("StartExposure", "Exposing");
+                debug.LogMessage("TakeImage", "Exposing");
                 CurrentCameraState = CameraStates.cameraExposing;
                 server.UnivDrvCommand(SBIG.PAR_COMMAND.CC_START_EXPOSURE2, exposureParams2);
 
+                if (server.stopExposure) return;
+
                 // read out the image
-                debug.LogMessage("StartExposure", "Reading");
+                debug.LogMessage("TakeImage", "Waiting");
                 CurrentCameraState = CameraStates.cameraReading;
+
+                if (server.stopExposure) return;
 
                 //cameraImageArray = SBIG.WaitEndAndReadoutExposure32(exposureParams2);
                 server.WaitExposure();
 
-                var data = new UInt16[exposureParams2.height, exposureParams2.width];
-                server.ReadoutData(exposureParams2, ref data);
+                if (server.stopExposure) return;
 
-                cameraImageArray = new UInt32[exposureParams2.height, exposureParams2.width];
-                for (int i = 0; i < exposureParams2.height; i++)
-                    for (int j = 0; j < exposureParams2.width; j++)
-                        cameraImageArray[i, j] = data[i, j];
+                lock (SBIGServer.lockCameraImaging)
+                {
+                    debug.LogMessage("TakeImage", "Reading");
+                    var data = new UInt16[exposureParams2.height, exposureParams2.width];
+                    server.ReadoutData(exposureParams2, ref data);
 
+                    if (server.stopExposure) return;
+
+                    cameraImageArray = new UInt32[exposureParams2.height, exposureParams2.width];
+                    for (int i = 0; i < exposureParams2.height; i++)
+                        for (int j = 0; j < exposureParams2.width; j++)
+                            cameraImageArray[i, j] = data[i, j];
+
+                    debug.LogMessage("TakeImage", "Finishing readout");
+
+                    if (server.stopExposure) return;
+
+                    server.EndReadout(exposureParams2.ccd);
+                }
                 CurrentCameraState = CameraStates.cameraIdle;
-                debug.LogMessage("StartExposure", "Done");
+                debug.LogMessage("TakeImage", "Done");
                 cameraImageReady = true;
             }
             catch (Exception e)
             {
-                debug.LogMessage("StartExposure", "Error: " + Utils.DisplayException(e));
+                debug.LogMessage("TakeImage", "Error: " + Utils.DisplayException(e));
                 throw;
             }
+
         }
 
         public int StartX
@@ -1065,12 +1155,12 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             AbortExposure();
         }
-
         public int OffsetMin { get { throw new ASCOM.PropertyNotImplementedException("OffsetMin", false); } }
         public int OffsetMax { get { throw new ASCOM.PropertyNotImplementedException("OffsetMax", false); } }
         public int Offset { get { throw new ASCOM.PropertyNotImplementedException("Offset", false); } set { throw new ASCOM.PropertyNotImplementedException("Offset", false); } }
         public ArrayList Offsets { get { throw new ASCOM.PropertyNotImplementedException("Offsets", false); } }
         public double SubExposureDuration { get { throw new ASCOM.PropertyNotImplementedException("SubExposureDuration", false); } set { throw new ASCOM.PropertyNotImplementedException("SubExposureDuration", false); } }
+
         #endregion
 
         #region Private properties and methods
@@ -1155,24 +1245,21 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             if (IsConnected)
             {
-                if (CurrentCameraState == CameraStates.cameraIdle) // SBIG quirk: you can't access the cooler during exposures.
+                try
                 {
-                    try
-                    {
-                        debug.LogMessage("Camera", "Getting cooling information");
-                        // query temperature
-                        server.UnivDrvCommand(
-                            SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
-                             new SBIG.QueryTemperatureStatusParams()
-                             {
-                                 request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
-                             },
-                            out Cooling);
-                    }
-                    catch (Exception e)
-                    {
-                        debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
-                    }
+                    debug.LogMessage("Camera", "Getting cooling information");
+                    // query temperature
+                    server.UnivDrvCommand(
+                        SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
+                            new SBIG.QueryTemperatureStatusParams()
+                            {
+                                request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
+                            },
+                        out Cooling);
+                }
+                catch (Exception e)
+                {
+                    debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
                 }
             }
         }
@@ -1184,14 +1271,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("IsConnected", "connectionState=" + server.IsConnected.ToString());
-                return server.IsConnected;
+                debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
+                return connectionState;
             }
-        }
-
-        private SBIG.READOUT_INFO GetCurrentReadoutMode(SBIG.READOUT_BINNING_MODE binning)
-        {
-            return ReadoutModeList.Find(r => r.mode == Binning);
         }
 
         private short ConvertReadoutModeToBinning(SBIG.READOUT_BINNING_MODE binning)
@@ -1236,6 +1318,10 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             return bin;
         }
 
+        private SBIG.READOUT_INFO GetCurrentReadoutMode(SBIG.READOUT_BINNING_MODE binning)
+        {
+            return ReadoutModeList.Find(r => r.mode == Binning);
+        }
 
         private short ConvertReadoutToBinning(SBIG.READOUT_BINNING_MODE binning)
         {
@@ -1264,161 +1350,140 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private void GetCameraSpecs()
         {
             debug.LogMessage("Connected Set", $"Getting camera info");
-            // query camera info
-            var gcir0 = new SBIG.GetCCDInfoResults0();
-            server.UnivDrvCommand(
-                SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
-                new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_TRACKING
-                },
-                out gcir0);
-            // now print it out
-            debug.LogMessage("Connected Set", $"Firmware version: {gcir0.firmwareVersion >> 8}.{gcir0.firmwareVersion & 0xFF}");
-            debug.LogMessage("Connected Set", $"Camera type: {gcir0.cameraType}");
-            debug.LogMessage("Connected Set", $"Camera name: {gcir0.name}");
-            debug.LogMessage("Connected Set", $"Readout modes: {gcir0.readoutModes}");
-            Binning = SBIG.READOUT_BINNING_MODE.RM_1X1;
-            for (int i = 0; i < gcir0.readoutModes; i++)
+            try
             {
-                SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
-                ri.pixel_height = (uint)ConvertReadoutModeToBinning(ri.mode);
-                ri.pixel_width = (uint)ConvertReadoutModeToBinning(ri.mode);
-                ReadoutModeList.Add(ri);
-                debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
-                debug.LogMessage("Connected Set", $"    Width: {ri.width}");
-                debug.LogMessage("Connected Set", $"    Height: {ri.height}");
-                debug.LogMessage("Connected Set", $"    Gain: {ri.gain >> 8}.{ri.gain & 0xFF} e-/ADU");
-                debug.LogMessage("Connected Set", $"    Pixel width: {ri.pixel_width}");
-                debug.LogMessage("Connected Set", $"    Pixel height: {ri.pixel_height}");
+                // query camera info
+                var gcir0 = new SBIG.GetCCDInfoResults0();
+                server.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
+                    new SBIG.GetCCDInfoParams
+                    {
+                        request = SBIG.CCD_INFO_REQUEST.CCD_INFO_TRACKING
+                    },
+                    out gcir0);
+                // now print it out
+                debug.LogMessage("Connected Set", $"Firmware version: {gcir0.firmwareVersion >> 8}.{gcir0.firmwareVersion & 0xFF}");
+                debug.LogMessage("Connected Set", $"Camera type: {gcir0.cameraType}");
+                CameraType = gcir0.cameraType;
+                debug.LogMessage("Connected Set", $"Camera name: {gcir0.name}");
+                CameraName = gcir0.name;
+                debug.LogMessage("Connected Set", $"Readout modes: {gcir0.readoutModes}");
+                Binning = SBIG.READOUT_BINNING_MODE.RM_1X1;
+                for (int i = 0; i < gcir0.readoutModes; i++)
+                {
+                    SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
+                    ri.pixel_height = (uint)ConvertReadoutModeToBinning(ri.mode);
+                    ri.pixel_width = (uint)ConvertReadoutModeToBinning(ri.mode);
+                    ReadoutModeList.Add(ri);
+                    debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
+                    debug.LogMessage("Connected Set", $"    Width: {ri.width}");
+                    debug.LogMessage("Connected Set", $"    Height: {ri.height}"); // Don't trust this, there is at least 1 bug in the STF-8300 that reports a height of 0 for mode RM_NX1
+                    debug.LogMessage("Connected Set", $"    Gain: {ri.gain >> 8}.{ri.gain & 0xFF} e-/ADU");
+                    debug.LogMessage("Connected Set", $"    Pixel width: {ri.pixel_width}"); // The SBIG documentation is wrong: this isn't pixel size in microns, this is pixel binning size
+                    debug.LogMessage("Connected Set", $"    Pixel height: {ri.pixel_height}"); // The SBIG documentation is wrong: this isn't pixel size in microns, this is pixel binning size
+                }
+            }
+            catch(Exception e1)
+            {
+                debug.LogMessage("Connected Set", "Error: "+Utils.DisplayException(e1));
             }
 
-            // get extended info
-            var gcir2 = new SBIG.GetCCDInfoResults2();
-            server.UnivDrvCommand(
-                SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
-                new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED
-                },
-                out gcir2);
-            // print it out
-            debug.LogMessage("Connected Set", $"Bad columns: {gcir2.badColumns} = ");
-            debug.LogMessage("Connected Set",
-                $"{gcir2.columns[0]}, {gcir2.columns[1] }, " +
-                $"{gcir2.columns[2]}, { gcir2.columns[3]}");
-            debug.LogMessage("Connected Set", $"ABG: {gcir2.imagingABG}");
-            debug.LogMessage("Connected Set", $"Serial number: {gcir2.serialNumber}");
-            /*
-            // get extended info
-            var gcir3 = new SBIG.GetCCDInfoResults3();
-            server.UnivDrvCommand(
-                SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
-                new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED_5C
-                },
-                out gcir3);
-            // print it out
-            debug.LogMessage("Connected Set", $"Filter wheel: {gcir3.filterType}");
-            switch (gcir3.filterType)
+            try
             {
-                case SBIG.FILTER_TYPE.FW_UNKNOWN:
-                    debug.LogMessage("Connected Set", $"    Unknown");
-                    break;
-                case SBIG.FILTER_TYPE.FW_VANE:
-                    debug.LogMessage("Connected Set", $"    Vane");
-                    FilterWheelPresent = true;
-                    break;
-                case SBIG.FILTER_TYPE.FW_EXTERNAL:
-                    debug.LogMessage("Connected Set", $"    External");
-                    FilterWheelPresent = true;
-                    break;
-                case SBIG.FILTER_TYPE.FW_FILTER_WHEEL:
-                    debug.LogMessage("Connected Set", $"    Standard");
-                    FilterWheelPresent = true;
-                    break;
-                default:
-                    debug.LogMessage("Connected Set", $"    Unexpected");
-                    break;
+                // get extended info
+                var gcir2 = new SBIG.GetCCDInfoResults2();
+                server.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
+                    new SBIG.GetCCDInfoParams
+                    {
+                        request = SBIG.CCD_INFO_REQUEST.CCD_INFO_TRACKING
+                    },
+                    out gcir2);
+                // print it out
+                debug.LogMessage("Connected Set", $"Bad columns: {gcir2.badColumns} = ");
+                debug.LogMessage("Connected Set",
+                    $"{gcir2.columns[0]}, {gcir2.columns[1] }, " +
+                    $"{gcir2.columns[2]}, { gcir2.columns[3]}");
+                debug.LogMessage("Connected Set", $"ABG: {gcir2.imagingABG}");
+                debug.LogMessage("Connected Set", $"Serial number: {gcir2.serialNumber}");
+
+                // get extended info
+                var gcir4 = new SBIG.GetCCDInfoResults4();
+                server.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
+                    new SBIG.GetCCDInfoParams
+                    {
+                        request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED2_TRACKING
+                    },
+                    out gcir4);
+                // print it out
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 0)) debug.LogMessage("Connected Set", $"CCD is frame transfer device");
+                else debug.LogMessage("Connected Set", $"CCD is full frame device");
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 1)) debug.LogMessage("Connected Set", $"Electronic shutter");
+                else debug.LogMessage("Connected Set", $"No electronic shutter");
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 2)) debug.LogMessage("Connected Set", $"Remote guide head present");
+                else debug.LogMessage("Connected Set", $"No remote guide head");
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 3)) debug.LogMessage("Connected Set", $"Supports Biorad TDI acquisition more");
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 4)) debug.LogMessage("Connected Set", $"AO8 detected");
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 5)) debug.LogMessage("Connected Set", $"Camera contains an internal frame buffer");
+                if (Utils.IsBitSet(gcir4.capabilitiesBits, 6))
+                {
+                    debug.LogMessage("Connected Set", $"Camera requires StartExposure2 command");
+                    RequiresExposureParams2 = true;
+                }
+                else
+                {
+                    debug.LogMessage("Connected Set", $"Camera requires StartExposure command");
+                    RequiresExposureParams2 = false;
+                }
             }
-            */
-            // get extended info
-            var gcir4 = new SBIG.GetCCDInfoResults4();
-            server.UnivDrvCommand(
-                SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
-                new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED2_TRACKING
-                },
-                out gcir4);
-            // print it out
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 0)) debug.LogMessage("Connected Set", $"CCD is frame transfer device");
-            else debug.LogMessage("Connected Set", $"CCD is full frame device");
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 1)) debug.LogMessage("Connected Set", $"Electronic shutter");
-            else debug.LogMessage("Connected Set", $"No electronic shutter");
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 2)) debug.LogMessage("Connected Set", $"Remote guide head present");
-            else debug.LogMessage("Connected Set", $"No remote guide head");
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 3)) debug.LogMessage("Connected Set", $"Supports Biorad TDI acquisition more");
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 4)) debug.LogMessage("Connected Set", $"AO8 detected");
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 5)) debug.LogMessage("Connected Set", $"Camera contains an internal frame buffer");
-            if (Utils.IsBitSet(gcir4.capabilitiesBits, 6))
+            catch (Exception e2)
             {
-                debug.LogMessage("Connected Set", $"Camera requires StartExposure2 command");
-                RequiresExposureParams2 = true;
-            }
-            else
-            {
-                debug.LogMessage("Connected Set", $"Camera requires StartExposure command");
-                RequiresExposureParams2 = false;
+                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e2));
             }
 
-            // get extended info
-            var gcir6 = new SBIG.GetCCDInfoResults6();
-            server.UnivDrvCommand(
-                SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
-                new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED3
-                },
-                out gcir6);
-            // print it out
-            if (Utils.IsBitSet(gcir6.cameraBits, 0)) debug.LogMessage("Connected Set", $"STXL camera");
-            else debug.LogMessage("Connected Set", $"STX camera");
-            if (Utils.IsBitSet(gcir6.cameraBits, 1))
-            {
-                HasMechanicalShutter = false;
-                debug.LogMessage("Connected Set", $"No mechanical shutter");
-            }
-            else
-            {
-                HasMechanicalShutter = true;
-                debug.LogMessage("Connected Set", $"Mechanical shutter");
-            }
-            if (Utils.IsBitSet(gcir6.ccdBits, 0))
-            {
-                debug.LogMessage("Connected Set", $"Color CCD");
-                ColorCamera = true;
-                if (Utils.IsBitSet(gcir6.ccdBits, 1)) debug.LogMessage("Connected Set", $"Truesense color matrix");
-                else debug.LogMessage("Connected Set", $"Bayer color matrix");
-            }
-            else
-            {
-                ColorCamera = false;
-                debug.LogMessage("Connected Set", $"Mono CDD");
-            }
 
-            // query temperature
-            server.UnivDrvCommand(
-                SBIG.PAR_COMMAND.CC_QUERY_TEMPERATURE_STATUS,
-                 new SBIG.QueryTemperatureStatusParams()
-                 {
-                     request = SBIG.QUERY_TEMP_STATUS_REQUEST.TEMP_STATUS_ADVANCED2
-                 },
-                out Cooling);
-            debug.LogMessage("Connected", "CCD temperature is " + Cooling.trackingCCDTemperature);
-            debug.LogMessage("Connected", "CCD power is " + Cooling.trackingCCDPower);
-            debug.LogMessage("Connected", "CCD cooler is " + Cooling.coolingEnabled.value.ToString());
+            try
+            {
+                // get extended info
+                var gcir6 = new SBIG.GetCCDInfoResults6();
+                server.UnivDrvCommand(
+                    SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
+                    new SBIG.GetCCDInfoParams
+                    {
+                        request = SBIG.CCD_INFO_REQUEST.CCD_INFO_TRACKING
+                    },
+                    out gcir6);
+                // print it out
+                if (Utils.IsBitSet(gcir6.cameraBits, 0)) debug.LogMessage("Connected Set", $"STXL camera");
+                else debug.LogMessage("Connected Set", $"STX camera");
+                if (Utils.IsBitSet(gcir6.cameraBits, 1))
+                {
+                    HasMechanicalShutter = false;
+                    debug.LogMessage("Connected Set", $"No mechanical shutter");
+                }
+                else
+                {
+                    HasMechanicalShutter = true;
+                    debug.LogMessage("Connected Set", $"Mechanical shutter");
+                }
+                if (Utils.IsBitSet(gcir6.ccdBits, 0))
+                {
+                    debug.LogMessage("Connected Set", $"Color CCD");
+                    ColorCamera = true;
+                    if (Utils.IsBitSet(gcir6.ccdBits, 1)) debug.LogMessage("Connected Set", $"Truesense color matrix");
+                    else debug.LogMessage("Connected Set", $"Bayer color matrix");
+                }
+                else
+                {
+                    ColorCamera = false;
+                    debug.LogMessage("Connected Set", $"Mono CDD");
+                }
+            }
+            catch (Exception e3)
+            {
+                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e3));
+            }
         }
 
         /// <summary>
