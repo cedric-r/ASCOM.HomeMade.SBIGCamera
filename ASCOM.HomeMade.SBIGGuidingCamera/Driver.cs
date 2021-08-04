@@ -1036,6 +1036,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
             if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
 
+            cameraImageReady = false;
             durationRequest = Duration;
             lightRequest = Light;
             server.stopExposure = false;
