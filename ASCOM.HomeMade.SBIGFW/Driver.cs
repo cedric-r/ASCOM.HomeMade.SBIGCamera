@@ -53,7 +53,7 @@ namespace ASCOM.HomeMade.SBIGFW
         private SBIGCommon.Debug debug = null;
         private bool connectionState = false;
 
-        private SBIGClient server = new SBIGClient();
+        private SBIGClient server = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -167,6 +167,9 @@ namespace ASCOM.HomeMade.SBIGFW
             set
             {
                 debug.LogMessage("Connected", "Set {0}", value);
+
+                if (server == null) server = new SBIGClient();
+
                 if (value && IsConnected)
                 {
                     debug.LogMessage("Connected", "Already connected");
@@ -206,12 +209,15 @@ namespace ASCOM.HomeMade.SBIGFW
                         if (IsConnected)
                         {
                             server.Disconnect();
+
+                            if (server != null) server.Close();
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e));
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
                 }
             }
         }
@@ -280,26 +286,31 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             try
             {
+                if (!IsConnected)
+                {
+                    throw new NotConnectedException("Not connected to the server");
+                }
+
                 var fwresults = server.CC_CFW(new SBIG.CFWParams
-                    {
-                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
-                        cfwCommand = SBIG.CFW_COMMAND.CFWC_OPEN_DEVICE
-                    });
+                {
+                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                    cfwCommand = SBIG.CFW_COMMAND.CFWC_OPEN_DEVICE
+                });
 
                 var fwresultsToReturn = server.CC_CFW(command);
 
                 fwresults = server.CC_CFW(new SBIG.CFWParams
-                    {
-                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
-                        cfwCommand = SBIG.CFW_COMMAND.CFWC_CLOSE_DEVICE
-                    });
+                {
+                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                    cfwCommand = SBIG.CFW_COMMAND.CFWC_CLOSE_DEVICE
+                });
 
                 return fwresultsToReturn;
             }
             catch (Exception e)
             {
                 debug.LogMessage("FWCommand", "Error: " + Utils.DisplayException(e));
-                return new SBIG.CFWResults();
+                throw;
             }
 
         }
@@ -317,7 +328,7 @@ namespace ASCOM.HomeMade.SBIGFW
             catch (Exception e)
             {
                 debug.LogMessage("GetFWData", "Error: " + Utils.DisplayException(e));
-                throw new ASCOM.DriverException("Error getting DW data");
+                throw;
             }
         }
 
@@ -369,24 +380,16 @@ namespace ASCOM.HomeMade.SBIGFW
 
         private SBIG.CFWResults SetFWPosition(short position)
         {
-            try
-            {
-                WaitFWIdle();
-                SBIG.CFWResults results = FWCommand(
-                    new SBIG.CFWParams
-                    {
-                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
-                        cfwCommand = SBIG.CFW_COMMAND.CFWC_GOTO,
-                        cfwParam1 = (uint)position
-                    });
-                WaitFWIdle();
-                return results;
-            }
-            catch (Exception e)
-            {
-                debug.LogMessage("GetFWData", "Error: " + Utils.DisplayException(e));
-                throw new ASCOM.DriverException("Error getting DW data");
-            }
+            WaitFWIdle();
+            SBIG.CFWResults results = FWCommand(
+                new SBIG.CFWParams
+                {
+                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                    cfwCommand = SBIG.CFW_COMMAND.CFWC_GOTO,
+                    cfwParam1 = (uint)position
+                });
+            WaitFWIdle();
+            return results;
         }
 
         private string GetFWTypeName(SBIG.CFWResults fwresults)
@@ -525,13 +528,20 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             get
             {
-                debug.LogMessage("FocusOffsets Get", "Getting FW filter FocusOffsets");
-                List<int> offsets = new List<int>();
-                for (int i = 1; i <= FWPositions; i++)
+                try
                 {
-                    offsets.Add(0);
+                    debug.LogMessage("FocusOffsets Get", "Getting FW filter FocusOffsets");
+                    List<int> offsets = new List<int>();
+                    for (int i = 1; i <= FWPositions; i++)
+                    {
+                        offsets.Add(0);
+                    }
+                    return offsets.ToArray();
                 }
-                return offsets.ToArray();
+                catch(Exception e)
+                {
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
+                }
             }
 
         }
@@ -540,13 +550,20 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             get
             {
-                debug.LogMessage("Names Get", "Getting FW filter names");
-                List<string> positions = new List<string>();
-                for (int i = 1; i <= FWPositions; i++)
+                try
                 {
-                    positions.Add("Filter " + i);
+                    debug.LogMessage("Names Get", "Getting FW filter names");
+                    List<string> positions = new List<string>();
+                    for (int i = 1; i <= FWPositions; i++)
+                    {
+                        positions.Add("Filter " + i);
+                    }
+                    return positions.ToArray();
                 }
-                return positions.ToArray();
+                catch(Exception e)
+                {
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
+                }
             }
         }
 
@@ -554,14 +571,28 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             get
             {
-                SBIG.CFWResults fwresults = GetFWPosition();
-                debug.LogMessage("Position Get", "FW position is " + fwresults.cfwPosition);
-                return CurrentFilter;
+                try
+                {
+                    SBIG.CFWResults fwresults = GetFWPosition();
+                    debug.LogMessage("Position Get", "FW position is " + fwresults.cfwPosition);
+                    return CurrentFilter;
+                }
+                catch(Exception e)
+                {
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
+                }
             }
             set
             {
-                debug.LogMessage("Position Set", "Set FW position to " + (value + 1));
-                SetFWPosition((short)(value + 1));
+                try
+                {
+                    debug.LogMessage("Position Set", "Set FW position to " + (value + 1));
+                    SetFWPosition((short)(value + 1));
+                }
+                catch(Exception e)
+                {
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
+                }
             }
         }
         #endregion
@@ -652,6 +683,14 @@ namespace ASCOM.HomeMade.SBIGFW
             get
             {
                 debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
+
+                // Some sanity checks: if we think we're connected but the client isn't, then we've been disconnected. We'll try to reconnect.
+                if (connectionState && !server.IsConnected)
+                {
+                    debug.LogMessage("IsConnected", "I think we're connected, but the client says it isn't. Trying to reconnect...");
+                    connectionState = server.ConnectToServer();
+                }
+
                 return connectionState;
             }
         }

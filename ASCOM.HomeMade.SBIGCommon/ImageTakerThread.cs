@@ -14,14 +14,15 @@ namespace ASCOM.HomeMade.SBIGCommon
     {
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGCamera.ImageTaker";
-        private SBIGClient server = new SBIGClient();
+        private SBIGClient server = null;
         private ISBIGCamera camera = null;
         protected static object lockCameraImaging = new object();
         public bool StopExposure = false;
 
-        public ImageTakerThread(ISBIGCamera callerCamera)
+        public ImageTakerThread(ISBIGCamera callerCamera, SBIGClient client)
         {
             camera = callerCamera;
+            server = client;
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
             strPath = Path.Combine(strPath, driverID);
             try

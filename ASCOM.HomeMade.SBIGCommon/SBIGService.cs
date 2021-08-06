@@ -44,7 +44,8 @@ namespace ASCOM.HomeMade.SBIGCommon
             if (_Instance == null)
             {
                 debug.LogMessage("SBIGService", "Creating instance");
-                _Instance = new SBIGService(url);
+                if (String.IsNullOrEmpty(url)) url = _Url;
+                _Instance = new SBIGService("@" + url);
             }
             debug.LogMessage("SBIGService", "Returning instance");
             return _Instance;
@@ -52,7 +53,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public static SBIGService CreateService()
         {
-            return CreateService("@"+_Url);
+            return CreateService(_Url);
         }
 
         private SBIGService(string url)
@@ -96,6 +97,9 @@ namespace ASCOM.HomeMade.SBIGCommon
 
                 switch (request.type)
                 {
+                    case "Ping":
+                        response.payload = JsonConvert.SerializeObject(true);
+                        break;
                     case "Connect":
                         response.payload = JsonConvert.SerializeObject(server.Connect());
                         break;

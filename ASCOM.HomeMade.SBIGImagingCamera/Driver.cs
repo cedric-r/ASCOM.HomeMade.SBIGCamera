@@ -61,7 +61,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private SBIGCommon.Debug debug = null;
         private bool connectionState = false;
 
-        private SBIGClient server = new SBIGClient();
+        private SBIGClient server = null;
 
         private BackgroundWorker bw = null;
         private BackgroundWorker imagingWorker = null;
@@ -206,6 +206,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             set
             {
                 debug.LogMessage("Connected", "Set {0}", value);
+
+                if (server == null) server = new SBIGClient();
+
                 if (value && IsConnected)
                 {
                     debug.LogMessage("Connected", "Already connected");
@@ -244,7 +247,14 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                         debug.LogMessage("Connected Set", "Disconnection requested");
                         if (IsConnected)
                         {
-                            AbortExposure();
+                            try
+                            {
+                                AbortExposure();
+                            }
+                            catch(Exception ex)
+                            {
+                                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
+                            }
 
                             if (bw!=null)
                             {
@@ -258,14 +268,17 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                                 catch (Exception) { }
                                 bw = null;
                             }
-
+                            connectionState = false;
                             server.Disconnect();
+
+                            if (server != null) server.Close();
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e));
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
                 }
             }
         }
@@ -351,30 +364,38 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             if (!IsConnected) throw new NotConnectedException("Camera is not connected");
 
-            // I removed the check that the camera requires StartExposureParams2
-            debug.LogMessage("AbortExposure", "Aborting...");
-            CurrentCameraState = CameraStates.cameraIdle;
-
-            server.AbortExposure(exposureParams2);
-
-            server.StopExposure(true);
-
-            if (imagetaker != null)
-            {
-                imagetaker.StopExposure = true;
-            }
-
             try
             {
-                if (imagingWorker != null) imagingWorker.CancelAsync();
+                // I removed the check that the camera requires StartExposureParams2
+                debug.LogMessage("AbortExposure", "Aborting...");
+                CurrentCameraState = CameraStates.cameraIdle;
+
+                server.AbortExposure(exposureParams2);
+
+                server.StopExposure(true);
+
+                if (imagetaker != null)
+                {
+                    imagetaker.StopExposure = true;
+                }
+
+                try
+                {
+                    if (imagingWorker != null) imagingWorker.CancelAsync();
+                }
+                catch (Exception) { }
+
+                imagingWorker = null;
+                imagetaker = null;
+
+                debug.LogMessage("AbortExposure", "Finishing readout");
+                server.EndReadout(exposureParams2.ccd);
             }
-            catch (Exception) { }
-
-            imagingWorker = null;
-            imagetaker = null;
-
-            debug.LogMessage("AbortExposure", "Finishing readout");
-            server.EndReadout(exposureParams2.ccd);
+            catch(Exception ex)
+            {
+                debug.LogMessage("AbortExposure", "Error: "+ Utils.DisplayException(ex));
+                throw new ASCOM.DriverException(Utils.DisplayException(ex));
+            }
         }
 
         public short BayerOffsetX
@@ -579,7 +600,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 catch (Exception e)
                 {
                     debug.LogMessage("CoolerOn Set", "Error: " + Utils.DisplayException(e));
-                    throw;
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
                 }
 
             }
@@ -1036,19 +1057,26 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
             if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
 
-            durationRequest = Duration;
-            lightRequest = Light;
-            cameraLastExposureDuration = durationRequest;
-            exposureStart = DateTime.Now;
-            server.StopExposure(false);
-            imagingWorker = new BackgroundWorker();
-            imagingWorker.DoWork += bw_TakeImage;
-            imagingWorker.RunWorkerAsync();
+            try
+            {
+                durationRequest = Duration;
+                lightRequest = Light;
+                cameraLastExposureDuration = durationRequest;
+                exposureStart = DateTime.Now;
+                server.StopExposure(false);
+                imagingWorker = new BackgroundWorker();
+                imagingWorker.DoWork += bw_TakeImage;
+                imagingWorker.RunWorkerAsync();
+            }
+            catch(Exception ex)
+            {
+                throw new ASCOM.DriverException(Utils.DisplayException(ex));
+            }
         }
 
         private void bw_TakeImage(object sender, DoWorkEventArgs e)
         {
-            imagetaker = new ImageTakerThread(this);
+            imagetaker = new ImageTakerThread(this, server);
             imagetaker.TakeImage();
         }
 
@@ -1183,6 +1211,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 catch (Exception e)
                 {
                     debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
                 }
             }
         }
@@ -1195,6 +1224,14 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
+
+                // Some sanity checks: if we think we're connected but the client isn't, then we've been disconnected. We'll try to reconnect.
+                if (connectionState && !server.IsConnected)
+                {
+                    debug.LogMessage("IsConnected", "I think we're connected, but the client says it isn't. Trying to reconnect...");
+                    connectionState = server.ConnectToServer();
+                }
+
                 return connectionState;
             }
         }
@@ -1273,6 +1310,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private void GetCameraSpecs()
         {
             debug.LogMessage("Connected Set", $"Getting camera info");
+            if (!IsConnected) throw new NotConnectedException("Not conneted to server");
 
             try
             {
@@ -1306,6 +1344,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             catch (Exception e1)
             {
                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e1));
+                throw new ASCOM.DriverException(Utils.DisplayException(e1));
             }
 
             try
@@ -1326,6 +1365,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             catch (Exception e2)
             {
                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e2));
+                throw new ASCOM.DriverException(Utils.DisplayException(e2));
             }
 
             /* try
@@ -1396,6 +1436,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             catch (Exception e4)
             {
                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e4));
+                throw new ASCOM.DriverException(Utils.DisplayException(e4));
             }
 
             try
@@ -1434,6 +1475,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             catch (Exception e5)
             {
                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e5));
+                throw new ASCOM.DriverException(Utils.DisplayException(e5));
             }
 
             try
@@ -1447,6 +1489,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             catch (Exception e6)
             {
                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e6));
+                throw new ASCOM.DriverException(Utils.DisplayException(e6));
             }
         }
 

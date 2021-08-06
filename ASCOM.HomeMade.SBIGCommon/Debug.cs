@@ -53,7 +53,11 @@ namespace ASCOM.HomeMade.SBIGCommon
             {
                 if (FileName != "")
                 {
-                    if (TraceEnabled) File.AppendAllText(FileName, message + "\n");
+                    try
+                    {
+                        if (TraceEnabled) File.AppendAllText(FileName, message + "\n");
+                    }
+                    catch (Exception) { }
                 }
             }
         }
