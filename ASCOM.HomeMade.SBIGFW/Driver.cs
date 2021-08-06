@@ -53,7 +53,7 @@ namespace ASCOM.HomeMade.SBIGFW
         private SBIGCommon.Debug debug = null;
         private bool connectionState = false;
 
-        private SBIGServer server = new SBIGServer(driverID);
+        private SBIGClient server = new SBIGClient();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -176,7 +176,7 @@ namespace ASCOM.HomeMade.SBIGFW
                 }
                 if (!value && !IsConnected)
                 {
-                    debug.LogMessage("Connected", "Not connected connected yet");
+                    debug.LogMessage("Connected", "Not connected yet");
 
                     return;
                 }
@@ -280,31 +280,19 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             try
             {
-                var fwresults = new SBIG.CFWResults();
-                SBIG.UnivDrvCommand(
-                    SBIG.PAR_COMMAND.CC_CFW,
-                    new SBIG.CFWParams
+                var fwresults = server.CC_CFW(new SBIG.CFWParams
                     {
                         cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                         cfwCommand = SBIG.CFW_COMMAND.CFWC_OPEN_DEVICE
-                    },
-                    out fwresults);
+                    });
 
-                var fwresultsToReturn = new SBIG.CFWResults();
-                SBIG.UnivDrvCommand(
-                    SBIG.PAR_COMMAND.CC_CFW,
-                    command,
-                    out fwresultsToReturn);
+                var fwresultsToReturn = server.CC_CFW(command);
 
-                fwresults = new SBIG.CFWResults();
-                SBIG.UnivDrvCommand(
-                    SBIG.PAR_COMMAND.CC_CFW,
-                    new SBIG.CFWParams
+                fwresults = server.CC_CFW(new SBIG.CFWParams
                     {
                         cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                         cfwCommand = SBIG.CFW_COMMAND.CFWC_CLOSE_DEVICE
-                    },
-                    out fwresults);
+                    });
 
                 return fwresultsToReturn;
             }
@@ -572,7 +560,7 @@ namespace ASCOM.HomeMade.SBIGFW
             }
             set
             {
-                debug.LogMessage("Position Set", "Set FW position to " + value + 1);
+                debug.LogMessage("Position Set", "Set FW position to " + (value + 1));
                 SetFWPosition((short)(value + 1));
             }
         }

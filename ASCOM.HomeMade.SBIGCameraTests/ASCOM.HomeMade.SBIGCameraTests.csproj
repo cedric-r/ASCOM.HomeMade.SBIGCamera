@@ -59,9 +59,17 @@
       <Project>{8c0ecd13-13c4-4d0d-83b2-1d967e87e30f}</Project>
       <Name>ASCOM.HomeMade.SBIGFW</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGGuidingCamera\ASCOM.HomeMade.SBIGGuidingCamera.csproj">
+      <Project>{e8259190-d17b-4601-b0e2-b8290ad7e467}</Project>
+      <Name>ASCOM.HomeMade.SBIGGuidingCamera</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ASCOM.HomeMade.SBIGImagingCamera\ASCOM.HomeMade.SBIGImagingCamera.csproj">
       <Project>{64308775-bd4a-469c-bcab-3ed830b811af}</Project>
       <Name>ASCOM.HomeMade.SBIGImagingCamera</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SbigSharp\SbigSharp.csproj">
+      <Project>{3BE45310-83C8-4294-A30B-585CE4996940}</Project>
+      <Name>SbigSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

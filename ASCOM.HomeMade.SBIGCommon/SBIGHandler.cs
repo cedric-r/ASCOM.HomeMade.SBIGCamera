@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGCommon
 {
-    public class SBIGServer
+    public class SBIGHandler : ISBIGHandler
     {
         private static object lockSBIGAccess = new object();
         private Debug debug = null;
@@ -40,7 +40,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public bool IsConnected { get { return connections > 0; } }
         public bool stopExposure = false;
 
-        public SBIGServer(string device)
+        public SBIGHandler(string device)
         {
             deviceId = device;
 
@@ -227,14 +227,6 @@ namespace ASCOM.HomeMade.SBIGCommon
             while (ExposureInProgress() && !stopExposure)
             {
                 Thread.Sleep(100);
-            }
-        }
-
-        public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[] data)
-        {
-            lock (lockSBIGAccess)
-            {
-                SBIG.ReadoutData(sep2, ref data);
             }
         }
 
