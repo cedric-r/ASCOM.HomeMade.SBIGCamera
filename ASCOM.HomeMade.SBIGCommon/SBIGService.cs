@@ -10,6 +10,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGCommon
@@ -53,7 +54,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public static SBIGService CreateService()
         {
-            return CreateService(_Url);
+               return CreateService(_Url);
         }
 
         private SBIGService(string url)
@@ -63,6 +64,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             bw = new BackgroundWorker();
             bw.DoWork += bw_DoWork;
             bw.RunWorkerAsync();
+            Thread.Sleep(500);
         }
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
@@ -106,17 +108,6 @@ namespace ASCOM.HomeMade.SBIGCommon
                     case "Disconnect":
                         server.Disconnect();
                         response.payload = JsonConvert.SerializeObject(null);
-                        break;
-                    case "StopExposure":
-                        if (JsonConvert.DeserializeObject<object>(request.parameters) == null)
-                        {
-                            response.payload = JsonConvert.SerializeObject(server.stopExposure);
-                        }
-                        else
-                        {
-                            server.stopExposure = JsonConvert.DeserializeObject<bool>(request.parameters);
-                            response.payload = JsonConvert.SerializeObject(null);
-                        }
                         break;
                     case "AbortExposure":
                         SBIG.StartExposureParams2 p0 = JsonConvert.DeserializeObject<SBIG.StartExposureParams2>(request.parameters);
@@ -167,10 +158,6 @@ namespace ASCOM.HomeMade.SBIGCommon
                         server.EndReadout(JsonConvert.DeserializeObject<SBIG.CCD_REQUEST>(request.parameters));
                         response.payload = JsonConvert.SerializeObject(null);
                         break;
-                    case "WaitExposure":
-                        server.WaitExposure();
-                        response.payload = JsonConvert.SerializeObject(null);
-                        break;
                     case "ExposureInProgress":
                         bool inProgress = server.ExposureInProgress();
                         response.payload = JsonConvert.SerializeObject(inProgress);
@@ -178,7 +165,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                     case "ReadoutData":
                         SBIG.StartExposureParams2 p8 = JsonConvert.DeserializeObject<SBIG.StartExposureParams2>(request.parameters);
                         var data = new UInt16[p8.height, p8.width];
-                        server.ReadoutData(p8, ref data);
+                        server.ReadoutDataAndEnd(p8, ref data);
                         byte[] byteArray = new byte[data.Length * 2];
                         Buffer.BlockCopy(data, 0, byteArray, 0, data.Length * 2);
                         data = null;

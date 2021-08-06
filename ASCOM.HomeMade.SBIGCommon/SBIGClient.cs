@@ -33,12 +33,18 @@ namespace ASCOM.HomeMade.SBIGCommon
 
             if (String.IsNullOrEmpty(url)) Url = SBIGService._Url;
 
+            CreateService();
             ConnectToServer();
         }
 
         private void CreateService()
         {
-            if (service == null) service = SBIGService.CreateService(Url);
+            debug.LogMessage("SBIGClient CreateService", "Checking...");
+            if (service == null)
+            {
+                debug.LogMessage("SBIGClient CreateService", "Creating service that doesn't exist...");
+                service = SBIGService.CreateService(Url);
+            }
         }
 
         private bool CheckServerPresence()
@@ -48,29 +54,40 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public bool ConnectToServer()
         {
+            //debug.LogMessage("SBIGClient ConnectToServer", "Connecting...");
             try
             {
                 if (socket == null) socket = new RequestSocket(">" + Url);
 
                 if (!CheckServerPresence())
                 {
-                    debug.LogMessage("SBIGClient", "Can't connect to server. Trying to spin one up");
-                    if (socket != null) try { socket.Close(); } catch (Exception) { }
+                    debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server. Trying to spin one up");
+                    if (socket != null) 
+                        try
+                        {
+                            debug.LogMessage("SBIGClient ConnectToServer", "Closing old socket");
+                            socket.Close();
+                        }
+                        catch (Exception) { }
 
                     // Create a new server, we can't find one. This essentially acts as a server election among the clients
                     CreateService();
 
                     try
                     {
-                        debug.LogMessage("SBIGClient", "Checking new connection");
-                        if (socket != null) try { socket.Close(); } catch (Exception) { }
+                        debug.LogMessage("SBIGClient ConnectToServer", "Checking new connection");
+                        if (socket != null) 
+                            try {
+                                debug.LogMessage("SBIGClient ConnectToServer", "Closing old socket");
+                                socket.Close(); 
+                            } catch (Exception) { }
                         socket = new RequestSocket(">" + Url);
                         return CheckServerPresence();
                     }
                     catch (Exception ex)
                     {
-                        debug.LogMessage("SBIGClient", "Can't connect to server.");
-                        debug.LogMessage("SBIGClient", "Error: " + Utils.DisplayException(ex));
+                        debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server.");
+                        debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(ex));
                         throw;
                     }
                 }
@@ -78,8 +95,8 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
             catch (Exception e)
             {
-                debug.LogMessage("SBIGClient", "Can't connect to server. Trying to spin one up");
-                debug.LogMessage("SBIGClient", "Error: " + Utils.DisplayException(e));
+                debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server. Trying to spin one up");
+                debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(e));
 
                 CreateService();
                 try
@@ -89,8 +106,8 @@ namespace ASCOM.HomeMade.SBIGCommon
                 }
                 catch (Exception ex)
                 {
-                    debug.LogMessage("SBIGClient", "Can't connect to server.");
-                    debug.LogMessage("SBIGClient", "Error: " + Utils.DisplayException(ex));
+                    debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server.");
+                    debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(ex));
                     throw;
                 }
             }
@@ -99,25 +116,23 @@ namespace ASCOM.HomeMade.SBIGCommon
         public bool IsConnected 
         { get
             {
+                if (socket == null)
                 {
-                    if (socket == null)
-                    {
-                        return false;
-                    }
-                    if (!socket.HasOut)
-                    {
-                        // We're disconnected but we used to be connected
-                        socket = null;
-                        return false;
-                    }
-                    return true;
+                    debug.LogMessage("SBIGClient IsConnected", "Socket is null.");
+                    return false;
                 }
+
+                return true;
             }
         }
 
         public void Close()
         {
-            if (socket != null) socket.Close();
+            if (socket != null)
+            {
+                debug.LogMessage("SBIGClient Close", "Closing socket.");
+                socket.Close();
+            }
         }
 
         #region Communication with service
@@ -197,6 +212,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             if (!ConnectToServer()) throw new ApplicationException("Not connected to server");
             SBIGResponse response = SendMessage("Disconnect");
             if (response.error != null) throw response.error;
+            Close();
         }
 
         public void CC_SET_TEMPERATURE_REGULATION2(SBIG.SetTemperatureRegulationParams2 tparam)
@@ -263,23 +279,6 @@ namespace ASCOM.HomeMade.SBIGCommon
             return JsonConvert.DeserializeObject<SBIG.GetCCDInfoResults6>(response.payload);
         }
 
-        public void StopExposure(bool state)
-        {
-            debug.LogMessage("SBIGClient", "StopExposure(state)");
-            if (!ConnectToServer()) throw new ApplicationException("Not connected to server");
-            SBIGResponse response = SendMessage("StopExposure", 0, state);
-            if (response.error != null) throw response.error;
-        }
-
-        public bool StopExposure()
-        {
-            debug.LogMessage("SBIGClient", "StopExposure");
-            if (!ConnectToServer()) throw new ApplicationException("Not connected to server");
-            SBIGResponse response = SendMessage("StopExposure");
-            if (response.error != null) throw response.error;
-            return JsonConvert.DeserializeObject<bool>(response.payload);
-        }
-
         public void AbortExposure(SBIG.StartExposureParams2 sep2)
         {
             debug.LogMessage("SBIGClient", "AbortExposure");
@@ -303,14 +302,6 @@ namespace ASCOM.HomeMade.SBIGCommon
             SBIGResponse response = SendMessage("ExposureInProgress");
             if (response.error != null) throw response.error;
             return JsonConvert.DeserializeObject<bool>(response.payload);
-        }
-
-        public void WaitExposure()
-        {
-            debug.LogMessage("SBIGClient", "WaitExposure");
-            if (!ConnectToServer()) throw new ApplicationException("Not connected to server");
-            SBIGResponse response = SendMessage("WaitExposure");
-            if (response.error != null) throw response.error;
         }
 
         public UInt16[,] ReadoutData(SBIG.StartExposureParams2 sep2)

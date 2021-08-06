@@ -260,7 +260,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                             {
                                 debug.LogMessage("Connected Set", "Shutting down background worker");
                                 Shutdown = true;
-                                server.StopExposure(true);
                                 try
                                 {
                                     bw.CancelAsync();
@@ -270,8 +269,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                             }
                             connectionState = false;
                             server.Disconnect();
-
-                            if (server != null) server.Close();
                         }
                     }
                 }
@@ -371,8 +368,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 CurrentCameraState = CameraStates.cameraIdle;
 
                 server.AbortExposure(exposureParams2);
-
-                server.StopExposure(true);
 
                 if (imagetaker != null)
                 {
@@ -1063,7 +1058,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 lightRequest = Light;
                 cameraLastExposureDuration = durationRequest;
                 exposureStart = DateTime.Now;
-                server.StopExposure(false);
                 imagingWorker = new BackgroundWorker();
                 imagingWorker.DoWork += bw_TakeImage;
                 imagingWorker.RunWorkerAsync();

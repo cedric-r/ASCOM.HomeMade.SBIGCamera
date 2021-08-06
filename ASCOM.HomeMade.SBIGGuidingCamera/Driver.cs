@@ -224,8 +224,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                             AbortExposure();
 
                             server.Disconnect();
-
-                            if (server != null) server.Close();
                         }
                     }
                 }
@@ -324,8 +322,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 CurrentCameraState = CameraStates.cameraIdle;
 
                 server.AbortExposure(exposureParams2);
-
-                server.StopExposure(true);
 
                 if (imagetaker != null)
                 {
@@ -984,7 +980,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 lightRequest = Light;
                 cameraLastExposureDuration = durationRequest;
                 exposureStart = DateTime.Now;
-                server.StopExposure(false);
                 GuidingWorker = new BackgroundWorker();
                 GuidingWorker.DoWork += bw_TakeImage;
                 GuidingWorker.RunWorkerAsync();

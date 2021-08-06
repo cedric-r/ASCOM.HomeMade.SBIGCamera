@@ -209,8 +209,6 @@ namespace ASCOM.HomeMade.SBIGFW
                         if (IsConnected)
                         {
                             server.Disconnect();
-
-                            if (server != null) server.Close();
                         }
                     }
                 }

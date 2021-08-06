@@ -19,7 +19,6 @@ namespace ASCOM.HomeMade.SBIGCommon
         void AbortExposure(SBIG.StartExposureParams2 sep2);
         void EndReadout(SBIG.CCD_REQUEST ccd);
         bool ExposureInProgress();
-        void WaitExposure();
         void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data);
     }
 }

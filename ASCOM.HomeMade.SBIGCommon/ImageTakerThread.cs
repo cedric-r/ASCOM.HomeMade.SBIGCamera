@@ -98,10 +98,6 @@ namespace ASCOM.HomeMade.SBIGCommon
                             camera.cameraImageArray[i, j] = data[i, j];
 
                     debug.LogMessage("TakeImage", "Finishing readout");
-
-                    if (StopExposure) return;
-
-                    server.EndReadout(exposureParams2.ccd);
                 }
                 camera.CurrentCameraState = CameraStates.cameraIdle;
                 debug.LogMessage("TakeImage", "Done");
