@@ -22,5 +22,5 @@ Note also that the 64 bits driver uses an unofficial version of the SBIG library
 This work uses SbigSharp code written by eliotg (https://github.com/eliotg/SbigSharp).
 
 Task list:
-- Provide access to guiding camera of the STT.
+<strike>- Provide access to guiding camera of the STT.</strike>
 - Support network cameras, not just USB.
