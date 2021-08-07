@@ -33,7 +33,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
             if (String.IsNullOrEmpty(url)) Url = SBIGService._Url;
 
-            CreateService();
+            CreateService(); // This will fail if one already exists but it saves time later.
             ConnectToServer();
         }
 
@@ -52,64 +52,52 @@ namespace ASCOM.HomeMade.SBIGCommon
             return PingServer();
         }
 
+        public bool CheckSocket()
+        {
+            bool temp = false;
+            if (socket == null) socket = new RequestSocket(">" + Url);
+
+            temp = CheckServerPresence();
+            if (!temp)
+            {
+                debug.LogMessage("SBIGClient ConnectToServer", "No reply from server");
+                if (socket != null)
+                    try
+                    {
+                        debug.LogMessage("SBIGClient ConnectToServer", "Closing old socket");
+                        socket.Close();
+                        socket = null;
+                    }
+                    catch (Exception) { }
+            }
+            return temp;
+        }
+
         public bool ConnectToServer()
         {
             //debug.LogMessage("SBIGClient ConnectToServer", "Connecting...");
             try
             {
-                if (socket == null) socket = new RequestSocket(">" + Url);
-
-                if (!CheckServerPresence())
+                bool temp = false;
+                temp = CheckSocket();
+                if (!temp)
                 {
-                    debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server. Trying to spin one up");
-                    if (socket != null) 
-                        try
-                        {
-                            debug.LogMessage("SBIGClient ConnectToServer", "Closing old socket");
-                            socket.Close();
-                        }
-                        catch (Exception) { }
-
                     // Create a new server, we can't find one. This essentially acts as a server election among the clients
+                    debug.LogMessage("SBIGClient ConnectToServer", "Starting a server");
                     CreateService();
-
-                    try
-                    {
-                        debug.LogMessage("SBIGClient ConnectToServer", "Checking new connection");
-                        if (socket != null) 
-                            try {
-                                debug.LogMessage("SBIGClient ConnectToServer", "Closing old socket");
-                                socket.Close(); 
-                            } catch (Exception) { }
-                        socket = new RequestSocket(">" + Url);
-                        return CheckServerPresence();
-                    }
-                    catch (Exception ex)
-                    {
-                        debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server.");
-                        debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(ex));
-                        throw;
-                    }
+                    temp = CheckSocket();
                 }
-                return true;
+                return temp;
             }
             catch (Exception e)
             {
                 debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server. Trying to spin one up");
                 debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(e));
 
+                // Create a new server, we can't find one. This essentially acts as a server election among the clients
                 CreateService();
-                try
-                {
-                    socket = new RequestSocket(">" + Url);
-                    return CheckServerPresence();
-                }
-                catch (Exception ex)
-                {
-                    debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server.");
-                    debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(ex));
-                    throw;
-                }
+
+                return CheckSocket();
             }
         }
 
@@ -137,7 +125,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         #region Communication with service
         private object lockAccess = new object();
-        private string SendMessageToServer(string message)
+        private string SendMessageToServerWithTimeout(string message, int timeout = 0) // Timeout is in ms
         {
             string temp = "";
             try
@@ -150,7 +138,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                 {
                     socket.SendFrame(message);
                     bool more = false;
-                    bool r = socket.TryReceiveFrameString(new TimeSpan(0, 0, 10), System.Text.Encoding.UTF8, out temp, out more);
+                    bool r = socket.TryReceiveFrameString(new TimeSpan(timeout*TimeSpan.TicksPerMillisecond), System.Text.Encoding.UTF8, out temp, out more);
                     if (!r)
                     {
                         // Communication error!
@@ -166,12 +154,12 @@ namespace ASCOM.HomeMade.SBIGCommon
             return temp;
         }
 
-        private SBIGResponse SendMessage(string type, SBIG.PAR_COMMAND command = 0, object payload = null)
+        private SBIGResponse SendMessage(string type, SBIG.PAR_COMMAND command = 0, object payload = null, int timeout = 10000)
         {
             try
             {
                 SBIGRequest request = new SBIGRequest() { type = type, command = (ushort)command, parameters = JsonConvert.SerializeObject(payload) };
-                string results = SendMessageToServer(JsonConvert.SerializeObject(request));
+                string results = SendMessageToServerWithTimeout(JsonConvert.SerializeObject(request), timeout);
                 SBIGResponse response = JsonConvert.DeserializeObject<SBIGResponse>(results);
                 return response;
             }
@@ -182,11 +170,16 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
         }
 
+        private SBIGResponse SendMessage(string type, int timeout) // Timeout in ms
+        {
+            return SendMessage(type, 0, null, timeout);
+        }
+
         public bool PingServer()
         {
             try
             {
-                SBIGResponse response = SendMessage("Ping");
+                SBIGResponse response = SendMessage("Ping", 2000);
                 return (bool)JsonConvert.DeserializeObject<bool>(response.payload);
             }
             catch(Exception)

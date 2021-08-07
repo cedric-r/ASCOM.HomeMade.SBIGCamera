@@ -25,6 +25,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         private static Debug debug = null;
         private string Url = "";
         private SBIGHandler server = new SBIGHandler(driverID);
+        private static bool Valid = true;
 
         public static bool Shutdown = false;
 
@@ -46,7 +47,9 @@ namespace ASCOM.HomeMade.SBIGCommon
             {
                 debug.LogMessage("SBIGService", "Creating instance");
                 if (String.IsNullOrEmpty(url)) url = _Url;
+                Valid = true;
                 _Instance = new SBIGService("@" + url);
+                if (!Valid) _Instance = null;
             }
             debug.LogMessage("SBIGService", "Returning instance");
             return _Instance;
@@ -86,6 +89,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             catch(Exception ex)
             {
                 debug.LogMessage("SBIGService dowork", "Error: "+Utils.DisplayException(ex));
+                Valid = false;
             }
         }
 
