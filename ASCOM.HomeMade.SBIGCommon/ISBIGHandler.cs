@@ -9,7 +9,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 {
     public interface ISBIGHandler
     {
-        bool Connect();
+        bool Connect(string ipAddress);
         void Disconnect();
         void DisconnectAll();
         void UnivDrvCommand(SBIG.PAR_COMMAND command);

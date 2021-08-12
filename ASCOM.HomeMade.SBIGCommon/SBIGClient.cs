@@ -206,11 +206,11 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         #endregion
         #region Camera calls implementation
-        public bool Connect()
+        public bool Connect(string ipAddress)
         {
             debug.LogMessage("SBIGClient", "Connect");
             if (!ConnectToServer()) throw new ApplicationException("Not connected to server");
-            SBIGResponse response = SendMessage("Connect");
+            SBIGResponse response = SendMessage("Connect", 0, ipAddress);
             if (response.error != null) throw response.error;
             return (bool)JsonConvert.DeserializeObject<bool>(response.payload);
         }

@@ -142,7 +142,10 @@ namespace ASCOM.HomeMade.SBIGCommon
                         response.payload = JsonConvert.SerializeObject(true);
                         break;
                     case "Connect":
-                        response.payload = JsonConvert.SerializeObject(server.Connect());
+                        string ip = "";
+                        if (!String.IsNullOrEmpty(request.parameters))
+                            ip = JsonConvert.DeserializeObject<string>(request.parameters);
+                        response.payload = JsonConvert.SerializeObject(server.Connect(ip));
                         break;
                     case "Disconnect":
                         server.Disconnect();

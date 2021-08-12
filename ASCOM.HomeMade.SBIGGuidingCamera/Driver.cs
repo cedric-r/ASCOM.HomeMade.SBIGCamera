@@ -61,6 +61,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private bool connectionState = false;
 
         private SBIGClient server = null;
+        internal static string IPAddress = "";
 
         private BackgroundWorker GuidingWorker = null;
         private bool Shutdown = false;
@@ -212,7 +213,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
                     if (value)
                     {
-                        connectionState = server.Connect();
+                        connectionState = server.Connect(IPAddress);
 
                         if (!connectionState)
                         {
@@ -1326,6 +1327,11 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                     ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled = Convert.ToBoolean(driverProfile.GetValue(driverID, "TraceDebug", "", "false"));
                 }
                 catch (Exception) { }
+                try
+                {
+                    IPAddress = driverProfile.GetValue(driverID, "IPAddress", "", "");
+                }
+                catch (Exception) { }
             }
         }
 
@@ -1338,6 +1344,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             {
                 driverProfile.DeviceType = "Camera";
                 driverProfile.WriteValue(driverID, "TraceDebug", ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled.ToString());
+                driverProfile.WriteValue(driverID, "IPAddress", IPAddress);
             }
         }
         #endregion

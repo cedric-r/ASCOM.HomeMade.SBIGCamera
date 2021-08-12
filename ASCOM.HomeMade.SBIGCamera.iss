@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 0.20.0
-AppVersion=0.20.0
+AppVerName=ASCOM HomeMade SBig Camera Driver 0.20.2
+AppVersion=0.20.2
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=0.20.0
+VersionInfoVersion=0.20.2
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes

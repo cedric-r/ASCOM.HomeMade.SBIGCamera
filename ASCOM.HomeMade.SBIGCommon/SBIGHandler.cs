@@ -54,7 +54,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             debug = new Debug(deviceId, Path.Combine(@"c:\temp\", "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
         }
 
-        public bool Connect()
+        public bool Connect(string ipAddress)
         {
             debug.LogMessage("Connect", "Connection request");
             debug.LogMessage("Connect", "connections=" + connections);
@@ -73,37 +73,50 @@ namespace ASCOM.HomeMade.SBIGCommon
                 SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DRIVER);
 
                 bool cameraFound = false;
-                debug.LogMessage("Connected Set", $"Enumerating USB cameras");
-                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_QUERY_USB, out SBIG.QueryUSBResults qur);
-                for (int i = 0; i < qur.camerasFound; i++)
+                if (String.IsNullOrEmpty(ipAddress))
                 {
-                    if (!qur.usbInfo[i].cameraFound)
-                        debug.LogMessage("Connected Set", $"Cam {i}: not found");
-                    else
+                    debug.LogMessage("Connected Set", $"Enumerating USB cameras");
+                    SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_QUERY_USB, out SBIG.QueryUSBResults qur);
+                    for (int i = 0; i < qur.camerasFound; i++)
                     {
-                        debug.LogMessage("Connected Set",
-                            $"Cam {i}: type={qur.usbInfo[i].cameraType} " +
-                            $"name={ qur.usbInfo[i].name} " +
-                            $"ser={qur.usbInfo[i].serialNumber}");
-                        cameraFound = true;
+                        if (!qur.usbInfo[i].cameraFound)
+                            debug.LogMessage("Connected Set", $"Cam {i}: not found");
+                        else
+                        {
+                            debug.LogMessage("Connected Set",
+                                $"Cam {i}: type={qur.usbInfo[i].cameraType} " +
+                                $"name={ qur.usbInfo[i].name} " +
+                                $"ser={qur.usbInfo[i].serialNumber}");
+                            cameraFound = true;
+                        }
                     }
                 }
 
-                if (!cameraFound)
+                if (!cameraFound && String.IsNullOrEmpty(ipAddress))
                 {
-                    debug.LogMessage("Connected Set", $"No USB camera found");
+                    debug.LogMessage("Connected Set", $"No camera found");
                     return false;
                 }
                 else
                 {
                     connections++;
 
-                    SBIG.UnivDrvCommand(
-                        SBIG.PAR_COMMAND.CC_OPEN_DEVICE,
-                        new SBIG.OpenDeviceParams
-                        {
-                            deviceType = SBIG.SBIG_DEVICE_TYPE.DEV_USB
-                        });
+                    if (String.IsNullOrEmpty(ipAddress))
+                    {
+                        SBIG.UnivDrvCommand(
+                            SBIG.PAR_COMMAND.CC_OPEN_DEVICE,
+                            new SBIG.OpenDeviceParams
+                            {
+                                deviceType = SBIG.SBIG_DEVICE_TYPE.DEV_USB
+                            });
+                    }
+                    else
+                    {
+                        SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DEVICE, 
+                            new SBIG.OpenDeviceParams(ipAddress));
+                    }
+                    var cameraType = SBIG.EstablishLink();
+
                     CameraType = SBIG.EstablishLink();
                     debug.LogMessage("Connected Set", $"Connected to USB camera");
 

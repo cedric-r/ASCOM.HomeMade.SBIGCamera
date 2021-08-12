@@ -34,6 +34,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             this.label1 = new System.Windows.Forms.Label();
             this.picASCOM = new System.Windows.Forms.PictureBox();
             this.chkTrace = new System.Windows.Forms.CheckBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.SuspendLayout();
             // 
@@ -93,11 +95,29 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             this.chkTrace.Text = "Trace on";
             this.chkTrace.UseVisualStyleBackColor = true;
             // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(182, 70);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(100, 20);
+            this.textBox1.TabIndex = 10;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 73);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(164, 13);
+            this.label2.TabIndex = 9;
+            this.label2.Text = "IP address (leave blank for USB):";
+            // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(350, 175);
+            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.chkTrace);
             this.Controls.Add(this.picASCOM);
             this.Controls.Add(this.label1);
@@ -123,5 +143,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox picASCOM;
         private System.Windows.Forms.CheckBox chkTrace;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Label label2;
     }
 }
