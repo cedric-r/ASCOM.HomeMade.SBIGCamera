@@ -2,6 +2,7 @@
 using SbigSharp;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -20,6 +21,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             public uint duration;
         }
 
+        private static int SOCKETTIMEOUT = 10 * 60 * 60; // In seconds
         private static bool lockAccess = false;
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGImagingCamera.SocketHandler";
@@ -27,6 +29,9 @@ namespace ASCOM.HomeMade.SBIGCommon
         private int clNo = 0;
         private SBIGHandler server = new SBIGHandler(driverID);
         private static Dictionary<SBIG.CCD_REQUEST, Exposure> exposures = new Dictionary<SBIG.CCD_REQUEST, Exposure>();
+        private DateTime lastSignal = DateTime.Now;
+        bool endCommunication = false;
+        private BackgroundWorker bw = null;
 
         public SocketHandler(TcpClient c, int count)
         {
@@ -45,14 +50,28 @@ namespace ASCOM.HomeMade.SBIGCommon
             client = c;
             clNo = count;
 
+            bw = new BackgroundWorker();
+            bw.DoWork += bw_SocketTimeout;
+            bw.RunWorkerAsync();
+
             debug.LogMessage("ImageTakerThread", "Completed initialisation");
 
+        }
+        private void bw_SocketTimeout(object sender, DoWorkEventArgs e)
+        {
+            while (!endCommunication)
+            {
+                if (lastSignal + TimeSpan.FromSeconds(SOCKETTIMEOUT) < DateTime.Now)
+                {
+                    debug.LogMessage("bw_SocketTimeout", "Socket has been inactive since " + lastSignal.ToLongTimeString());
+                    endCommunication = true;
+                }
+                Thread.Sleep(5000);
+            }
         }
 
         public void Handle()
         {
-            bool endCommunication = false;
-
             try
             {
                 Byte[] sendBytes = null;
@@ -76,6 +95,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                             }
                             if (!String.IsNullOrEmpty(dataFromClient))
                             {
+                                lastSignal = DateTime.Now;
                                 //Console.WriteLine(" >> " + "From client-" + clNo + dataFromClient);
                                 string[] d = dataFromClient.Split(new string[] { "<EOM>" }, StringSplitOptions.RemoveEmptyEntries);
                                 //dataFromClient = null;
