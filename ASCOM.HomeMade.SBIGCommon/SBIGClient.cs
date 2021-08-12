@@ -1,4 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿/**
+ * ASCOM.HomeMade.SBIGCamera - SBIG camera driver
+ * Copyright (C) 2021 Cedric Raguenaud [cedric@raguenaud.earth]
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+using Newtonsoft.Json;
 using SbigSharp;
 using System;
 using System.Collections.Generic;
@@ -19,6 +37,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         private string Url = "";
         private TcpClient clientSocket = new TcpClient();
         private NetworkStream serverStream = null;
+        private HeartbeatSignaler hs = null;
 
         public SBIGClient(string url = "")
         {
@@ -56,6 +75,8 @@ namespace ASCOM.HomeMade.SBIGCommon
                 clientSocket = new TcpClient();
                 clientSocket.Connect(System.Net.IPAddress.Loopback, 5557);
                 serverStream = clientSocket.GetStream();
+
+                //hs = new HeartbeatSignaler(this);
             }
             return clientSocket.Connected;
         }
@@ -132,11 +153,13 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         #region Communication with service
         private bool lockAccess = false;
+        private bool lockSocket = false;
         private string SendMessageToServerWithTimeout(string message, int timeout = 0) // Timeout is in ms
         {
             string temp = "";
             try
             {
+                Utils.AcquireLock(ref lockSocket);
                 byte[] outStream = System.Text.Encoding.UTF8.GetBytes(message+"<EOM>");
                 serverStream.Write(outStream, 0, outStream.Length);
                 serverStream.Flush();
@@ -167,6 +190,10 @@ namespace ASCOM.HomeMade.SBIGCommon
                 debug.LogMessage("SBIGClient SendMessage", "Error: " + Utils.DisplayException(e));
                 throw;
             }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSocket);
+            }
             return temp;
         }
 
@@ -195,7 +222,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         {
             try
             {
-                SBIGResponse response = SendMessage("Ping", 2000);
+                SBIGResponse response = SendMessage("PING", 2000);
                 return (bool)JsonConvert.DeserializeObject<bool>(response.payload);
             }
             catch(Exception e)

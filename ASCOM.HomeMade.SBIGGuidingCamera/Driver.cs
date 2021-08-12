@@ -217,12 +217,12 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
                         if (!connectionState)
                         {
-                            debug.LogMessage("Connected Set", $"No USB camera found");
+                            debug.LogMessage("Connected Set", $"No camera found");
                             throw new DriverException("No suitable camera found");
                         }
                         else
                         {
-                            debug.LogMessage("Connected Set", $"Connected to USB camera");
+                            debug.LogMessage("Connected Set", $"Connected to camera");
 
                             GetCameraSpecs();
                         }

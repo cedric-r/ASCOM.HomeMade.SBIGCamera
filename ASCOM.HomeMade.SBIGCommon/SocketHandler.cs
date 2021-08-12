@@ -1,4 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿/**
+ * ASCOM.HomeMade.SBIGCamera - SBIG camera driver
+ * Copyright (C) 2021 Cedric Raguenaud [cedric@raguenaud.earth]
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+using Newtonsoft.Json;
 using SbigSharp;
 using System;
 using System.Collections.Generic;
@@ -31,7 +49,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         private static Dictionary<SBIG.CCD_REQUEST, Exposure> exposures = new Dictionary<SBIG.CCD_REQUEST, Exposure>();
         private DateTime lastSignal = DateTime.Now;
         bool endCommunication = false;
-        private BackgroundWorker bw = null;
+        private HeartbeatMonitor hm = null;
 
         public SocketHandler(TcpClient c, int count)
         {
@@ -50,30 +68,16 @@ namespace ASCOM.HomeMade.SBIGCommon
             client = c;
             clNo = count;
 
-            bw = new BackgroundWorker();
-            bw.DoWork += bw_SocketTimeout;
-            bw.RunWorkerAsync();
-
             debug.LogMessage("ImageTakerThread", "Completed initialisation");
 
-        }
-        private void bw_SocketTimeout(object sender, DoWorkEventArgs e)
-        {
-            while (!endCommunication)
-            {
-                if (lastSignal + TimeSpan.FromSeconds(SOCKETTIMEOUT) < DateTime.Now)
-                {
-                    debug.LogMessage("bw_SocketTimeout", "Socket has been inactive since " + lastSignal.ToLongTimeString());
-                    endCommunication = true;
-                }
-                Thread.Sleep(5000);
-            }
         }
 
         public void Handle()
         {
             try
             {
+                //hm = new HeartbeatMonitor(ref endCommunication);
+
                 Byte[] sendBytes = null;
                 int requestCount = 0;
 
@@ -158,7 +162,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
                 switch (request.type)
                 {
-                    case "Ping":
+                    case "PING":
                         response.payload = JsonConvert.SerializeObject(true);
                         break;
                     case "Connect":

@@ -250,7 +250,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                         }
                         else
                         {
-                            debug.LogMessage("Connected Set", $"Connected to USB camera");
+                            debug.LogMessage("Connected Set", $"Connected to camera");
 
                             GetCameraSpecs();
                         }
