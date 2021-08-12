@@ -165,6 +165,7 @@ Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMa
 Filename: "{dotnet4032}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 32bit
 Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
+Filename: {sys}\sc.exe; Parameters: "stop SBIGService" ; Flags: runhidden
 Filename: {sys}\sc.exe; Parameters: "create SBIGService start= auto binPath= ""{app}\ASCOM.HomeMade.SBIGWindowsService.exe""" ; Flags: runhidden
 Filename: {sys}\sc.exe; Parameters: "start SBIGService" ; Flags: runhidden
 
