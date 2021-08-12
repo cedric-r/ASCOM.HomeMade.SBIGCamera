@@ -44,6 +44,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             // Place any validation constraint checks here
             // Update the state variables with results from the dialogue
             ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled = chkTrace.Checked;
+            Camera.IPAddress = textBox1.Text;
         }
 
         private void cmdCancel_Click(object sender, EventArgs e) // Cancel button event handler
@@ -71,6 +72,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private void InitUI()
         {
             chkTrace.Checked = ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled;
+            textBox1.Text = Camera.IPAddress;
             // set the list of com ports to those that are currently available
         }
     }

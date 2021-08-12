@@ -1,4 +1,5 @@
 /**
+/**
  * ASCOM.HomeMade.SBIGCamera - SBIG camera driver
  * Copyright (C) 2021 Cedric Raguenaud [cedric@raguenaud.earth]
  *
@@ -54,6 +55,7 @@ namespace ASCOM.HomeMade.SBIGFW
         private bool connectionState = false;
 
         private SBIGClient server = null;
+        internal static string IPAddress = "";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -189,7 +191,7 @@ namespace ASCOM.HomeMade.SBIGFW
 
                     if (value)
                     {
-                        connectionState = server.Connect();
+                        connectionState = server.Connect(IPAddress);
 
                         if (!connectionState)
                         {
@@ -745,6 +747,11 @@ namespace ASCOM.HomeMade.SBIGFW
                     ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled = Convert.ToBoolean(driverProfile.GetValue(driverID, "TraceDebug", "", "false"));
                 }
                 catch(Exception) { }
+                try
+                {
+                    IPAddress = driverProfile.GetValue(driverID, "IPAddress", "", "");
+                }
+                catch (Exception) { }
             }
         }
 
@@ -757,6 +764,7 @@ namespace ASCOM.HomeMade.SBIGFW
             {
                 driverProfile.DeviceType = "FilterWheel";
                 driverProfile.WriteValue(driverID, "TraceDebug", ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled.ToString());
+                driverProfile.WriteValue(driverID, "IPAddress", IPAddress);
             }
         }
         #endregion

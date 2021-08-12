@@ -1,7 +1,26 @@
-﻿using Newtonsoft.Json;
+﻿/**
+ * ASCOM.HomeMade.SBIGCamera - SBIG camera driver
+ * Copyright (C) 2021 Cedric Raguenaud [cedric@raguenaud.earth]
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+using Newtonsoft.Json;
 using SbigSharp;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -20,6 +39,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             public uint duration;
         }
 
+        private static int SOCKETTIMEOUT = 10 * 60 * 60; // In seconds
         private static bool lockAccess = false;
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGImagingCamera.SocketHandler";
@@ -27,6 +47,9 @@ namespace ASCOM.HomeMade.SBIGCommon
         private int clNo = 0;
         private SBIGHandler server = new SBIGHandler(driverID);
         private static Dictionary<SBIG.CCD_REQUEST, Exposure> exposures = new Dictionary<SBIG.CCD_REQUEST, Exposure>();
+        private DateTime lastSignal = DateTime.Now;
+        bool endCommunication = false;
+        private HeartbeatMonitor hm = null;
 
         public SocketHandler(TcpClient c, int count)
         {
@@ -51,10 +74,10 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public void Handle()
         {
-            bool endCommunication = false;
-
             try
             {
+                //hm = new HeartbeatMonitor(ref endCommunication);
+
                 Byte[] sendBytes = null;
                 int requestCount = 0;
 
@@ -76,6 +99,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                             }
                             if (!String.IsNullOrEmpty(dataFromClient))
                             {
+                                lastSignal = DateTime.Now;
                                 //Console.WriteLine(" >> " + "From client-" + clNo + dataFromClient);
                                 string[] d = dataFromClient.Split(new string[] { "<EOM>" }, StringSplitOptions.RemoveEmptyEntries);
                                 //dataFromClient = null;
@@ -138,11 +162,14 @@ namespace ASCOM.HomeMade.SBIGCommon
 
                 switch (request.type)
                 {
-                    case "Ping":
+                    case "PING":
                         response.payload = JsonConvert.SerializeObject(true);
                         break;
                     case "Connect":
-                        response.payload = JsonConvert.SerializeObject(server.Connect());
+                        string ip = "";
+                        if (!String.IsNullOrEmpty(request.parameters))
+                            ip = JsonConvert.DeserializeObject<string>(request.parameters);
+                        response.payload = JsonConvert.SerializeObject(server.Connect(ip));
                         break;
                     case "Disconnect":
                         server.Disconnect();
