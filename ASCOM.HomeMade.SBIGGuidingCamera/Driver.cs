@@ -168,6 +168,16 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
         public void Dispose()
         {
+            if (server != null)
+            {
+                try
+                {
+                    if (IsConnected)
+                        server.Disconnect();
+                }
+                catch (Exception) { }
+            }
+
         }
 
         public bool Connected
@@ -221,9 +231,25 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                         debug.LogMessage("Connected Set", "Disconnection requested");
                         if (IsConnected)
                         {
-                            AbortExposure();
+                            try
+                            {
+                                AbortExposure();
+                            }
+                            catch (Exception ex)
+                            {
+                                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
+                            }
 
-                            server.Disconnect();
+                            connectionState = false;
+                            try
+                            {
+                                server.Disconnect();
+                            }
+                            catch (Exception ex)
+                            {
+                                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
+                            }
+
                         }
                     }
                 }
@@ -321,24 +347,10 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 debug.LogMessage("AbortExposure", "Aborting...");
                 CurrentCameraState = CameraStates.cameraIdle;
 
-                server.AbortExposure(exposureParams2);
-
                 if (imagetaker != null)
                 {
                     imagetaker.StopExposure = true;
                 }
-
-                try
-                {
-                    if (GuidingWorker != null) GuidingWorker.CancelAsync();
-                }
-                catch (Exception) { }
-
-                GuidingWorker = null;
-                imagetaker = null;
-
-                debug.LogMessage("AbortExposure", "Finishing readout");
-                server.EndReadout(exposureParams2.ccd);
             }
             catch(Exception ex)
             {
@@ -992,9 +1004,18 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
         private void bw_TakeImage(object sender, DoWorkEventArgs e)
         {
-            imagetaker = new ImageTakerThread(this, server);
-            imagetaker.TakeImage();
+            try
+            {
+                imagetaker = new ImageTakerThread(this);
+                imagetaker.TakeImage();
+                imagetaker = null;
+            }
+            catch (Exception ex)
+            {
+                debug.LogMessage("bw_TakeImage", "Error: " + Utils.DisplayException(ex));
+            }
         }
+
         public int StartX
         {
             get
@@ -1112,25 +1133,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         }
 
         #endregion
-
-        private void GetCoolingInfo()
-        {
-            if (IsConnected)
-            {
-                try
-                {
-                    debug.LogMessage("Camera", "Getting cooling information");
-                    // query temperature
-                    Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
-                }
-                catch (Exception e)
-                {
-                    debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
-                    throw new ASCOM.DriverException(Utils.DisplayException(e));
-                }
-            }
-        }
-
 
         /// <summary>
         /// Returns true if there is a valid connection to the driver hardware

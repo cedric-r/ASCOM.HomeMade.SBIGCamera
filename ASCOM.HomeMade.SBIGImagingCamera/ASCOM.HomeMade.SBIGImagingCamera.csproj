@@ -85,6 +85,7 @@
     <Compile Include="..\ASCOM.HomeMade.SBIGCommon\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="CoolingInfoThread.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

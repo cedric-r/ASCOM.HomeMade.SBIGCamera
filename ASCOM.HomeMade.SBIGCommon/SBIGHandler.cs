@@ -30,7 +30,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 {
     public class SBIGHandler : ISBIGHandler
     {
-        private static object lockSBIGAccess = new object();
+        private static bool lockSBIGAccess = false;
         private Debug debug = null;
         private string deviceId = "";
 
@@ -50,8 +50,8 @@ namespace ASCOM.HomeMade.SBIGCommon
                 System.IO.Directory.CreateDirectory(strPath);
             }
             catch (Exception) { }
-
-            debug = new Debug(deviceId, Path.Combine(strPath, "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
+            Debug.TraceEnabled = true;
+            debug = new Debug(deviceId, Path.Combine(@"c:\temp\", "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
         }
 
         public bool Connect()
@@ -62,6 +62,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             {
                 connections++;
                 debug.LogMessage("Connect", "Already connected");
+
                 return true;
             }
             else
@@ -111,6 +112,11 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
         }
 
+        public void DisconnectAll()
+        {
+            while (connections > 0) Disconnect();
+        }
+
         public void Disconnect()
         {
             debug.LogMessage("Disconnect", "Disconnection requested");
@@ -144,35 +150,73 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void UnivDrvCommand(SBIG.PAR_COMMAND command)
         {
             // make the call
-            lock (lockSBIGAccess)
-            {
+            try {
+
+                Utils.AcquireLock(ref lockSBIGAccess);
                 SBIG.UnivDrvCommand(command);
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
         public void UnivDrvCommand<TParams>(SBIG.PAR_COMMAND command, TParams Params)
             where TParams : SBIG.IParams
         {
-            lock (lockSBIGAccess)
+            try
             {
+
+                Utils.AcquireLock(ref lockSBIGAccess);
                 SBIG.UnivDrvCommand<TParams>(command, Params);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
         public void UnivDrvCommand<TResults>(SBIG.PAR_COMMAND command, out TResults pResults)
             where TResults : SBIG.IResults
         {
-            lock (lockSBIGAccess)
+            try
             {
+
+                Utils.AcquireLock(ref lockSBIGAccess);
                 SBIG.UnivDrvCommand<TResults>(command, out pResults);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
         public void UnivDrvCommand(SBIG.PAR_COMMAND command, SBIG.ReadoutLineParams Params, out UInt16[] data)
         {
-            lock (lockSBIGAccess)
+            try
             {
+                Utils.AcquireLock(ref lockSBIGAccess);
                 SBIG.UnivDrvCommand(command, Params, out data);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
@@ -180,16 +224,26 @@ namespace ASCOM.HomeMade.SBIGCommon
             where TParams : SBIG.IParams
             where TResults : SBIG.IResults
         {
-            lock (lockSBIGAccess)
+            try
             {
+                Utils.AcquireLock(ref lockSBIGAccess);
                 SBIG.UnivDrvCommand<TParams, TResults>(command, Params, out pResults);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
         public void AbortExposure(SBIG.StartExposureParams2 sep2)
         {
-            lock (lockSBIGAccess)
+            try
             {
+                Utils.AcquireLock(ref lockReadout);
                 UnivDrvCommand(
                 SBIG.PAR_COMMAND.CC_END_EXPOSURE,
                 new SBIG.EndExposureParams()
@@ -197,47 +251,81 @@ namespace ASCOM.HomeMade.SBIGCommon
                     ccd = sep2.ccd
                 });
             }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockReadout);
+            }
         }
 
         public void EndReadout(SBIG.CCD_REQUEST ccd)
         {
-            lock (lockSBIGAccess)
+            UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
+            new SBIG.EndReadoutParams()
             {
-                UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
-                new SBIG.EndReadoutParams()
-                {
-                    ccd = ccd
-                });
-            }
+                ccd = ccd
+            });
         }
 
         public bool ExposureInProgress()
         {
-            lock (lockSBIGAccess)
+            try
             {
+                Utils.AcquireLock(ref lockSBIGAccess);
                 return SBIG.ExposureInProgress();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
         public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
         {
-            lock (lockSBIGAccess)
+            try
             {
+                Utils.AcquireLock(ref lockSBIGAccess);
                 SBIG.ReadoutData(sep2, ref data);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockSBIGAccess);
             }
         }
 
+        private static bool lockReadout = false;
         public void ReadoutDataAndEnd(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
         {
-            lock (lockSBIGAccess)
+            try
             {
+                Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
                 UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
-                 new SBIG.EndReadoutParams()
-                 {
-                     ccd = sep2.ccd
-                 });
+                new SBIG.EndReadoutParams()
+                    {
+                        ccd = sep2.ccd
+                    });
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref lockReadout);
             }
         }
     }
 }
+

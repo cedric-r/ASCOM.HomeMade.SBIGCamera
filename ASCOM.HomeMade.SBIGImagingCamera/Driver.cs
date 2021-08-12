@@ -111,11 +111,13 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
+            CoolingInfoThread cool = new CoolingInfoThread();
             while (!Shutdown)
             {
-                GetCoolingInfo();
+                Cooling = cool.GetCoolingInfo();
                 Thread.Sleep(500);
             }
+            cool.Close();
         }
 
         //
@@ -194,6 +196,16 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         public void Dispose()
         {
+            if (server != null)
+            {
+                try
+                {
+                    if (IsConnected)
+                        server.Disconnect();
+                }
+                catch (Exception) { }
+            }
+
         }
 
         public bool Connected
@@ -256,19 +268,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
                             }
 
-                            if (bw!=null)
-                            {
-                                debug.LogMessage("Connected Set", "Shutting down background worker");
-                                Shutdown = true;
-                                try
-                                {
-                                    bw.CancelAsync();
-                                }
-                                catch (Exception) { }
-                                bw = null;
-                            }
                             connectionState = false;
-                            server.Disconnect();
+                            try
+                            {
+                                server.Disconnect();
+                            }
+                            catch (Exception ex)
+                            {
+                                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
+                            }
                         }
                     }
                 }
@@ -343,7 +351,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         private string CameraName = "";
         private bool ColorCamera = false;
-        private SBIG.QueryTemperatureStatusResults2 Cooling;
         private double CCDTempTarget = 0;
         private bool CCDTempTargetSet = false;
         private bool HasMechanicalShutter = false;
@@ -356,6 +363,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private double cameraLastExposureDuration = 0.0;
 
         private SBIG.StartExposureParams2 exposureParams2;
+        private SBIG.QueryTemperatureStatusResults2 Cooling;
 
         public void AbortExposure()
         {
@@ -367,24 +375,10 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 debug.LogMessage("AbortExposure", "Aborting...");
                 CurrentCameraState = CameraStates.cameraIdle;
 
-                server.AbortExposure(exposureParams2);
-
                 if (imagetaker != null)
                 {
                     imagetaker.StopExposure = true;
                 }
-
-                try
-                {
-                    if (imagingWorker != null) imagingWorker.CancelAsync();
-                }
-                catch (Exception) { }
-
-                imagingWorker = null;
-                imagetaker = null;
-
-                debug.LogMessage("AbortExposure", "Finishing readout");
-                server.EndReadout(exposureParams2.ccd);
             }
             catch(Exception ex)
             {
@@ -1070,8 +1064,16 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         private void bw_TakeImage(object sender, DoWorkEventArgs e)
         {
-            imagetaker = new ImageTakerThread(this, server);
-            imagetaker.TakeImage();
+            try
+            {
+                imagetaker = new ImageTakerThread(this);
+                imagetaker.TakeImage();
+                imagetaker = null;
+            }
+            catch(Exception ex)
+            {
+                debug.LogMessage("bw_TakeImage", "Error: " + Utils.DisplayException(ex));
+            }
         }
 
         public int StartX
@@ -1191,24 +1193,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         }
 
         #endregion
-
-        private void GetCoolingInfo()
-        {
-            if (IsConnected)
-            {
-                try
-                {
-                    debug.LogMessage("Camera", "Getting cooling information");
-                    // query temperature
-                    Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
-                }
-                catch (Exception e)
-                {
-                    debug.LogMessage("GetCoolingInfo", "Error: " + Utils.DisplayException(e));
-                    throw new ASCOM.DriverException(Utils.DisplayException(e));
-                }
-            }
-        }
 
         /// <summary>
         /// Returns true if there is a valid connection to the driver hardware

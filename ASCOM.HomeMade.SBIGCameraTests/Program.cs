@@ -18,6 +18,7 @@
  */
 
 using System.Threading;
+using System.Threading.Tasks;
 using ASCOM.HomeMade.SBIGFW;
 using SbigSharp;
 
@@ -35,37 +36,38 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             System.Console.WriteLine("Connecting camera");
             camera.Connected = true;
             binx = camera.PixelSizeX;
-
+            /*
             System.Console.WriteLine("Connecting FW");
             FilterWheel fw = new FilterWheel();
             fw.Connected = true;
 
             System.Console.WriteLine("Setting FW position to 2");
             fw.Position = 2;
-
+            
             System.Console.WriteLine("Setting CCD temperature to 20");
             camera.SetCCDTemperature= 20.0;
             System.Console.WriteLine("Setting cooler on");
             //camera.CoolerOn = true;
+            */
             camera.NumX = camera.CameraXSize;
             camera.NumY = camera.CameraYSize;
             camera.StartX = 0;
             camera.StartY = 0;
-            System.Console.WriteLine("Taking exposure");
-            camera.StartExposure(10.0, true);
-            while (!camera.ImageReady) Thread.Sleep(100);
-            var image = camera.ImageArray;
 
-            System.Console.WriteLine("Taking exposure");
-            camera.StartExposure(10.0, true);
-            while (!camera.ImageReady) Thread.Sleep(100);
-            image = camera.ImageArray;
-
-            System.Console.WriteLine("Taking exposure");
-            camera.StartExposure(300.0, true);
-            System.Console.WriteLine("Waiting to abort");
-            Thread.Sleep(5000);
-            camera.AbortExposure();
+            /*System.Console.WriteLine("Taking 10 imaging exposures");
+            for (int i = 0; i < 1; i++)
+            {
+                System.Console.WriteLine("Taking 1 imaging exposure");
+                camera.StartExposure(1.0, true);
+                while (!camera.ImageReady) Thread.Sleep(100);
+                var resultImage = camera.ImageArray;
+            }
+            */
+            //System.Console.WriteLine("Taking cancelled exposure");
+            //camera.StartExposure(300.0, true);
+            //System.Console.WriteLine("Waiting to abort");
+            //Thread.Sleep(5000);
+            //camera.AbortExposure();
 
             SBIGGuidingCamera.Camera guidingCamera = new SBIGGuidingCamera.Camera();
             System.Console.WriteLine("Connecting guidingCamera");
@@ -75,10 +77,36 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             guidingCamera.NumY = guidingCamera.CameraYSize;
             guidingCamera.StartX = 0;
             guidingCamera.StartY = 0;
-            System.Console.WriteLine("Taking exposure");
-            guidingCamera.StartExposure(10.0, true);
-            while (!guidingCamera.ImageReady) Thread.Sleep(100);
-            image = guidingCamera.ImageArray;
+            System.Console.WriteLine("Taking guiding exposure");
+            //guidingCamera.StartExposure(10.0, true);
+            //while (!guidingCamera.ImageReady) Thread.Sleep(100);
+            //var image = guidingCamera.ImageArray;
+
+            bool end1 = false;
+            bool end2 = false;
+            Task.Factory.StartNew(() => {
+                System.Console.WriteLine("Taking exposure parallel exposure imaging");
+                camera.StartExposure(10.0, true);
+                while (!camera.ImageReady) Thread.Sleep(100);
+                var i1 = camera.ImageArray;
+                System.Console.WriteLine("Imaging exposure done");
+                end1 = true;
+            });
+
+            Task.Factory.StartNew(() => {
+                for (int i = 0; i < 10; i++)
+                {
+                    System.Console.WriteLine("Taking exposure parallel exposure guiding");
+                    guidingCamera.StartExposure(1.0, true);
+                    while (!guidingCamera.ImageReady) Thread.Sleep(100);
+                    var i1 = guidingCamera.ImageArray;
+                    System.Console.WriteLine("Guiding exposure done");
+                }
+                end2 = true;
+            });
+
+            System.Console.WriteLine("Waiting for threads to end");
+            while (!end1 || !end2) Thread.Sleep(100);
 
             System.Console.WriteLine("Setting cooler off");
             camera.CoolerOn = false;

@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGCommon
@@ -18,9 +19,9 @@ namespace ASCOM.HomeMade.SBIGCommon
         public static string DisplayException(Exception e)
         {
             string temp = "";
-            if (e.InnerException != null)
-                temp += DisplayException(e.InnerException) + "-----\n";
             temp += e.Message + "\n" + e.StackTrace + "\n";
+            if (e.InnerException != null)
+                temp += "-----\n" + DisplayException(e.InnerException);
             return temp;
         }
 
@@ -55,6 +56,29 @@ namespace ASCOM.HomeMade.SBIGCommon
                 dstream.CopyTo(output);
             }
             return output.ToArray();
+        }
+
+        private static TimeSpan LOCKTIMEOUT = TimeSpan.FromSeconds(10);
+        public static void AcquireLock(ref bool lockObject)
+        {
+            DateTime start = DateTime.Now;
+            while (lockObject)
+            {
+                if (DateTime.Now >= (start + LOCKTIMEOUT))
+                {
+                    throw new TimeoutException("Timed out acquiring lock");
+                }
+                else
+                {
+                    Thread.Sleep(10);
+                }
+            }
+            lockObject = true;
+        }
+
+        public static void ReleaseLock(ref bool lockObject)
+        {
+            lockObject = false;
         }
     }
 }

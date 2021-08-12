@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 0.18.12
-AppVersion=0.18.12
+AppVerName=ASCOM HomeMade SBig Camera Driver 0.19.17
+AppVersion=0.19.17
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=0.18.12
+VersionInfoVersion=0.19.17
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes
@@ -46,21 +46,19 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGFW\bin\Debug\ASCO
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGFW\bin\Debug\ASCOM.HomeMade.SBIGFW.dll.config"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGGuidingCamera\bin\Debug\ASCOM.HomeMade.SBIGGuidingCamera.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGGuidingCamera\bin\Debug\ASCOM.HomeMade.SBIGGuidingCamera.dll.config"; DestDir: "{app}"
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGWindowsService\bin\Debug\ASCOM.HomeMade.SBIGWindowsService.exe"; DestDir: "{app}"
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGWindowsService\bin\Debug\ASCOM.HomeMade.SBIGWindowsService.exe.config"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Internal.Extensions.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.SettingsProvider.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Utilities.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Utilities.Video.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\AsyncIO.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\Microsoft.Win32.Primitives.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\NaCl.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\NetMQ.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\netstandard.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\Newtonsoft.Json.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\SbigSharp.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\x86\HomeMade.SBIGUDrv.dll"; DestDir: "{app}\x86\"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\x64\HomeMade.SBIGUDrv.dll"; DestDir: "{app}\x64\"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.AppContext.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Buffers.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Collections.Concurrent.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Collections.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Collections.NonGeneric.dll"; DestDir: "{app}"
@@ -100,7 +98,6 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Linq.Expressions.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Linq.Parallel.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Linq.Queryable.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Memory.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Net.Http.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Net.NameResolution.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Net.NetworkInformation.dll"; DestDir: "{app}"
@@ -112,7 +109,6 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Net.WebHeaderCollection.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Net.WebSockets.Client.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Net.WebSockets.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Numerics.Vectors.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.ObjectModel.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Reflection.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Reflection.Extensions.dll"; DestDir: "{app}"
@@ -120,7 +116,6 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Resources.Reader.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Resources.ResourceManager.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Resources.Writer.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Runtime.CompilerServices.VisualC.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Runtime.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Runtime.Extensions.dll"; DestDir: "{app}"
@@ -146,7 +141,6 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.Overlapped.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.Tasks.dll"; DestDir: "{app}"
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.Tasks.Extensions.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.Tasks.Parallel.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.Thread.dll"; DestDir: "{app}"
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\System.Threading.ThreadPool.dll"; DestDir: "{app}"
@@ -171,6 +165,9 @@ Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMa
 Filename: "{dotnet4032}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 32bit
 Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
+Filename: {sys}\sc.exe; Parameters: "create SBIGService start= auto binPath= ""{app}\ASCOM.HomeMade.SBIGWindowsService.exe""" ; Flags: runhidden
+Filename: {sys}\sc.exe; Parameters: "start SBIGService" ; Flags: runhidden
+
 
 ; Only if driver is .NET
 [UninstallRun]
@@ -189,6 +186,8 @@ Filename: "{dotnet4032}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIG
 Filename: "{dotnet4064}\regasm.exe"; Parameters: "/codebase ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
 Filename: "{dotnet4064}\regasm.exe"; Parameters: "-u ""{app}\ASCOM.HomeMade.SBIGFW.dll"""; Flags: runhidden 64bit; Check: IsWin64
 
+Filename: {sys}\sc.exe; Parameters: "stop SBIGService" ; Flags: runhidden
+Filename: {sys}\sc.exe; Parameters: "delete SBIGService" ; Flags: runhidden
 
 [CODE]
 //

@@ -43,7 +43,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void LogMessage(string identifier, string message, params object[] args)
         {
             var msg = string.Format(message, args);
-            LogMessage(DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString() + ": " + identifier + ": " + msg);
+            LogMessage(DateTime.Now.Day+"/"+ DateTime.Now.Month+"/"+ DateTime.Now.Year + " " + DateTime.Now.Hour+":"+ DateTime.Now.Minute+":"+ DateTime.Now.Second+"."+ DateTime.Now.Millisecond + ": " + identifier + ": " + msg);
         }
 
         readonly object fileLockObject = new object();

@@ -1,12 +1,13 @@
-﻿using NetMQ;
-using NetMQ.Sockets;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SbigSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGCommon
@@ -15,9 +16,10 @@ namespace ASCOM.HomeMade.SBIGCommon
     {
         private const string driverID = "ASCOM.HomeMade.SBIGService";
         private Debug debug = null;
-        private SBIGService service = null;
         private string Url = "";
-        private RequestSocket socket;
+        private TcpClient clientSocket = new TcpClient();
+        private NetworkStream serverStream = null;
+
         public SBIGClient(string url = "")
         {
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
@@ -33,18 +35,12 @@ namespace ASCOM.HomeMade.SBIGCommon
 
             if (String.IsNullOrEmpty(url)) Url = SBIGService._Url;
 
-            CreateService(); // This will fail if one already exists but it saves time later.
             ConnectToServer();
         }
 
         private void CreateService()
         {
-            debug.LogMessage("SBIGClient CreateService", "Checking...");
-            if (service == null)
-            {
-                debug.LogMessage("SBIGClient CreateService", "Creating service that doesn't exist...");
-                service = SBIGService.CreateService(Url);
-            }
+            debug.LogMessage("SBIGClient CreateService", "Service should already be running as a Windows Service");
         }
 
         private bool CheckServerPresence()
@@ -54,59 +50,38 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public bool CheckSocket()
         {
-            bool temp = false;
-            if (socket == null) socket = new RequestSocket(">" + Url);
-
-            temp = CheckServerPresence();
-            if (!temp)
+            if (!clientSocket.Connected)
             {
-                debug.LogMessage("SBIGClient ConnectToServer", "No reply from server");
-                if (socket != null)
-                    try
-                    {
-                        debug.LogMessage("SBIGClient ConnectToServer", "Closing old socket");
-                        socket.Close();
-                        socket = null;
-                    }
-                    catch (Exception) { }
+                debug.LogMessage("CheckSocket", "Start client");
+                clientSocket = new TcpClient();
+                clientSocket.Connect(System.Net.IPAddress.Loopback, 5557);
+                serverStream = clientSocket.GetStream();
             }
-            return temp;
+            return clientSocket.Connected;
         }
 
         public bool ConnectToServer()
         {
-            //debug.LogMessage("SBIGClient ConnectToServer", "Connecting...");
+            debug.LogMessage("SBIGClient ConnectToServer", "Connecting...");
             try
             {
                 bool temp = false;
                 temp = CheckSocket();
-                if (!temp)
-                {
-                    // Create a new server, we can't find one. This essentially acts as a server election among the clients
-                    debug.LogMessage("SBIGClient ConnectToServer", "Starting a server");
-                    CreateService();
-                    temp = CheckSocket();
-                }
                 return temp;
             }
             catch (Exception e)
             {
-                debug.LogMessage("SBIGClient ConnectToServer", "Can't connect to server. Trying to spin one up");
                 debug.LogMessage("SBIGClient ConnectToServer", "Error: " + Utils.DisplayException(e));
-
-                // Create a new server, we can't find one. This essentially acts as a server election among the clients
-                CreateService();
-
-                return CheckSocket();
+                throw;
             }
         }
 
         public bool IsConnected 
         { get
             {
-                if (socket == null)
+                if (!clientSocket.Connected)
                 {
-                    debug.LogMessage("SBIGClient IsConnected", "Socket is null.");
+                    debug.LogMessage("SBIGClient IsConnected", "Socket is not connected.");
                     return false;
                 }
 
@@ -114,36 +89,77 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
         }
 
+        public void Dispose()
+        {
+            if (clientSocket != null)
+            {
+                try
+                {
+                    if (IsConnected)
+                        Close();
+                }
+                catch (Exception) { }
+            }
+
+        }
+
         public void Close()
         {
-            if (socket != null)
+            if (clientSocket.Connected)
             {
-                debug.LogMessage("SBIGClient Close", "Closing socket.");
-                socket.Close();
+                try
+                {
+                    debug.LogMessage("SBIGClient Close", "Closing socket.");
+                    byte[] outStream = System.Text.Encoding.UTF8.GetBytes("BYE" + "<EOM>");
+                    serverStream.Write(outStream, 0, outStream.Length);
+                    serverStream.Flush();
+                    serverStream.Close();
+                }
+                catch (Exception) { }
+            }
+        }
+
+        public static string AssemblyDirectory
+        {
+            get
+            {
+                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
             }
         }
 
         #region Communication with service
-        private object lockAccess = new object();
+        private bool lockAccess = false;
         private string SendMessageToServerWithTimeout(string message, int timeout = 0) // Timeout is in ms
         {
             string temp = "";
             try
             {
-                if (!IsConnected)
+                byte[] outStream = System.Text.Encoding.UTF8.GetBytes(message+"<EOM>");
+                serverStream.Write(outStream, 0, outStream.Length);
+                serverStream.Flush();
+
+                DateTime start = DateTime.Now;
+                while (!serverStream.DataAvailable && ((start + TimeSpan.FromMilliseconds(timeout)) > DateTime.Now)) Thread.Sleep(10);
+
+                if (serverStream.DataAvailable)
                 {
-                    throw new ApplicationException("Client is not connected to server");
-                }
-                lock (lockAccess)
-                {
-                    socket.SendFrame(message);
-                    bool more = false;
-                    bool r = socket.TryReceiveFrameString(new TimeSpan(timeout*TimeSpan.TicksPerMillisecond), System.Text.Encoding.UTF8, out temp, out more);
-                    if (!r)
+                    while (serverStream.DataAvailable)
                     {
-                        // Communication error!
-                        throw new ApplicationException("Can't read from server");
+                        byte[] bytesFrom = new byte[clientSocket.Available];
+                        serverStream.Read(bytesFrom, 0, (int)clientSocket.Available);
+                        temp += System.Text.Encoding.UTF8.GetString(bytesFrom);
+                        bytesFrom = null;
                     }
+                    //Console.WriteLine(" >> " + "From server-" + temp);
+                    temp = temp.Substring(0, temp.IndexOf("<EOM>"));
+                }
+                else
+                {
+                    // It must have been a timeout
+                    throw new TimeoutException("Timeout reading from service");
                 }
             }
             catch (Exception e)
@@ -154,7 +170,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             return temp;
         }
 
-        private SBIGResponse SendMessage(string type, SBIG.PAR_COMMAND command = 0, object payload = null, int timeout = 10000)
+        private SBIGResponse SendMessage(string type, SBIG.PAR_COMMAND command = 0, object payload = null, int timeout = 60000)
         {
             try
             {
@@ -182,7 +198,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                 SBIGResponse response = SendMessage("Ping", 2000);
                 return (bool)JsonConvert.DeserializeObject<bool>(response.payload);
             }
-            catch(Exception)
+            catch(Exception e)
             {
                 return false;
             }
@@ -288,11 +304,11 @@ namespace ASCOM.HomeMade.SBIGCommon
             if (response.error != null) throw response.error;
         }
 
-        public bool ExposureInProgress()
+        public bool ExposureInProgress(SBIG.StartExposureParams2 tparam)
         {
             debug.LogMessage("SBIGClient", "ExposureInProgress");
             if (!ConnectToServer()) throw new ApplicationException("Not connected to server");
-            SBIGResponse response = SendMessage("ExposureInProgress");
+            SBIGResponse response = SendMessage("ExposureInProgress", 0, tparam);
             if (response.error != null) throw response.error;
             return JsonConvert.DeserializeObject<bool>(response.payload);
         }
@@ -307,11 +323,9 @@ namespace ASCOM.HomeMade.SBIGCommon
             byte[] array = Convert.FromBase64String(JsonConvert.DeserializeObject<string>(response.payload));
             byte[] deCompressedArray = Utils.Decompress(array);
             array = null;
-            GC.Collect();
             ushort[,] target = new ushort[sep2.height, sep2.width];
             Buffer.BlockCopy(deCompressedArray, 0, target, 0, deCompressedArray.Length);
             deCompressedArray = null;
-            GC.Collect();
             return target;
         }
         #endregion
