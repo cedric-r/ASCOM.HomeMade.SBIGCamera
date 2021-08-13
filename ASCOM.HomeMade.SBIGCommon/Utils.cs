@@ -98,5 +98,22 @@ namespace ASCOM.HomeMade.SBIGCommon
         {
             lockObject = false;
         }
+
+        public static int[,] RotateMatrixCounterClockwiseAndConvertToInt(UInt16[,] oldMatrix)
+        {
+            int[,] newMatrix = new int[oldMatrix.GetLength(1), oldMatrix.GetLength(0)];
+            int newColumn, newRow = 0;
+            for (int oldColumn = 0; oldColumn < oldMatrix.GetLength(1); oldColumn++)
+            {
+                newColumn = 0;
+                for (int oldRow = 0; oldRow < oldMatrix.GetLength(0); oldRow++)
+                {
+                    newMatrix[newRow, newColumn] = oldMatrix[oldRow, oldColumn];
+                    newColumn++;
+                }
+                newRow++;
+            }
+            return newMatrix;
+        }
     }
 }

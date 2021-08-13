@@ -134,10 +134,11 @@ namespace ASCOM.HomeMade.SBIGCommon
 
                 if (StopExposure) return;
 
-                camera.cameraImageArray = new int[exposureParams2.height, exposureParams2.width];
-                for (int i = 0; i < exposureParams2.height; i++)
-                    for (int j = 0; j < exposureParams2.width; j++)
-                        camera.cameraImageArray[i, j] = data[i, j];
+                //camera.cameraImageArray = new int[exposureParams2.height, exposureParams2.width];
+                //for (int i = 0; i < exposureParams2.height; i++)
+                //for (int j = 0; j < exposureParams2.width; j++)
+                //camera.cameraImageArray[i, j] = data[i, j];
+                camera.cameraImageArray = Utils.RotateMatrixCounterClockwiseAndConvertToInt(data);
 
                 data = null;
                 debug.LogMessage("ImageTakerThread TakeImage", "Finishing readout");

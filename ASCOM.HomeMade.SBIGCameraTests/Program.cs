@@ -54,7 +54,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             camera.StartX = 0;
             camera.StartY = 0;
 
-            /*System.Console.WriteLine("Taking 10 imaging exposures");
+            System.Console.WriteLine("Taking 10 imaging exposures");
             for (int i = 0; i < 1; i++)
             {
                 System.Console.WriteLine("Taking 1 imaging exposure");
@@ -62,7 +62,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
                 while (!camera.ImageReady) Thread.Sleep(100);
                 var resultImage = camera.ImageArray;
             }
-            */
+            
             //System.Console.WriteLine("Taking cancelled exposure");
             //camera.StartExposure(300.0, true);
             //System.Console.WriteLine("Waiting to abort");
