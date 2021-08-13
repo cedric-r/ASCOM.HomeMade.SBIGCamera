@@ -329,8 +329,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private bool CCDTempTargetSet = false;
         private bool HasMechanicalShutter = false;
         private List<SBIG.READOUT_INFO> ReadoutModeList = new List<SBIG.READOUT_INFO>();
-        private int ccdWidth { get { return ReadoutModeList.Find(r => r.mode == Binning).width; } }
-        private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == Binning).height; } }
+        private int ccdWidth { get { return ReadoutModeList.Find(r => r.mode == 0).width; } }
+        private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == 0).height; } }
         private double pixelSize { get { return ReadoutModeList.Find(r => r.mode == Binning).pixel_height; } } // We assume square pixels
 
         private DateTime exposureStart = DateTime.MinValue;
