@@ -762,7 +762,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 {
                     for (int j = 0; j < cameraImageArray.GetLength(0); j++)
                     {
-                        cameraImageArrayVariant[j, i] = cameraImageArray[j, i];
+                        cameraImageArrayVariant[j, i] = cameraImageArray.GetValue(j, i);
                     }
 
                 }

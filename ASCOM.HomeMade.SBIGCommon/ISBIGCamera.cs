@@ -41,7 +41,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public int cameraStartX = 0;
         public int cameraStartY = 0;
         public bool cameraImageReady = false;
-        public int[,] cameraImageArray;
+        public Array cameraImageArray;
         public object[,] cameraImageArrayVariant;
         public bool FastReadoutRequested = false;
     }
