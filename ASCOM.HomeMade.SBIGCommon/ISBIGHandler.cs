@@ -29,7 +29,6 @@ namespace ASCOM.HomeMade.SBIGCommon
     {
         bool Connect(string ipAddress);
         void Disconnect();
-        void DisconnectAll();
         void UnivDrvCommand(SBIG.PAR_COMMAND command);
         void UnivDrvCommand<TParams>(SBIG.PAR_COMMAND command, TParams Params) where TParams : SBIG.IParams;
         void UnivDrvCommand<TResults>(SBIG.PAR_COMMAND command, out TResults pResults) where TResults : SBIG.IResults;

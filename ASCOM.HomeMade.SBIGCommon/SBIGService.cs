@@ -118,7 +118,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                     Console.WriteLine(" >> " + "Client No:" + Convert.ToString(counter) + " started!");
 
                     SocketHandler sh = new SocketHandler(clientSocket, counter);
-                    Task.Factory.StartNew(() => { sh.Handle(); });
+                    Task.Factory.StartNew(() => { sh.Handle(ref Shutdown); });
                     }
 
                 serverSocket.Stop();
@@ -133,29 +133,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         {
             debug.LogMessage("SBIGService", "Stopping service");
             Shutdown = true;
-            /*
-            try
-            {
-                bw.CancelAsync();
-            }
-            catch (Exception) { }
 
-            try
-            {
-                memoryControlWorker.CancelAsync();
-            }
-            catch (Exception) { }
-
-            if (server!=null)
-            {
-                try
-                {
-                    debug.LogMessage("SBIGService", "Disconnect USB connections");
-                    server.DisconnectAll();
-                }
-                catch (Exception) { }
-            }
-            */
         }
 
         #endregion

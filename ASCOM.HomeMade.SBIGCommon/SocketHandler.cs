@@ -72,7 +72,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         }
 
-        public void Handle()
+        public void Handle(ref bool Shutdown)
         {
             try
             {
@@ -85,7 +85,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                 using (NetworkStream networkStream = client.GetStream())
                 {
 
-                    while (!endCommunication)
+                    while (!endCommunication && !Shutdown)
                     {
                         if (networkStream.DataAvailable)
                         {
