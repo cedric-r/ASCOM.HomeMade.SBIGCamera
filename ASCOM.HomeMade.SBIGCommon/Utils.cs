@@ -103,7 +103,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         {
             int[,] newMatrix = new int[oldMatrix.GetLength(1), oldMatrix.GetLength(0)];
             int newColumn, newRow = 0;
-            for (int oldColumn = oldMatrix.GetLength(1) - 1; oldColumn >= 0; oldColumn--)
+            for (int oldColumn = 0; oldColumn < oldMatrix.GetLength(1); oldColumn++)
             {
                 newColumn = 0;
                 for (int oldRow = 0; oldRow < oldMatrix.GetLength(0); oldRow++)
