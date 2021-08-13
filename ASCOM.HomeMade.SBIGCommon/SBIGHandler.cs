@@ -95,6 +95,20 @@ namespace ASCOM.HomeMade.SBIGCommon
                 if (!cameraFound && String.IsNullOrEmpty(ipAddress))
                 {
                     debug.LogMessage("Connected Set", $"No camera found");
+                    if (String.IsNullOrEmpty(ipAddress))
+                    {
+                        try
+                        {
+                            debug.LogMessage("Disconnect", "Disconnecting device");
+                            // clean up
+                            SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DRIVER);
+                        }
+                        catch (Exception e)
+                        {
+                            //debug.LogMessage("Connected", "Error: " + DisplayException(e));
+                        }
+
+                    }
                     return false;
                 }
                 else
