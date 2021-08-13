@@ -249,7 +249,7 @@ namespace ASCOM.HomeMade.SBIGFW
             get
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}", version.Major, version.Minor, version.Build);
                 debug.LogMessage("DriverVersion Get", driverVersion);
                 return driverVersion;
             }
