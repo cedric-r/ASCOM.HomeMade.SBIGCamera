@@ -34,6 +34,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using ASCOM.HomeMade.SBIGCommon;
+using ASCOM.HomeMade.SBIGClient;
+using ASCOM.HomeMade.SBIGHub;
 
 namespace ASCOM.HomeMade.SBIGGuidingCamera
 {
@@ -42,7 +44,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
     /// </summary>
     [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2992")]
     [ClassInterface(ClassInterfaceType.None)]
+    [ServedClassName(Camera.driverDescription)]
     [ProgId(Camera.driverID)]
+    [ComVisible(true)]
     public class Camera : ISBIGCamera, ICameraV3, ICameraV2
     {
         private double PIXELINMICRONS = 7.4;
@@ -50,21 +54,20 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         /// ASCOM DeviceID (COM ProgID) for this driver.
         /// The DeviceID is used by ASCOM applications to load the driver at runtime.
         /// </summary>
-        internal const string driverID = "ASCOM.HomeMade.SBIGGuidingCamera";
+        public const string driverID = "ASCOM.HomeMade.SBIGGuidingCamera";
         // TODO Change the descriptive string for your driver then remove this line
         /// <summary>
         /// Driver description that displays in the ASCOM Chooser.
         /// </summary>
-        public static string driverDescription = "ASCOM SBIG Guiding Camera Driver.";
+        public const string driverDescription = "ASCOM SBIG Guiding Camera Driver.";
 
         private SBIGCommon.Debug debug = null;
-        private bool connectionState = false;
 
-        private SBIGClient server = null;
+        private SBIGClient.SBIGClient server = null;
         internal static string IPAddress = "";
 
+        private BackgroundWorker bw = null;
         private BackgroundWorker GuidingWorker = null;
-        private bool Shutdown = false;
         private ImageTakerThread imagetaker = null;
 
         /// <summary>
@@ -87,6 +90,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             debug.LogMessage("Camera", "Starting initialisation");
 
             debug.LogMessage(driverID + " v" + DriverVersion);
+            int nProcessID = Process.GetCurrentProcess().Id;
+            debug.LogMessage("Process ID: " + nProcessID);
 
             CameraType = SBIG.CCD_REQUEST.CCD_TRACKING;
 
@@ -174,11 +179,13 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 try
                 {
                     if (IsConnected)
-                        server.Disconnect();
+                    {
+                        server.Close();
+                        server = null;
+                    }
                 }
                 catch (Exception) { }
             }
-
         }
 
         public bool Connected
@@ -191,6 +198,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             set
             {
                 debug.LogMessage("Connected", "Set {0}", value);
+
+                if (server == null) server = new SBIGClient.SBIGClient();
+
                 if (value && IsConnected)
                 {
                     debug.LogMessage("Connected", "Already connected");
@@ -207,17 +217,14 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
                 try
                 {
-                    debug.LogMessage("Connected", "Set {0}", value);
-
-                    if (server == null) server = new SBIGClient();
 
                     if (value)
                     {
-                        connectionState = server.Connect(IPAddress);
+                        bool connectionState = server.Connect(IPAddress);
 
                         if (!connectionState)
                         {
-                            debug.LogMessage("Connected Set", $"No camera found");
+                            debug.LogMessage("Connected Set", $"No USB camera found");
                             throw new DriverException("No suitable camera found");
                         }
                         else
@@ -241,7 +248,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
                             }
 
-                            connectionState = false;
                             try
                             {
                                 server.Disconnect();
@@ -250,13 +256,14 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                             {
                                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
                             }
-
+                            server = null;
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e));
+                    throw new ASCOM.DriverException(Utils.DisplayException(e));
                 }
             }
         }
@@ -389,6 +396,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             set
             {
                 debug.LogMessage("BinX Set", value.ToString());
+                if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
+                if (value > MaxBinX) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinX);
                 Binning = ConvertBinningToReadout(value);
 
             }
@@ -404,6 +413,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             set
             {
                 debug.LogMessage("BinY Set", value.ToString());
+                if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
+                if (value > MaxBinY) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinY);
                 Binning = ConvertBinningToReadout(value);
             }
         }
@@ -817,7 +828,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                     throw new ASCOM.InvalidOperationException("Call to LastExposureStartTime before the first image has been taken!");
                 }
                 debug.LogMessage("LastExposureStartTime Get", exposureStart.ToString());
-                return exposureStart.ToString();
+                return exposureStart.ToString("yyyy-MM-ddTHH\\:mm\\:ss");
             }
         }
 
@@ -962,15 +973,13 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("SetCCDTemperature Get", "CCD temperature target is " + CCDTempTarget);
-                return CCDTempTarget;
+                debug.LogMessage("SetCCDTemperature Get", "Not implemented");
+                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature");
             }
             set
             {
-                CCDTempTarget = value;
-                CCDTempTargetSet = true;
-                if (CoolerOn) CoolerOn = true;
-                debug.LogMessage("SetCCDTemperature Set", "CCD temperature target is " + CCDTempTarget);
+                debug.LogMessage("SetCCDTemperature Set", "Not implemented");
+                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature");
             }
         }
 
@@ -982,10 +991,10 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             if (!IsConnected) throw new NotConnectedException("Camera is not connected");
             debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
             if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
-            if (cameraNumX > ccdWidth) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
-            if (cameraNumY > ccdHeight) throw new InvalidValueException("StartExposure", cameraNumY.ToString(), ccdHeight.ToString());
-            if (cameraStartX > ccdWidth) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
-            if (cameraStartY > ccdHeight) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
+            if (cameraNumX > (ccdWidth / BinX)) throw new InvalidValueException("StartExposure", cameraNumX.ToString(), ccdWidth.ToString());
+            if (cameraNumY > (ccdHeight / BinY)) throw new InvalidValueException("StartExposure", cameraNumY.ToString(), ccdHeight.ToString());
+            if (cameraStartX > (ccdWidth / BinX)) throw new InvalidValueException("StartExposure", cameraStartX.ToString(), ccdWidth.ToString());
+            if (cameraStartY > (ccdHeight / BinY)) throw new InvalidValueException("StartExposure", cameraStartY.ToString(), ccdHeight.ToString());
 
             try
             {
@@ -1007,7 +1016,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             try
             {
-                imagetaker = new ImageTakerThread(this);
+                imagetaker = new ImageTakerThread(this, IPAddress);
                 imagetaker.TakeImage();
                 imagetaker = null;
             }
@@ -1061,80 +1070,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         // here are some useful properties and methods that can be used as required
         // to help with driver development
 
-        #region ASCOM Registration
-
-        // Register or unregister driver for ASCOM. This is harmless if already
-        // registered or unregistered. 
-        //
-        /// <summary>
-        /// Register or unregister the driver with the ASCOM Platform.
-        /// This is harmless if the driver is already registered/unregistered.
-        /// </summary>
-        /// <param name="bRegister">If <c>true</c>, registers the driver, otherwise unregisters it.</param>
-        private static void RegUnregASCOM(bool bRegister)
-        {
-            using (var P = new ASCOM.Utilities.Profile())
-            {
-                P.DeviceType = "Camera";
-                if (bRegister)
-                {
-                    P.Register(driverID, driverDescription);
-                }
-                else
-                {
-                    P.Unregister(driverID);
-                }
-            }
-        }
-
-        /// <summary>
-        /// This function registers the driver with the ASCOM Chooser and
-        /// is called automatically whenever this class is registered for COM Interop.
-        /// </summary>
-        /// <param name="t">Type of the class being registered, not used.</param>
-        /// <remarks>
-        /// This method typically runs in two distinct situations:
-        /// <list type="numbered">
-        /// <item>
-        /// In Visual Studio, when the project is successfully built.
-        /// For this to work correctly, the option <c>Register for COM Interop</c>
-        /// must be enabled in the project settings.
-        /// </item>
-        /// <item>During setup, when the installer registers the assembly for COM Interop.</item>
-        /// </list>
-        /// This technique should mean that it is never necessary to manually register a driver with ASCOM.
-        /// </remarks>
-        [ComRegisterFunction]
-        public static void RegisterASCOM(Type t)
-        {
-            RegUnregASCOM(true);
-        }
-
-        /// <summary>
-        /// This function unregisters the driver from the ASCOM Chooser and
-        /// is called automatically whenever this class is unregistered from COM Interop.
-        /// </summary>
-        /// <param name="t">Type of the class being registered, not used.</param>
-        /// <remarks>
-        /// This method typically runs in two distinct situations:
-        /// <list type="numbered">
-        /// <item>
-        /// In Visual Studio, when the project is cleaned or prior to rebuilding.
-        /// For this to work correctly, the option <c>Register for COM Interop</c>
-        /// must be enabled in the project settings.
-        /// </item>
-        /// <item>During uninstall, when the installer unregisters the assembly from COM Interop.</item>
-        /// </list>
-        /// This technique should mean that it is never necessary to manually unregister a driver from ASCOM.
-        /// </remarks>
-        [ComUnregisterFunction]
-        public static void UnregisterASCOM(Type t)
-        {
-            RegUnregASCOM(false);
-        }
-
-        #endregion
-
         /// <summary>
         /// Returns true if there is a valid connection to the driver hardware
         /// </summary>
@@ -1142,16 +1077,14 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         {
             get
             {
-                debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
 
-                // Some sanity checks: if we think we're connected but the client isn't, then we've been disconnected. We'll try to reconnect.
-                if (connectionState && !server.IsConnected)
-                {
-                    debug.LogMessage("IsConnected", "I think we're connected, but the client says it isn't. Trying to reconnect...");
-                    connectionState = server.ConnectToServer();
-                }
+                bool temp = false;
 
-                return connectionState;
+                if (server != null)
+                    temp = server.IsConnected;
+
+                debug.LogMessage("IsConnected", "connectionState=" + temp.ToString());
+                return temp;
             }
         }
 
@@ -1306,6 +1239,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                     debug.LogMessage("Connected Set", $"Camera requires StartExposure command");
                     RequiresExposureParams2 = false;
                 }
+
+                cameraNumX = ccdWidth;
+                cameraNumY = ccdHeight;
             }
             catch (Exception e2)
             {

@@ -8,13 +8,14 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>ASCOM.HomeMade.SBIGCameraTests</RootNamespace>
     <AssemblyName>ASCOM.HomeMade.SBIGCameraTests</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -62,6 +63,10 @@
     <ProjectReference Include="..\ASCOM.HomeMade.SBIGGuidingCamera\ASCOM.HomeMade.SBIGGuidingCamera.csproj">
       <Project>{e8259190-d17b-4601-b0e2-b8290ad7e467}</Project>
       <Name>ASCOM.HomeMade.SBIGGuidingCamera</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGHub\ASCOM.HomeMade.SBIGHub.csproj">
+      <Project>{c708e487-e3a9-4073-a545-294b88674225}</Project>
+      <Name>ASCOM.HomeMade.SBIGHub</Name>
     </ProjectReference>
     <ProjectReference Include="..\ASCOM.HomeMade.SBIGImagingCamera\ASCOM.HomeMade.SBIGImagingCamera.csproj">
       <Project>{64308775-bd4a-469c-bcab-3ed830b811af}</Project>

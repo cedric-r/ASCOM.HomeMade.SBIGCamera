@@ -30,19 +30,23 @@ namespace ASCOM.HomeMade.SBIGCommon
 {
     public class SBIGHandler : ISBIGHandler
     {
-        private static bool lockSBIGAccess = false;
-        private Debug debug = null;
-        private string deviceId = "";
-
-        protected static int connections = 0;
-
-        public static object lockCameraImaging = new object();
-        public bool IsConnected { get { return connections > 0; } }
-
-        public SBIGHandler(string device)
+        private class Exposure
         {
-            deviceId = device;
+            public SBIG.CCD_REQUEST ccd;
+            public DateTime start;
+            public uint duration;
+        }
 
+        public const string deviceId = "ASCOM.HomeMade.SBIGCamera";
+        private static Dictionary<SBIG.CCD_REQUEST, Exposure> exposures = new Dictionary<SBIG.CCD_REQUEST, Exposure>();
+        private static bool lockAccess = false;
+        private Debug debug = null;
+        private bool _Connected = false;
+
+        public bool IsConnected { get { return _Connected; } }
+
+        public SBIGHandler()
+        {
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
             strPath = Path.Combine(strPath, deviceId);
             try
@@ -54,216 +58,265 @@ namespace ASCOM.HomeMade.SBIGCommon
             debug = new Debug(deviceId, Path.Combine(@"c:\temp\", "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
         }
 
+        public SBIGResponse Transmit(SBIGRequest request)
+        {
+            return HandleMessage(request);
+        }
+
+        private SBIGResponse HandleMessage(SBIGRequest request)
+        {
+            SBIGResponse response = new SBIGResponse();
+            try
+            {
+                debug.LogMessage("SBIGService HandleMessage", "Message is " + request.type);
+
+                switch (request.type)
+                {
+                    case "PING":
+                        response.payload = true;
+                        break;
+                    case "Connect":
+                        string ip = "";
+                        ip = (string)request.parameters;
+                        response.payload = Connect(ip);
+                        break;
+                    case "Disconnect":
+                        Disconnect();
+                        response.payload = null;
+                        break;
+                    case "AbortExposure":
+                        SBIG.StartExposureParams2 p0 = (SBIG.StartExposureParams2)request.parameters;
+                        if (!exposures.Keys.Contains(p0.ccd)) exposures.Remove(p0.ccd);
+                        try
+                        {
+                            Utils.AcquireLock(ref lockAccess);
+                            AbortExposure(p0);
+                        }
+                        catch (Exception ex)
+                        {
+                            debug.LogMessage("SBIGService HandleMessage", "Error: " + Utils.DisplayException(ex));
+                        }
+                        finally
+                        {
+                            Utils.ReleaseLock(ref lockAccess);
+                        }
+                        response.payload = null;
+                        break;
+                    case "CC_SET_TEMPERATURE_REGULATION2":
+                        SBIG.SetTemperatureRegulationParams2 p1 = (SBIG.SetTemperatureRegulationParams2)request.parameters;
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p1);
+                        response.payload = null;
+                        break;
+                    case "CC_START_EXPOSURE2":
+                        SBIG.StartExposureParams2 p2 = (SBIG.StartExposureParams2)request.parameters;
+                        Exposure exposure = new Exposure() { ccd = p2.ccd, start = DateTime.Now, duration = p2.exposureTime };
+                        if (!exposures.Keys.Contains(p2.ccd)) exposures.Remove(p2.ccd);
+                        exposures[p2.ccd] = exposure;
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p2);
+                        response.payload = null;
+                        break;
+                    case "CC_QUERY_TEMPERATURE_STATUS":
+                        SBIG.QueryTemperatureStatusParams p3 = (SBIG.QueryTemperatureStatusParams)request.parameters;
+                        SBIG.QueryTemperatureStatusResults2 result3 = new SBIG.QueryTemperatureStatusResults2();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p3, out result3);
+                        response.payload = result3;
+                        break;
+                    case "CCD_INFO":
+                        SBIG.GetCCDInfoParams p4 = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults0 result4 = new SBIG.GetCCDInfoResults0();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p4, out result4);
+                        response.payload = result4;
+                        break;
+                    case "CCD_INFO_EXTENDED":
+                        SBIG.GetCCDInfoParams p5 = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults2 result5 = new SBIG.GetCCDInfoResults2();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p5, out result5);
+                        response.payload = result5;
+                        break;
+                    case "CCD_INFO_EXTENDED2":
+                        SBIG.GetCCDInfoParams p6 = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults4 result6 = new SBIG.GetCCDInfoResults4();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p6, out result6);
+                        response.payload = result6;
+                        break;
+                    case "CCD_INFO_EXTENDED3":
+                        SBIG.GetCCDInfoParams p7 = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults6 result7 = new SBIG.GetCCDInfoResults6();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p7, out result7);
+                        response.payload = result7;
+                        break;
+                    case "EndReadout":
+                        SBIG.CCD_REQUEST ccd = (SBIG.CCD_REQUEST)request.parameters;
+                        if (!exposures.Keys.Contains(ccd)) exposures.Remove(ccd);
+                        EndReadout(ccd);
+                        response.payload = null;
+                        break;
+                    case "ExposureInProgress":
+                        bool temp = false;
+                        SBIG.StartExposureParams2 p11 = (SBIG.StartExposureParams2)request.parameters;
+                        if (exposures.Keys.Contains(p11.ccd))
+                        {
+                            if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan((long)exposures[p11.ccd].duration * TimeSpan.TicksPerSecond / 100)))
+                                temp = true;
+                        }
+                        //bool inProgress = server.ExposureInProgress();
+                        response.payload = temp;
+                        break;
+                    case "ReadoutData":
+                        SBIG.StartExposureParams2 p8 = (SBIG.StartExposureParams2)request.parameters;
+                        if (!exposures.Keys.Contains(p8.ccd)) exposures.Remove(p8.ccd);
+                        var data = new UInt16[p8.height, p8.width];
+                        try
+                        {
+                            Utils.AcquireLock(ref lockAccess);
+                            ReadoutDataAndEnd(p8, ref data);
+                        }
+                        catch (Exception ex)
+                        {
+                            debug.LogMessage("SBIGService HandleMessage", "Error: " + Utils.DisplayException(ex));
+                        }
+                        finally
+                        {
+                            Utils.ReleaseLock(ref lockAccess);
+                        }
+                        response.payload = data;
+                        break;
+                    case "CC_CFW":
+                        SBIG.CFWParams p9 = (SBIG.CFWParams)request.parameters;
+                        SBIG.CFWResults result9 = new SBIG.CFWResults();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p9, out result9);
+                        response.payload = result9;
+                        break;
+                    default:
+                        throw new NotImplementedException("Message type " + request.type + " not implemented");
+                        break;
+                }
+                return response;
+            }
+            catch (Exception e)
+            {
+                debug.LogMessage("SBIGService HandleMessage", "Error: " + Utils.DisplayException(e));
+                response.error = e;
+                return response;
+            }
+        }
+
         public bool Connect(string ipAddress)
         {
             debug.LogMessage("Connect", "Connection request");
-            debug.LogMessage("Connect", "connections=" + connections);
-            if (connections > 0)
+
+            SBIG.CAMERA_TYPE CameraType;
+
+            SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DRIVER);
+
+            bool cameraFound = false;
+            if (String.IsNullOrEmpty(ipAddress))
             {
-                connections++;
-                debug.LogMessage("Connect", "Already connected");
-
-                return true;
-            }
-            else
-            {
-
-                SBIG.CAMERA_TYPE CameraType;
-
-                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DRIVER);
-
-                bool cameraFound = false;
-                if (String.IsNullOrEmpty(ipAddress))
+                debug.LogMessage("Connected Set", $"Enumerating USB cameras");
+                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_QUERY_USB, out SBIG.QueryUSBResults qur);
+                for (int i = 0; i < qur.camerasFound; i++)
                 {
-                    debug.LogMessage("Connected Set", $"Enumerating USB cameras");
-                    SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_QUERY_USB, out SBIG.QueryUSBResults qur);
-                    for (int i = 0; i < qur.camerasFound; i++)
-                    {
-                        if (!qur.usbInfo[i].cameraFound)
-                            debug.LogMessage("Connected Set", $"Cam {i}: not found");
-                        else
-                        {
-                            debug.LogMessage("Connected Set",
-                                $"Cam {i}: type={qur.usbInfo[i].cameraType} " +
-                                $"name={ qur.usbInfo[i].name} " +
-                                $"ser={qur.usbInfo[i].serialNumber}");
-                            cameraFound = true;
-                        }
-                    }
-                }
-
-                if (!cameraFound && String.IsNullOrEmpty(ipAddress))
-                {
-                    debug.LogMessage("Connected Set", $"No camera found");
-                    if (String.IsNullOrEmpty(ipAddress))
-                    {
-                        try
-                        {
-                            debug.LogMessage("Disconnect", "Disconnecting device");
-                            // clean up
-                            SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DRIVER);
-                        }
-                        catch (Exception e)
-                        {
-                            //debug.LogMessage("Connected", "Error: " + DisplayException(e));
-                        }
-
-                    }
-                    return false;
-                }
-                else
-                {
-                    connections++;
-
-                    if (String.IsNullOrEmpty(ipAddress))
-                    {
-                        SBIG.UnivDrvCommand(
-                            SBIG.PAR_COMMAND.CC_OPEN_DEVICE,
-                            new SBIG.OpenDeviceParams
-                            {
-                                deviceType = SBIG.SBIG_DEVICE_TYPE.DEV_USB
-                            });
-                    }
+                    if (!qur.usbInfo[i].cameraFound)
+                        debug.LogMessage("Connected Set", $"Cam {i}: not found");
                     else
                     {
-                        SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DEVICE, 
-                            new SBIG.OpenDeviceParams(ipAddress));
+                        debug.LogMessage("Connected Set",
+                            $"Cam {i}: type={qur.usbInfo[i].cameraType} " +
+                            $"name={ qur.usbInfo[i].name} " +
+                            $"ser={qur.usbInfo[i].serialNumber}");
+                        cameraFound = true;
                     }
-                    var cameraType = SBIG.EstablishLink();
-
-                    CameraType = SBIG.EstablishLink();
-                    debug.LogMessage("Connected Set", $"Connected to USB camera");
-
-                    return true;
                 }
             }
-        }
 
-        public void DisconnectAll()
-        {
-            while (connections > 0) Disconnect();
-        }
-
-        public void Disconnect()
-        {
-            debug.LogMessage("Disconnect", "Disconnection requested");
-            if (connections > 0)
+            if (!cameraFound && String.IsNullOrEmpty(ipAddress))
             {
-                connections--;
-                if (connections < 0) connections = 0; // some software start with a disconnect
-
-                if (connections == 0)
+                debug.LogMessage("Connected Set", $"No camera found");
+                if (String.IsNullOrEmpty(ipAddress))
                 {
                     try
                     {
                         debug.LogMessage("Disconnect", "Disconnecting device");
                         // clean up
-                        SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DEVICE);
                         SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DRIVER);
                     }
                     catch (Exception e)
                     {
                         //debug.LogMessage("Connected", "Error: " + DisplayException(e));
                     }
+
                 }
+                return false;
             }
             else
             {
-                debug.LogMessage("Disconnect", "Already disconnected");
-            }
+                if (String.IsNullOrEmpty(ipAddress))
+                {
+                    SBIG.UnivDrvCommand(
+                        SBIG.PAR_COMMAND.CC_OPEN_DEVICE,
+                        new SBIG.OpenDeviceParams
+                        {
+                            deviceType = SBIG.SBIG_DEVICE_TYPE.DEV_USB
+                        });
+                }
+                else
+                {
+                    SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DEVICE, 
+                        new SBIG.OpenDeviceParams(ipAddress));
+                }
+                var cameraType = SBIG.EstablishLink();
 
+                CameraType = SBIG.EstablishLink();
+                debug.LogMessage("Connected Set", $"Connected to USB camera");
+
+                return true;
+            }
+        }
+
+        public void Disconnect()
+        {
+            debug.LogMessage("Disconnect", "Disconnection requested");
+            try
+            {
+                debug.LogMessage("Disconnect", "Disconnecting device");
+                // clean up
+                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DEVICE);
+                SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DRIVER);
+            }
+            catch (Exception e)
+            {
+                //debug.LogMessage("Connected", "Error: " + DisplayException(e));
+            }
         }
 
         public void UnivDrvCommand(SBIG.PAR_COMMAND command)
         {
             // make the call
-            try {
-
-                Utils.AcquireLock(ref lockSBIGAccess);
-                SBIG.UnivDrvCommand(command);
-            }
-            catch(Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockSBIGAccess);
-            }
+            SBIG.UnivDrvCommand(command);
         }
 
         public void UnivDrvCommand<TParams>(SBIG.PAR_COMMAND command, TParams Params)
             where TParams : SBIG.IParams
         {
-            try
-            {
-
-                Utils.AcquireLock(ref lockSBIGAccess);
-                SBIG.UnivDrvCommand<TParams>(command, Params);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockSBIGAccess);
-            }
+            SBIG.UnivDrvCommand<TParams>(command, Params);
         }
 
         public void UnivDrvCommand<TResults>(SBIG.PAR_COMMAND command, out TResults pResults)
             where TResults : SBIG.IResults
         {
-            try
-            {
-
-                Utils.AcquireLock(ref lockSBIGAccess);
-                SBIG.UnivDrvCommand<TResults>(command, out pResults);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockSBIGAccess);
-            }
+            SBIG.UnivDrvCommand<TResults>(command, out pResults);
         }
 
         public void UnivDrvCommand(SBIG.PAR_COMMAND command, SBIG.ReadoutLineParams Params, out UInt16[] data)
         {
-            try
-            {
-                Utils.AcquireLock(ref lockSBIGAccess);
-                SBIG.UnivDrvCommand(command, Params, out data);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockSBIGAccess);
-            }
+            SBIG.UnivDrvCommand(command, Params, out data);
         }
 
         public void UnivDrvCommand<TParams, TResults>(SBIG.PAR_COMMAND command, TParams Params, out TResults pResults)
             where TParams : SBIG.IParams
             where TResults : SBIG.IResults
         {
-            try
-            {
-                Utils.AcquireLock(ref lockSBIGAccess);
-                SBIG.UnivDrvCommand<TParams, TResults>(command, Params, out pResults);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockSBIGAccess);
-            }
+            SBIG.UnivDrvCommand<TParams, TResults>(command, Params, out pResults);
         }
 
         public void AbortExposure(SBIG.StartExposureParams2 sep2)
@@ -299,26 +352,14 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public bool ExposureInProgress()
         {
-            try
-            {
-                Utils.AcquireLock(ref lockSBIGAccess);
-                return SBIG.ExposureInProgress();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockSBIGAccess);
-            }
+            return SBIG.ExposureInProgress();
         }
 
         public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
         {
             try
             {
-                Utils.AcquireLock(ref lockSBIGAccess);
+                Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
             }
             catch (Exception)
@@ -327,7 +368,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
             finally
             {
-                Utils.ReleaseLock(ref lockSBIGAccess);
+                Utils.ReleaseLock(ref lockReadout);
             }
         }
 

@@ -16,47 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+using ASCOM.DeviceInterface;
+using SbigSharp;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace ASCOM.HomeMade.SBIGCommon
+namespace ASCOM.HomeMade.SBIGHub
 {
-    public class HeartbeatSignaler
+    public class ISBIGCamera: ReferenceCountedObjectBase
     {
-        private BackgroundWorker bw = null;
-        private SBIGClient socket = null;
-        private bool error = false;
+        public SBIG.CAMERA_TYPE CameraModel;
+        public SBIG.CCD_REQUEST CameraType;
+        public bool RequiresExposureParams2 = true;
+        public SBIG.READOUT_BINNING_MODE Binning = 0;
+        public CameraStates CurrentCameraState = CameraStates.cameraIdle;
+        public double durationRequest = 0;
+        public bool lightRequest = false;
 
-        public HeartbeatSignaler(SBIGClient client)
-        {
-            socket = client;
-
-            bw = new BackgroundWorker();
-            bw.DoWork += bw_DoWork;
-            bw.RunWorkerAsync();
-        }
-
-        private void bw_DoWork(object sender, DoWorkEventArgs e)
-        {
-            while (!error)
-            {
-                try
-                {
-                     error = !socket.PingServer();
-
-                    Thread.Sleep(10000);
-                }
-                catch (Exception ex)
-                {
-                    error = true;
-                }
-            }
-        }
+        public int cameraNumX = 0;
+        public int cameraNumY = 0;
+        public int cameraStartX = 0;
+        public int cameraStartY = 0;
+        public bool cameraImageReady = false;
+        public Array cameraImageArray;
+        public object[,] cameraImageArrayVariant;
+        public bool FastReadoutRequested = false;
     }
 }

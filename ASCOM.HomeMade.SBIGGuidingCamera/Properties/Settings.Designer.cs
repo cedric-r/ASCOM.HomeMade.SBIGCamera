@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ASCOM.HomeMade.SBIGImagingCamera.Properties {
+namespace ASCOM.HomeMade.SBIGGuidingCamera.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
