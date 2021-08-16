@@ -99,16 +99,17 @@ namespace ASCOM.HomeMade.SBIGCommon
             lockObject = false;
         }
 
-        public static int[,] RotateMatrixCounterClockwiseAndConvertToInt(UInt16[,] oldMatrix)
+        public static Array RotateMatrixCounterClockwiseAndConvertToInt(UInt16[,] oldMatrix)
         {
-            int[,] newMatrix = new int[oldMatrix.GetLength(1), oldMatrix.GetLength(0)];
+            Array newMatrix = Array.CreateInstance(typeof(int), oldMatrix.GetLength(1), oldMatrix.GetLength(0));
+            //int[,] newMatrix = new int[oldMatrix.GetLength(1), oldMatrix.GetLength(0)];
             int newColumn, newRow = 0;
             for (int oldColumn = 0; oldColumn < oldMatrix.GetLength(1); oldColumn++)
             {
                 newColumn = 0;
                 for (int oldRow = 0; oldRow < oldMatrix.GetLength(0); oldRow++)
                 {
-                    newMatrix[newRow, newColumn] = oldMatrix[oldRow, oldColumn];
+                    newMatrix.SetValue(oldMatrix[oldRow, oldColumn], newRow, newColumn);
                     newColumn++;
                 }
                 newRow++;

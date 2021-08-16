@@ -33,13 +33,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
     {
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGCamera.CoolingInfoThread";
-        private SBIGClient server = null;
+        private SBIGClient.SBIGClient server = null;
         protected static object lockCameraImaging = new object();
+        private string IPAddress = "";
         public bool StopExposure = false;
 
-        public CoolingInfoThread()
+        public CoolingInfoThread(string ipAddress)
         {
-            server = new SBIGClient();
+            IPAddress = ipAddress;
+            server = new SBIGClient.SBIGClient();
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
             strPath = Path.Combine(strPath, driverID);
             try
@@ -52,6 +54,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             debug.LogMessage("CoolingInfoThread", "Starting initialisation");
 
             debug.LogMessage(driverID);
+            server.Connect(IPAddress);
 
             debug.LogMessage("CoolingInfoThread", "Completed initialisation");
         }
@@ -70,10 +73,18 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 throw new ASCOM.DriverException(Utils.DisplayException(e));
             }
         }
+
         public void Close()
         {
             debug.LogMessage("CoolingInfoThread Close", "Closing client.");
-            server.Close();
+            try
+            {
+                server.Disconnect();
+            }
+            catch(Exception e)
+            {
+                debug.LogMessage("CoolingInfoThread Close", "Error: "+Utils.DisplayException(e));
+            }
         }
     }
 }

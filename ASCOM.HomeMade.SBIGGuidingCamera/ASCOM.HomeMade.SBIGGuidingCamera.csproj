@@ -16,7 +16,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <ApplicationIcon>ASCOM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ASCOMDriverTemplate.snk</AssemblyOriginatorKeyFile>
@@ -46,8 +46,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RegisterForComInterop>true</RegisterForComInterop>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -143,9 +143,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGClient\ASCOM.HomeMade.SBIGClient.csproj">
+      <Project>{87831011-E8FA-4797-928A-0F439F041218}</Project>
+      <Name>ASCOM.HomeMade.SBIGClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ASCOM.HomeMade.SBIGCommon\ASCOM.HomeMade.SBIGCommon.csproj">
       <Project>{13cdac16-2b3b-4691-9607-e8f6b695cf7d}</Project>
       <Name>ASCOM.HomeMade.SBIGCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGHub\ASCOM.HomeMade.SBIGHub.csproj">
+      <Project>{c708e487-e3a9-4073-a545-294b88674225}</Project>
+      <Name>ASCOM.HomeMade.SBIGHub</Name>
     </ProjectReference>
     <ProjectReference Include="..\SbigSharp\SbigSharp.csproj">
       <Project>{3be45310-83c8-4294-a30b-585ce4996940}</Project>

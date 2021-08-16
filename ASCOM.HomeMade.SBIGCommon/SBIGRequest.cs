@@ -29,6 +29,6 @@ namespace ASCOM.HomeMade.SBIGCommon
     {
         public string type;
         public ushort command;
-        public string parameters = "";
+        public object parameters = null;
     }
 }

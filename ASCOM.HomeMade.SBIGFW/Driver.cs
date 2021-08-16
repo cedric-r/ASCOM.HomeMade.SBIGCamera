@@ -28,6 +28,9 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using ASCOM.HomeMade.SBIGCommon;
+using ASCOM.HomeMade.SBIGClient;
+using ASCOM.HomeMade.SBIGHub;
+using System.Diagnostics;
 
 namespace ASCOM.HomeMade.SBIGFW
 {
@@ -36,25 +39,26 @@ namespace ASCOM.HomeMade.SBIGFW
     /// </summary>
     [Guid("3a7e63ad-c912-44f0-9489-e1744c9c2991")]
     [ClassInterface(ClassInterfaceType.None)]
+    [ServedClassName(FilterWheel.driverDescription)]
     [ProgId(FilterWheel.driverID)]
+    [ComVisible(true)]
 
-    public class FilterWheel : IFilterWheelV2
+    public class FilterWheel : ReferenceCountedObjectBase, IFilterWheelV2
     {
         /// <summary>
         /// ASCOM DeviceID (COM ProgID) for this driver.
         /// The DeviceID is used by ASCOM applications to load the driver at runtime.
         /// </summary>
-        internal const string driverID = "ASCOM.HomeMade.SBIGFW";
+        public const string driverID = "ASCOM.HomeMade.SBIGFW";
         // TODO Change the descriptive string for your driver then remove this line
         /// <summary>
         /// Driver description that displays in the ASCOM Chooser.
         /// </summary>
-        public static string driverDescription = "ASCOM SBIG FilterWheel Driver.";
+        public const string driverDescription = "ASCOM SBIG FilterWheel Driver.";
 
         private SBIGCommon.Debug debug = null;
-        private bool connectionState = false;
 
-        private SBIGClient server = null;
+        private SBIGClient.SBIGClient server = null;
         internal static string IPAddress = "";
 
         /// <summary>
@@ -77,6 +81,8 @@ namespace ASCOM.HomeMade.SBIGFW
             debug.LogMessage("FW", "Starting initialisation");
 
             debug.LogMessage(driverID + " " + DriverInfo);
+            int nProcessID = Process.GetCurrentProcess().Id;
+            debug.LogMessage("Process ID: " + nProcessID);
 
             debug.LogMessage("FW", "Completed initialisation");
         }
@@ -157,6 +163,16 @@ namespace ASCOM.HomeMade.SBIGFW
 
         public void Dispose()
         {
+            if (server != null)
+            {
+                try
+                {
+                    if (IsConnected)
+                        server.Disconnect();
+                }
+                catch (Exception) { }
+            }
+
         }
 
         public bool Connected
@@ -170,7 +186,7 @@ namespace ASCOM.HomeMade.SBIGFW
             {
                 debug.LogMessage("Connected", "Set {0}", value);
 
-                if (server == null) server = new SBIGClient();
+                if (server == null) server = new SBIGClient.SBIGClient();
 
                 if (value && IsConnected)
                 {
@@ -191,16 +207,16 @@ namespace ASCOM.HomeMade.SBIGFW
 
                     if (value)
                     {
-                        connectionState = server.Connect(IPAddress);
+                        bool connectionState = server.Connect(IPAddress);
 
                         if (!connectionState)
                         {
-                            debug.LogMessage("Connected Set", $"No USB FW found");
+                            debug.LogMessage("Connected Set", $"No USB camera found");
                             throw new DriverException("No suitable camera found");
                         }
                         else
                         {
-                            debug.LogMessage("Connected Set", $"Connected to USB FW");
+                            debug.LogMessage("Connected Set", $"Connected to camera");
 
                             GetFWSpecs();
                         }
@@ -210,7 +226,14 @@ namespace ASCOM.HomeMade.SBIGFW
                         debug.LogMessage("Connected Set", "Disconnection requested");
                         if (IsConnected)
                         {
-                            server.Disconnect();
+                            try
+                            {
+                                server.Disconnect();
+                            }
+                            catch (Exception ex)
+                            {
+                                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(ex));
+                            }
                         }
                     }
                 }
@@ -249,7 +272,7 @@ namespace ASCOM.HomeMade.SBIGFW
             get
             {
                 Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-                string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+                string driverVersion = String.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}", version.Major, version.Minor, version.Build);
                 debug.LogMessage("DriverVersion Get", driverVersion);
                 return driverVersion;
             }
@@ -601,80 +624,6 @@ namespace ASCOM.HomeMade.SBIGFW
         // here are some useful properties and methods that can be used as required
         // to help with driver development
 
-        #region ASCOM Registration
-
-        // Register or unregister driver for ASCOM. This is harmless if already
-        // registered or unregistered. 
-        //
-        /// <summary>
-        /// Register or unregister the driver with the ASCOM Platform.
-        /// This is harmless if the driver is already registered/unregistered.
-        /// </summary>
-        /// <param name="bRegister">If <c>true</c>, registers the driver, otherwise unregisters it.</param>
-        private static void RegUnregASCOM(bool bRegister)
-        {
-            using (var P = new ASCOM.Utilities.Profile())
-            {
-                P.DeviceType = "FilterWheel";
-                if (bRegister)
-                {
-                    P.Register(driverID, driverDescription);
-                }
-                else
-                {
-                    P.Unregister(driverID);
-                }
-            }
-        }
-
-        /// <summary>
-        /// This function registers the driver with the ASCOM Chooser and
-        /// is called automatically whenever this class is registered for COM Interop.
-        /// </summary>
-        /// <param name="t">Type of the class being registered, not used.</param>
-        /// <remarks>
-        /// This method typically runs in two distinct situations:
-        /// <list type="numbered">
-        /// <item>
-        /// In Visual Studio, when the project is successfully built.
-        /// For this to work correctly, the option <c>Register for COM Interop</c>
-        /// must be enabled in the project settings.
-        /// </item>
-        /// <item>During setup, when the installer registers the assembly for COM Interop.</item>
-        /// </list>
-        /// This technique should mean that it is never necessary to manually register a driver with ASCOM.
-        /// </remarks>
-        [ComRegisterFunction]
-        public static void RegisterASCOM(Type t)
-        {
-            RegUnregASCOM(true);
-        }
-
-        /// <summary>
-        /// This function unregisters the driver from the ASCOM Chooser and
-        /// is called automatically whenever this class is unregistered from COM Interop.
-        /// </summary>
-        /// <param name="t">Type of the class being registered, not used.</param>
-        /// <remarks>
-        /// This method typically runs in two distinct situations:
-        /// <list type="numbered">
-        /// <item>
-        /// In Visual Studio, when the project is cleaned or prior to rebuilding.
-        /// For this to work correctly, the option <c>Register for COM Interop</c>
-        /// must be enabled in the project settings.
-        /// </item>
-        /// <item>During uninstall, when the installer unregisters the assembly from COM Interop.</item>
-        /// </list>
-        /// This technique should mean that it is never necessary to manually unregister a driver from ASCOM.
-        /// </remarks>
-        [ComUnregisterFunction]
-        public static void UnregisterASCOM(Type t)
-        {
-            RegUnregASCOM(false);
-        }
-
-        #endregion
-
         /// <summary>
         /// Returns true if there is a valid connection to the driver hardware
         /// </summary>
@@ -682,16 +631,13 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             get
             {
-                debug.LogMessage("IsConnected", "connectionState=" + connectionState.ToString());
+                bool temp = false;
 
-                // Some sanity checks: if we think we're connected but the client isn't, then we've been disconnected. We'll try to reconnect.
-                if (connectionState && !server.IsConnected)
-                {
-                    debug.LogMessage("IsConnected", "I think we're connected, but the client says it isn't. Trying to reconnect...");
-                    connectionState = server.ConnectToServer();
-                }
+                if (server != null)
+                    temp = server.IsConnected;
 
-                return connectionState;
+                debug.LogMessage("IsConnected", "connectionState=" + temp.ToString());
+                return temp;
             }
         }
 

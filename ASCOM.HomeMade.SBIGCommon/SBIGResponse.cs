@@ -27,7 +27,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 {
     public class SBIGResponse
     {
-        public string payload = null;
+        public object payload = null;
         public Exception error = null;
     }
 }

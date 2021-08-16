@@ -1,0 +1,184 @@
+ 
+ConformanceCheck ASCOM Device Conformance Checker Version 6.5.7831.20978, Build time: 10/06/2021 11:39:22
+ConformanceCheck Running on: ASCOM Platform 6.5 SP1 6.5.1.3234
+ 
+ConformanceCheck Driver ProgID: ASCOM.HomeMade.SBIGImagingCamera
+ 
+Error handling 
+Error number for "Not Implemented" is: 80040400
+Error number for "Invalid Value 1" is: 80040405
+Error number for "Value Not Set 1" is: 80040402
+Error number for "Value Not Set 2" is: 80040403
+Error messages will not be interpreted to infer state.
+ 
+16:41:20.406 Driver Access Checks              OK       
+16:41:21.243 AccessChecks                      OK       Successfully created driver using late binding
+16:41:22.133 AccessChecks                      OK       Successfully connected using late binding
+16:41:22.137 AccessChecks                      INFO     The driver is a COM object
+16:41:22.818 AccessChecks                      INFO     Driver does not expose interface ICamera
+16:41:22.902 AccessChecks                      INFO     Device exposes interface ICameraV2
+16:41:22.932 AccessChecks                      OK       Successfully created driver using driver access toolkit
+16:41:22.957 AccessChecks                      OK       Successfully connected using driver access toolkit
+ 
+Conform is using ASCOM.DriverAccess.Camera to get a Camera object
+16:41:22.976 ConformanceCheck                  OK       Driver instance created successfully
+16:41:23.055 ConformanceCheck                  OK       Connected OK
+ 
+Common Driver Methods 
+16:41:23.103 InterfaceVersion                  OK       3
+16:41:23.140 Connected                         OK       True
+16:41:23.187 Description                       OK       ASCOM SBIG Imaging Camera Driver.
+16:41:23.236 DriverInfo                        OK       Version: 0.21.36
+16:41:23.281 DriverVersion                     OK       0.21.36
+16:41:23.325 Name                              OK       ASCOM driver for SBIG cameras
+16:41:23.373 CommandString                     INFO     Conform cannot test the CommandString method
+16:41:23.381 CommandBlind                      INFO     Conform cannot test the CommandBlind method
+16:41:23.392 CommandBool                       INFO     Conform cannot test the CommandBool method
+16:41:23.402 Action                            INFO     Conform cannot test the Action method
+16:41:23.420 SupportedActions                  OK       Driver returned an empty action list
+ 
+Can Properties 
+16:41:23.505 CanAbortExposure                  OK       True
+16:41:23.514 CanAsymmetricBin                  OK       False
+16:41:23.523 CanGetCoolerPower                 OK       True
+16:41:23.534 CanPulseGuide                     OK       False
+16:41:23.541 CanSetCCDTemperature              OK       True
+16:41:23.548 CanStopExposure                   OK       True
+16:41:23.555 CanFastReadout                    OK       True
+ 
+Pre-run Checks 
+ 
+Last Tests 
+16:41:23.706 LastExposureDuration              OK       LastExposureDuration correctly generated a COM exception before an exposure was made
+16:41:23.716 LastExposureStartTime             OK       LastExposureStartTime correctly generated a COM exception before an exposure was made
+ 
+Properties 
+16:41:23.788 MaxBinX                           OK       3
+16:41:23.841 MaxBinY                           OK       3
+16:41:23.907 BinX Read                         OK       1
+16:41:23.965 BinY Read                         OK       1
+16:41:24.013 BinX Write                        OK       Exception correctly generated on setting BinX to 0
+16:41:24.025 BinX Write                        OK       Exception correctly generated on setting BinX to 4
+16:41:24.037 BinY Write                        OK       Exception correctly generated on setting BinY to 0
+16:41:24.047 BinY Write                        OK       Exception correctly generated on setting BinY to 4
+16:41:24.055 BinXY Write                       OK       Successfully set symmetric xy binning: 1 x 1
+16:41:24.063 BinXY Write                       OK       Successfully set symmetric xy binning: 2 x 2
+16:41:24.070 BinXY Write                       OK       Successfully set symmetric xy binning: 3 x 3
+16:41:24.078 CameraState                       OK       cameraIdle
+16:41:24.119 CameraXSize                       OK       3358
+16:41:24.166 CameraYSize                       OK       2536
+16:41:24.217 CCDTemperature                    OK       27.28125
+16:41:24.261 CoolerOn Read                     OK       False
+16:41:24.308 CoolerOn Write                    OK       Successfully changed CoolerOn state
+16:41:24.330 CoolerPower                       OK       0
+16:41:24.392 ElectronsPerADU                   OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:24.447 FullWellCapacity                  OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:24.493 HasShutter                        OK       True
+16:41:24.540 HeatSinkTemperature               OK       0
+16:41:24.587 ImageReady                        OK       False
+16:41:24.634 ImageArray                        OK       Exception correctly generated when ImageReady is false
+16:41:24.646 ImageArrayVariant                 OK       Exception correctly generated when ImageReady is false
+16:41:24.658 IsPulseGuiding                    OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:24.694 MaxADU                            OK       50000
+16:41:24.741 NumX Read                         OK       3358
+16:41:24.789 NumX write                        OK       Successfully wrote 1679
+16:41:24.799 NumY Read                         OK       2536
+16:41:24.836 NumY write                        OK       Successfully wrote 1268
+16:41:24.846 PixelSizeX                        OK       5.4
+16:41:24.898 PixelSizeY                        OK       5.4
+16:41:24.944 SetCCDTemperature Read            OK       0
+16:41:24.989 SetCCDTemperature Write           OK       Successfully wrote 0.0
+16:41:25.006 SetCCDTemperature Write           INFO     Setpoint lower limit found in the range -100.000 to -104.999 degrees
+16:41:25.022 SetCCDTemperature Write           INFO     Setpoint can be set to 100.000 degrees
+16:41:25.031 StartX Read                       OK       0
+16:41:25.082 StartX write                      OK       Successfully wrote 1679
+16:41:25.092 StartY Read                       OK       0
+16:41:25.144 StartY write                      OK       Successfully wrote 1268
+16:41:25.155 SensorType Read                   OK       Monochrome
+16:41:25.169 BayerOffsetX Read                 OK       Sensor type is Monochrome and a PropertyNotImplementedException exception was generated as expected
+16:41:25.182 BayerOffsetY Read                 OK       Sensor type is Monochrome and a PropertyNotImplementedException exception was generated as expected
+16:41:25.194 ExposureMax Read                  OK       167777.16
+16:41:25.208 ExposureMin Read                  OK       0
+16:41:25.219 ExposureMin                       OK       ExposureMin is less than or equal to ExposureMax
+16:41:25.231 ExposureResolution Read           OK       0
+16:41:25.243 ExposureResolution                OK       ExposureResolution is less than or equal to ExposureMax
+16:41:25.256 FastReadout Read                  OK       False
+16:41:25.269 FastReadout Write                 OK       Able to change the FastReadout state OK
+16:41:25.284 GainMin Read                      OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.298 GainMax Read                      OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.312 Gains Read                        OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.327 Gain Read                         OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.340 Gain Read                         OK       All four gain properties throw exceptions - the driver is in "Gain Not Implemented" mode.
+16:41:25.355 Gain Write                        OK       PropertyNotImplementedException is expected and a PropertyNotImplementedException exception was generated as expected
+16:41:25.369 PercentCompleted Read             OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.380 ReadoutModes Read                 OK       RM_1X1
+16:41:25.392 ReadoutModes Read                 OK       RM_2X2
+16:41:25.404 ReadoutModes Read                 OK       RM_3X3
+16:41:25.414 ReadoutModes Read                 OK       RM_NX1
+16:41:25.425 ReadoutModes Read                 OK       RM_NX2
+16:41:25.435 ReadoutModes Read                 OK       RM_NX3
+16:41:25.446 ReadoutModes Read                 OK       RM_1X1_VOFFCHIP
+16:41:25.458 ReadoutModes Read                 OK       RM_2X2_VOFFCHIP
+16:41:25.468 ReadoutModes Read                 OK       RM_3X3_VOFFCHIP
+16:41:25.478 ReadoutModes Read                 OK       RM_9X9
+16:41:25.490 ReadoutModes Read                 OK       RM_NXN
+16:41:25.503 ReadoutMode Read                  OK       0
+16:41:25.513 ReadoutMode Index                 OK       ReadReadoutMode is within the bounds of the ReadoutModes ArrayList
+16:41:25.525 ReadoutMode Index                 INFO     Current value: RM_1X1
+16:41:25.541 SensorName Read                   OK       SBIG STT-8300 3 CCD Camera
+16:41:25.554 OffsetMin Read                    OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.569 OffsetMax Read                    OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.585 Offsets Read                      OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.595 Offset Read                       OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.607 Offset Read                       OK       All four offset properties throw exceptions - the driver is in "Offset Not Implemented" mode.
+16:41:25.620 Offset Write                      OK       PropertyNotImplementedException is expected and a PropertyNotImplementedException exception was generated as expected
+16:41:25.631 SubExposureDuration               OK       Optional member threw a PropertyNotImplementedException exception.
+16:41:25.673 SubExposureDuration write         OK       Optional member threw a PropertyNotImplementedException exception.
+ 
+Methods 
+16:41:25.750 AbortExposure                     OK       No exception generated when camera is already idle
+16:41:25.762 PulseGuide                        OK       CanPulseGuide is false and PulseGuide is not implemented in this driver
+16:41:25.776 StopExposure                      OK       No exception generated when camera is already idle
+ 
+Take image full frame 1 x 1 bin 
+16:41:29.918 StartExposure                     OK       Asynchronous exposure found OK: 2 seconds
+16:41:29.955 LastExposureDuration              OK       LastExposureDuration is: 2 seconds
+16:41:29.991 LastExposureStartTime             OK       LastExposureStartTime is correct to within 2 seconds: 2021-08-16T16:41:25 UTC
+16:41:30.241 ImageArray                        OK       Successfully read 32 bit integer array (1 plane) 3358 x 2536 pixels
+16:41:36.017 ImageArrayVariant                 OK       Successfully read variant array (1 plane) with System.Int32 elements 3358 x 2536 pixels
+ 
+Take image full frame 2 x 2 bin 
+16:41:39.452 StartExposure                     OK       Asynchronous exposure found OK: 2 seconds
+16:41:39.464 LastExposureDuration              OK       LastExposureDuration is: 2 seconds
+16:41:39.479 LastExposureStartTime             OK       LastExposureStartTime is correct to within 2 seconds: 2021-08-16T16:41:36 UTC
+16:41:39.535 ImageArray                        OK       Successfully read 32 bit integer array (1 plane) 1679 x 1268 pixels
+16:41:40.836 ImageArrayVariant                 OK       Successfully read variant array (1 plane) with System.Int32 elements 1679 x 1268 pixels
+ 
+Take image full frame 3 x 3 bin 
+16:41:43.684 StartExposure                     OK       Asynchronous exposure found OK: 2 seconds
+16:41:43.714 LastExposureDuration              OK       LastExposureDuration is: 2 seconds
+16:41:43.738 LastExposureStartTime             OK       LastExposureStartTime is correct to within 2 seconds: 2021-08-16T16:41:40 UTC
+16:41:43.774 ImageArray                        OK       Successfully read 32 bit integer array (1 plane) 1119 x 845 pixels
+16:41:44.311 ImageArrayVariant                 OK       Successfully read variant array (1 plane) with System.Int32 elements 1119 x 845 pixels
+ 
+StartExposure error cases 
+16:41:44.398 StartExposure                     OK       Exception correctly generated for negative duration
+16:41:44.461 StartExposure                     OK       Exception correctly generated for X size larger than binned chip size, Bin 1x1
+16:41:44.520 StartExposure                     OK       Exception correctly generated for Y size larger than binned chip size, Bin 1x1
+16:41:44.582 StartExposure                     OK       Exception correctly generated for X start outside binned chip size, Bin 1x1
+16:41:44.641 StartExposure                     OK       Exception correctly generated for Y start outside binned chip size, Bin 1x1
+16:41:44.701 StartExposure                     OK       Exception correctly generated for X size larger than binned chip size, Bin 2x2
+16:41:44.748 StartExposure                     OK       Exception correctly generated for Y size larger than binned chip size, Bin 2x2
+16:41:44.794 StartExposure                     OK       Exception correctly generated for X start outside binned chip size, Bin 2x2
+16:41:44.840 StartExposure                     OK       Exception correctly generated for Y start outside binned chip size, Bin 2x2
+16:41:44.886 StartExposure                     OK       Exception correctly generated for X size larger than binned chip size, Bin 3x3
+16:41:44.932 StartExposure                     OK       Exception correctly generated for Y size larger than binned chip size, Bin 3x3
+16:41:44.978 StartExposure                     OK       Exception correctly generated for X start outside binned chip size, Bin 3x3
+16:41:45.023 StartExposure                     OK       Exception correctly generated for Y start outside binned chip size, Bin 3x3
+ 
+Post-run Checks 
+16:41:45.177 PostRunCheck                      OK       Camera returned to initial cooler temperature
+ 
+Conformance test complete 
+ 
+No errors, warnings or issues found: your driver passes ASCOM validation!! 

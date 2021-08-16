@@ -17,6 +17,8 @@
  *
  */
 using ASCOM.DeviceInterface;
+using ASCOM.HomeMade.SBIGCommon;
+using ASCOM.HomeMade.SBIGHub;
 using SbigSharp;
 using System;
 using System.Collections.Generic;
@@ -26,7 +28,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ASCOM.HomeMade.SBIGCommon
+namespace ASCOM.HomeMade.SBIGClient
 {
     public class ImageTakerThread
     {
@@ -34,10 +36,12 @@ namespace ASCOM.HomeMade.SBIGCommon
         private const string driverID = "ASCOM.HomeMade.SBIGImagingCamera.ImageTaker";
         private SBIGClient server = null;
         private ISBIGCamera camera = null;
+        private string IPAddress = "";
         public bool StopExposure = false;
 
-        public ImageTakerThread(ISBIGCamera callerCamera)
+        public ImageTakerThread(ISBIGCamera callerCamera, string ipAddress)
         {
+            IPAddress = ipAddress;
             camera = callerCamera;
             server = new SBIGClient();
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
@@ -47,7 +51,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                 System.IO.Directory.CreateDirectory(strPath);
             }
             catch (Exception) { }
-            debug = new ASCOM.HomeMade.SBIGCommon.Debug(driverID, Path.Combine(strPath, "SBIGImageTaker_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
+            debug = new Debug(driverID, Path.Combine(strPath, "SBIGImageTaker_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
 
             debug.LogMessage("ImageTakerThread", "Starting initialisation");
 
@@ -77,6 +81,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             try
             {
                 if (StopExposure) return;
+                server.Connect(IPAddress);
                 debug.LogMessage("ImageTakerThread TakeImage", "Starting imaging worker");
 
                 if (!camera.RequiresExposureParams2)
@@ -108,7 +113,6 @@ namespace ASCOM.HomeMade.SBIGCommon
 
                 // read out the image
                 debug.LogMessage("ImageTakerThread TakeImage", "Waiting");
-                camera.CurrentCameraState = CameraStates.cameraReading;
 
                 if (StopExposure)
                 {
@@ -130,6 +134,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                 if (StopExposure) return;
 
                 debug.LogMessage("ImageTakerThread TakeImage", "Reading");
+                camera.CurrentCameraState = CameraStates.cameraReading;
                 var data = server.ReadoutData(exposureParams2);
 
                 if (StopExposure) return;
@@ -154,7 +159,7 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
             finally
             {
-                server.Close();
+                server.Disconnect();
             }
         }
 
