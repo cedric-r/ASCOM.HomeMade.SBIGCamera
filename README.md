@@ -6,18 +6,16 @@ As SBIG was bought by Diffraction Limited a few years ago, DL have decided not t
 
 So I decided to build my own. 
 
-This codebase is my first attempt over a weekend. Consider it alpha software and don't even expect it to work. But if you try it, please tell me and tell me if anything doesn't work. To do so, please activate trace logging in the ASCOM driver options so I can see what happens. The log file lives in your AppData\Local\ASCOM.HomeMade.SBIGCamera\ folder.
+This codebase started as a weekend project. Consider it alpha software and don't even expect it to work. But if you try it, please tell me and tell me if anything doesn't work. To do so, please activate trace logging in the ASCOM driver options so I can see what happens. The log file lives in your AppData\Local\ASCOM.HomeMade.*\ folders.
 
-For information, I've tested only with an STF-8300M with FW8 using SGP, NINA, and Voyager. I found that everything seems to be working:
-- Camera access.
+For information, I've tested only with an STF-8300M with FW8 and an STT-8300M with the guiding sensor FW using SGP, NINA, CCDCiel, and Voyager. I found that everything seems to be working:
+- Camera access (USB and Ethernet).
 - Cooling management.
-- FW access.
+- FW access (USB and Ethernet).
 
 If you just want to install the drivers and test them, run the installer: https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera/blob/main/HomeMade%20SBIG%20Camera%20Setup.exe
 
-Note that the software hasn't been through any certification (ASCOM or otherwise).
-
-Note also that the 64 bits driver uses an unofficial version of the SBIG library released by DL for Prism but isn't part of their official distribution (it officially doesn't exist).
+Note that the 64 bits driver uses an unofficial version of the SBIG library released by DL for Prism but isn't part of their official distribution (it officially doesn't exist).
 
 This work uses SbigSharp code written by eliotg (https://github.com/eliotg/SbigSharp).
 
