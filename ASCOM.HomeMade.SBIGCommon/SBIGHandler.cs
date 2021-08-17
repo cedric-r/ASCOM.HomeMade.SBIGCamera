@@ -54,8 +54,8 @@ namespace ASCOM.HomeMade.SBIGCommon
                 System.IO.Directory.CreateDirectory(strPath);
             }
             catch (Exception) { }
-            Debug.TraceEnabled = true;
-            debug = new Debug(deviceId, Path.Combine(@"c:\temp\", "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
+
+            debug = new Debug(deviceId, Path.Combine(strPath, "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
         }
 
         public SBIGResponse Transmit(SBIGRequest request)

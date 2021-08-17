@@ -36,7 +36,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             System.Console.WriteLine("Connecting camera");
             camera.Connected = true;
             binx = camera.PixelSizeX;
-            /*
+
             System.Console.WriteLine("Connecting FW");
             FilterWheel fw = new FilterWheel();
             fw.Connected = true;
@@ -47,8 +47,8 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             System.Console.WriteLine("Setting CCD temperature to 20");
             camera.SetCCDTemperature= 20.0;
             System.Console.WriteLine("Setting cooler on");
-            //camera.CoolerOn = true;
-            */
+            camera.CoolerOn = true;
+
             camera.NumX = camera.CameraXSize;
             camera.NumY = camera.CameraYSize;
             camera.StartX = 0;
@@ -63,11 +63,11 @@ namespace ASCOM.HomeMade.SBIGCameraTests
                 var resultImage = camera.ImageArray;
             }
             
-            //System.Console.WriteLine("Taking cancelled exposure");
-            //camera.StartExposure(300.0, true);
-            //System.Console.WriteLine("Waiting to abort");
-            //Thread.Sleep(5000);
-            //camera.AbortExposure();
+            System.Console.WriteLine("Taking cancelled exposure");
+            camera.StartExposure(300.0, true);
+            System.Console.WriteLine("Waiting to abort");
+            Thread.Sleep(5000);
+            camera.AbortExposure();
 
             SBIGGuidingCamera.Camera guidingCamera = new SBIGGuidingCamera.Camera();
             System.Console.WriteLine("Connecting guidingCamera");
@@ -78,9 +78,9 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             guidingCamera.StartX = 0;
             guidingCamera.StartY = 0;
             System.Console.WriteLine("Taking guiding exposure");
-            //guidingCamera.StartExposure(10.0, true);
-            //while (!guidingCamera.ImageReady) Thread.Sleep(100);
-            //var image = guidingCamera.ImageArray;
+            guidingCamera.StartExposure(10.0, true);
+            while (!guidingCamera.ImageReady) Thread.Sleep(100);
+            var image = guidingCamera.ImageArray;
 
             bool end1 = false;
             bool end2 = false;
