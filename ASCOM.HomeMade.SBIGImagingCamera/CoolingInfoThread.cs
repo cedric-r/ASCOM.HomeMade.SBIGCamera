@@ -18,6 +18,7 @@
  */
 using ASCOM.DeviceInterface;
 using ASCOM.HomeMade.SBIGCommon;
+using ASCOM.HomeMade.SBIGHub;
 using SbigSharp;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGImagingCamera
 {
-    public class CoolingInfoThread
+    public class CoolingInfoThread : ReferenceCountedObjectBase
     {
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGCamera.CoolingInfoThread";
