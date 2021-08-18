@@ -49,10 +49,13 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             System.Console.WriteLine("Setting cooler on");
             camera.CoolerOn = true;
 
-            camera.NumX = camera.CameraXSize;
-            camera.NumY = camera.CameraYSize;
+            // Take bin 2 images
+            camera.NumX = camera.CameraXSize/2;
+            camera.NumY = camera.CameraYSize/2;
             camera.StartX = 0;
             camera.StartY = 0;
+            camera.BinX = 2;
+            camera.BinY = 2;
 
             System.Console.WriteLine("Taking 10 imaging exposures");
             for (int i = 0; i < 1; i++)

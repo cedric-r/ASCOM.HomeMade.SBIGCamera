@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 0.21.40
-AppVersion=0.21.40
+AppVerName=ASCOM HomeMade SBig Camera Driver 0.21.41
+AppVersion=0.21.41
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=0.21.40
+VersionInfoVersion=0.21.41
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes
@@ -33,7 +33,6 @@ Name: "{cf}\ASCOM\Uninstall\Camera\HomeMade SBIGCamera\"
 ; Require a read-me HTML to appear after installation, maybe driver's Help doc
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\readme.txt"; DestDir: "{app}"; Flags: isreadme
 ; TODO: Add other files needed by your driver here (add subfolders above)
-Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCommon\bin\Debug\sensors.txt"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Astrometry.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Attributes.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Controls.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion

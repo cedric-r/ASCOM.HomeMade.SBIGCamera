@@ -72,8 +72,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private bool Shutdown = false;
         private ImageTakerThread imagetaker = null;
 
-        private Dictionary<string, double> pixelSizes = new Dictionary<string, double>();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
         /// Must be public for COM registration.
@@ -97,20 +95,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             debug.LogMessage("Process ID: " + nProcessID);
 
             CameraType = SBIG.CCD_REQUEST.CCD_IMAGING;
-
-            try
-            {
-                string[] sensors = File.ReadAllLines(Path.Combine(AssemblyDirectory, @"sensors.txt"));
-                foreach (string line in sensors)
-                {
-                    string[] parts = line.Split(':');
-                    pixelSizes.Add(parts[0], Double.Parse(parts[1]));
-                }
-            }
-            catch(Exception e)
-            {
-                debug.LogMessage("Camera", "Can't load sensors file");
-            }
 
             debug.LogMessage("Camera", "Completed initialisation");
         }
@@ -373,7 +357,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private List<SBIG.READOUT_INFO> ReadoutModeList = new List<SBIG.READOUT_INFO>();
         private int ccdWidth { get { return ReadoutModeList.Find(r => r.mode == 0).width; } }
         private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == 0).height; } }
-        private double pixelSize { get { return ReadoutModeList.Find(r => r.mode == Binning).pixel_height; } } // We assume square pixels
+        private double pixelSize { get { return ((double)ReadoutModeList.Find(r => r.mode == Binning).pixel_height)/100; } } // We assume square pixels
 
         private DateTime exposureStart = DateTime.MinValue;
         private double cameraLastExposureDuration = 0.0;
@@ -428,7 +412,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 debug.LogMessage("BinX Get", "Bin size is "+ GetCurrentReadoutMode(Binning).pixel_width);
-                return (short)GetCurrentReadoutMode(Binning).pixel_width == 0 ? (short)1 : (short)GetCurrentReadoutMode(Binning).pixel_width;
+                return (short)ConvertReadoutModeToBinning(Binning);
             }
             set
             {
@@ -445,7 +429,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 debug.LogMessage("BinY Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_height);
-                return (short)GetCurrentReadoutMode(Binning).pixel_height == 0 ? (short)1 : (short)GetCurrentReadoutMode(Binning).pixel_height;
+                return (short)ConvertReadoutModeToBinning(Binning);
             }
             set
             {
@@ -970,8 +954,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("PixelSizeX Get", GetPixelSize().ToString());
-                return GetPixelSize();
+                debug.LogMessage("PixelSizeX Get", pixelSize.ToString());
+                return pixelSize;
             }
         }
 
@@ -979,8 +963,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("PixelSizeY Get", GetPixelSize().ToString());
-                return GetPixelSize();
+                debug.LogMessage("PixelSizeY Get", pixelSize.ToString());
+                return pixelSize;
             }
         }
 
@@ -1208,15 +1192,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             return ReadoutModeList.Find(r => r.mode == Binning);
         }
 
-        private short ConvertReadoutToBinning(SBIG.READOUT_BINNING_MODE binning)
-        {
-            short bin = (short)ReadoutModeList.Find(r => r.mode == Binning).pixel_width;
-            return bin;
-        }
-
         private SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short binning)
         {
-            SBIG.READOUT_BINNING_MODE readout = ReadoutModeList.Find(r => r.pixel_width == binning).mode;
+            double nominalPixelWidth = ReadoutModeList.Find(r1 => r1.mode == 0).pixel_width;
+            SBIG.READOUT_INFO ri = ReadoutModeList.Find(r => (r.pixel_width / nominalPixelWidth) == binning);
+            SBIG.READOUT_BINNING_MODE readout = ri.mode;
             return readout;
         }
 
@@ -1255,8 +1235,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 for (int i = 0; i < gcir0.readoutModes; i++)
                 {
                     SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
-                    ri.pixel_height = (uint)ConvertReadoutModeToBinning(ri.mode);
-                    ri.pixel_width = (uint)ConvertReadoutModeToBinning(ri.mode);
+                    ri.pixel_width = Utils.BCDToUInt(ri.pixel_width);
+                    ri.pixel_height = Utils.BCDToUInt(ri.pixel_height);
                     ReadoutModeList.Add(ri);
                     debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
                     debug.LogMessage("Connected Set", $"    Width: {ri.width}");
@@ -1419,23 +1399,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e6));
                 throw new ASCOM.DriverException(Utils.DisplayException(e6));
             }
-        }
-
-        private double GetPixelSize()
-        {
-            double size = pixelSize;
-            double factor = 1;
-            if (pixelSizes.Count>0)
-            {
-                foreach(string key in pixelSizes.Keys)
-                { 
-                    if (CameraName.Contains(key))
-                    {
-                        factor = pixelSizes[key];
-                    }
-                }
-            }
-            return (double)(size * factor);
         }
 
         public static string AssemblyDirectory
