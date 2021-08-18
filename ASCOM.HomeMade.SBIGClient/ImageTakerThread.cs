@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGClient
 {
-    public class ImageTakerThread
+    public class ImageTakerThread : ReferenceCountedObjectBase
     {
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGImagingCamera.ImageTaker";
