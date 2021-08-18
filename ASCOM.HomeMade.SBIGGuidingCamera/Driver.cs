@@ -338,7 +338,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private List<SBIG.READOUT_INFO> ReadoutModeList = new List<SBIG.READOUT_INFO>();
         private int ccdWidth { get { return ReadoutModeList.Find(r => r.mode == 0).width; } }
         private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == 0).height; } }
-        private double pixelSize { get { return ReadoutModeList.Find(r => r.mode == Binning).pixel_height; } } // We assume square pixels
+        private double pixelSize { get { return ((double)ReadoutModeList.Find(r => r.mode == Binning).pixel_height)/100; } } // We assume square pixels
 
         private DateTime exposureStart = DateTime.MinValue;
         private double cameraLastExposureDuration = 0.0;
@@ -391,7 +391,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("BinX Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_width);
-                return (short)GetCurrentReadoutMode(Binning).pixel_width == 0 ? (short)1 : (short)GetCurrentReadoutMode(Binning).pixel_width;
+                return (short)ConvertReadoutModeToBinning(Binning);
             }
             set
             {
@@ -408,7 +408,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("BinY Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_height);
-                return (short)GetCurrentReadoutMode(Binning).pixel_height == 0 ? (short)1 : (short)GetCurrentReadoutMode(Binning).pixel_height;
+                return (short)ConvertReadoutModeToBinning(Binning);
             }
             set
             {
@@ -1143,7 +1143,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
         private SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short binning)
         {
-            SBIG.READOUT_BINNING_MODE readout = ReadoutModeList.Find(r => r.pixel_width == binning).mode;
+            double nominalPixelWidth = ReadoutModeList.Find(r1 => r1.mode == 0).pixel_width;
+            SBIG.READOUT_INFO ri = ReadoutModeList.Find(r => (r.pixel_width / nominalPixelWidth) == binning);
+            SBIG.READOUT_BINNING_MODE readout = ri.mode;
             return readout;
         }
 
@@ -1182,8 +1184,8 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 for (int i = 0; i < gcir0.readoutModes; i++)
                 {
                     SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
-                    ri.pixel_height = (uint)ConvertReadoutModeToBinning(ri.mode);
-                    ri.pixel_width = (uint)ConvertReadoutModeToBinning(ri.mode);
+                    ri.pixel_width = Utils.BCDToUInt(ri.pixel_width);
+                    ri.pixel_height = Utils.BCDToUInt(ri.pixel_height);
                     ReadoutModeList.Add(ri);
                     debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
                     debug.LogMessage("Connected Set", $"    Width: {ri.width}");

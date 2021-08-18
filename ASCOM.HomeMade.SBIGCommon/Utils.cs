@@ -116,5 +116,18 @@ namespace ASCOM.HomeMade.SBIGCommon
             }
             return newMatrix;
         }
+
+        public static uint BCDToUInt(uint bcd)
+        {
+            uint result = 0;
+            uint multiplier = 1;
+            for (int i = 0; i < 8; ++i)
+            {
+                var nextDigit = (bcd >> (4 * i)) & 0xF;
+                result += nextDigit * multiplier;
+                multiplier *= 10;
+            }
+            return result;
+        }
     }
 }
