@@ -351,6 +351,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         private string CameraName = "";
         private bool ColorCamera = false;
+        private int ColorCameraType = 0;
+        private int AdSize = 16;
         private double CCDTempTarget = 0;
         private bool CCDTempTargetSet = false;
         private bool HasMechanicalShutter = false;
@@ -411,7 +413,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("BinX Get", "Bin size is "+ GetCurrentReadoutMode(Binning).pixel_width);
+                debug.LogMessage("BinX Get", "Bin size is "+ ConvertReadoutModeToBinning(Binning));
                 return (short)ConvertReadoutModeToBinning(Binning);
             }
             set
@@ -428,7 +430,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("BinY Get", "Bin size is " + GetCurrentReadoutMode(Binning).pixel_height);
+                debug.LogMessage("BinY Get", "Bin size is " + ConvertReadoutModeToBinning(Binning));
                 return (short)ConvertReadoutModeToBinning(Binning);
             }
             set
@@ -1016,9 +1018,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("SensorType Get", "Camera type is "+ColorCamera.ToString());
-                if (ColorCamera) return SensorType.RGGB; // Guessing here
-                else return SensorType.Monochrome;
+                SensorType type;
+                if (ColorCamera)
+                {
+                    if (ColorCameraType == 0) type = SensorType.RGGB; // Guessing here
+                    else type = SensorType.LRGB;
+                }
+                else type = SensorType.Monochrome;
+                debug.LogMessage("SensorType Get", "Camera type is " + type.ToString());
+                return type;
             }
         }
 
@@ -1273,17 +1281,14 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 throw new ASCOM.DriverException(Utils.DisplayException(e2));
             }
 
-            /* try
+            try
             {
                 // get extended info
-                var gcir3 = new SBIG.GetCCDInfoResults3();
-                server.UnivDrvCommand(
-                    SBIG.PAR_COMMAND.CC_GET_CCD_INFO,
+                var gcir3 = server.CCD_INFO_EXTENDED_PIXCEL(
                     new SBIG.GetCCDInfoParams
                     {
                         request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED_5C
-                    },
-                    out gcir3);
+                    });
                 // print it out
                 debug.LogMessage("Connected Set", $"Filter wheel: {gcir3.filterType}");
                 switch (gcir3.filterType)
@@ -1304,11 +1309,14 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                         debug.LogMessage("Connected Set", $"    Unexpected");
                         break;
                 }
+                if (gcir3.adSize == SBIG.AD_SIZE.AD_12_BITS) AdSize = 12;
+                else if (gcir3.adSize == SBIG.AD_SIZE.AD_16_BITS) AdSize = 16;
+                else AdSize = 16; // Go with 16 bits default
             }
             catch (Exception e3)
             {
-                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e3));
-            } */
+                debug.LogMessage("Connected Set", "Not PixCel camera");
+            }
 
             try
             {
@@ -1368,8 +1376,16 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 {
                     debug.LogMessage("Connected Set", $"Color CCD");
                     ColorCamera = true;
-                    if (Utils.IsBitSet(gcir6.ccdBits, 1)) debug.LogMessage("Connected Set", $"Truesense color matrix");
-                    else debug.LogMessage("Connected Set", $"Bayer color matrix");
+                    if (Utils.IsBitSet(gcir6.ccdBits, 1))
+                    {
+                        debug.LogMessage("Connected Set", $"Truesense color matrix");
+                        ColorCameraType = 1;
+                    }
+                    else
+                    {
+                        debug.LogMessage("Connected Set", $"Bayer color matrix");
+                        ColorCameraType = 0;
+                    }
                 }
                 else
                 {
