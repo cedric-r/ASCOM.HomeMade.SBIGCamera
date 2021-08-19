@@ -186,6 +186,15 @@ namespace ASCOM.HomeMade.SBIGClient
             return (SBIG.GetCCDInfoResults6)response.payload;
         }
 
+        public SBIG.GetCCDInfoResults3 CCD_INFO_EXTENDED_PIXCEL(SBIG.GetCCDInfoParams tparams)
+        {
+            debug.LogMessage("SBIGClient", "CCD_INFO_EXTENDED_PIXCEL");
+            if (!IsConnected) throw new ApplicationException("Not connected to server");
+            SBIGResponse response = SendMessage("CCD_INFO_EXTENDED_PIXCEL", SBIG.PAR_COMMAND.CC_GET_CCD_INFO, tparams);
+            if (response.error != null) throw response.error;
+            return (SBIG.GetCCDInfoResults3)response.payload;
+        }
+
         public void AbortExposure(SBIG.StartExposureParams2 sep2)
         {
             debug.LogMessage("SBIGClient", "AbortExposure");

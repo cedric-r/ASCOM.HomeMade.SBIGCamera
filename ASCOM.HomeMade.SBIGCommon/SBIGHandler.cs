@@ -145,6 +145,12 @@ namespace ASCOM.HomeMade.SBIGCommon
                         UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p7, out result7);
                         response.payload = result7;
                         break;
+                    case "CCD_INFO_EXTENDED_PIXCEL":
+                        SBIG.GetCCDInfoParams p10 = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults3 result10 = new SBIG.GetCCDInfoResults3();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p10, out result10);
+                        response.payload = result10;
+                        break;
                     case "EndReadout":
                         SBIG.CCD_REQUEST ccd = (SBIG.CCD_REQUEST)request.parameters;
                         if (!exposures.Keys.Contains(ccd)) exposures.Remove(ccd);
@@ -156,7 +162,9 @@ namespace ASCOM.HomeMade.SBIGCommon
                         SBIG.StartExposureParams2 p11 = (SBIG.StartExposureParams2)request.parameters;
                         if (exposures.Keys.Contains(p11.ccd))
                         {
-                            if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan((long)exposures[p11.ccd].duration * TimeSpan.TicksPerSecond / 100)))
+                            long duration = (long)exposures[p11.ccd].duration;
+                            if (duration > SBIG.EXP_FAST_READOUT) duration -= SBIG.EXP_FAST_READOUT;
+                            if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan(duration * TimeSpan.TicksPerSecond / 100)))
                                 temp = true;
                         }
                         //bool inProgress = server.ExposureInProgress();
