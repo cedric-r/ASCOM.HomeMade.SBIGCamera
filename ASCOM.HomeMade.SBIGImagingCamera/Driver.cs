@@ -48,7 +48,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
     [ServedClassName(Camera.driverDescription)]
     [ProgId(Camera.driverID)]
     [ComVisible(true)]
-    public class Camera : ISBIGCamera, ICameraV3, ICameraV2
+    public class Camera : ISBIGCameraSpecs, ICameraV3, ICameraV2
     {
         /// <summary>
         /// ASCOM DeviceID (COM ProgID) for this driver.
@@ -61,11 +61,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         /// Driver description that displays in the ASCOM Chooser.
         /// </summary>
         public const string driverDescription = "ASCOM SBIG Imaging Camera Driver.";
-
-        private SBIGCommon.Debug debug = null;
-
-        private SBIGClient.SBIGClient server = null;
-        internal static string IPAddress = "";
 
         private BackgroundWorker bw = null;
         private BackgroundWorker imagingWorker = null;
@@ -217,7 +212,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 if (value && IsConnected)
                 {
                     debug.LogMessage("Connected", "Already connected");
-                    GetCameraSpecs();
+                    cameraInfo = GetCameraSpecs();
 
                     return;
                 }
@@ -244,7 +239,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                         {
                             debug.LogMessage("Connected Set", $"Connected to camera");
 
-                            GetCameraSpecs();
+                            cameraInfo = GetCameraSpecs();
 
                             debug.LogMessage("Camera", "Starting background cooler worker");
                             Shutdown = false;
@@ -349,26 +344,17 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private const double MIN_EXPOSURE_TIME = 0; // This is camera dependent. So requesting a shorter exposure than the camera can do will result in minimum allowed exposure
         private const double EXPOSURE_RESOLTION = 0.0;
 
-        private string CameraName = "";
-        private bool ColorCamera = false;
-        private int ColorCameraType = 0;
-        private int AdSize = 16;
         private double CCDTempTarget = 0;
         private bool CCDTempTargetSet = false;
-        private bool HasMechanicalShutter = false;
-        private List<SBIG.READOUT_INFO> ReadoutModeList = new List<SBIG.READOUT_INFO>();
-        private int ccdWidth { get { return ReadoutModeList.Find(r => r.mode == 0).width; } }
-        private int ccdHeight { get { return ReadoutModeList.Find(r => r.mode == 0).height; } }
-        private double pixelSize { get { return ((double)ReadoutModeList.Find(r => r.mode == Binning).pixel_height)/100; } } // We assume square pixels
 
         private DateTime exposureStart = DateTime.MinValue;
         private double cameraLastExposureDuration = 0.0;
 
         private SBIG.StartExposureParams2 exposureParams2;
-        private SBIG.QueryTemperatureStatusResults2 Cooling;
 
         public void AbortExposure()
         {
+            debug.LogMessage("AbortExposure", "Get");
             if (!IsConnected) throw new NotConnectedException("Camera is not connected");
 
             try
@@ -413,12 +399,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("BinX Get", "Bin size is "+ ConvertReadoutModeToBinning(Binning));
-                return (short)ConvertReadoutModeToBinning(Binning);
+                debug.LogMessage("BinX", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                debug.LogMessage("BinX Get", "Bin size is "+ ConvertReadoutModeToXBinning(Binning));
+                return (short)ConvertReadoutModeToXBinning(Binning);
             }
             set
             {
                 debug.LogMessage("BinX Set", value.ToString());
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
                 if (value > MaxBinX) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinX);
                 Binning = ConvertBinningToReadout(value);
@@ -430,12 +419,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("BinY Get", "Bin size is " + ConvertReadoutModeToBinning(Binning));
-                return (short)ConvertReadoutModeToBinning(Binning);
+                debug.LogMessage("BinY", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                debug.LogMessage("BinY Get", "Bin size is " + ConvertReadoutModeToYBinning(Binning));
+                return (short)ConvertReadoutModeToYBinning(Binning);
             }
             set
             {
                 debug.LogMessage("BinY Set", value.ToString());
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
                 if (value > MaxBinY) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinY);
                 Binning = ConvertBinningToReadout(value);
@@ -446,6 +438,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CCDTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CCDTemperature Get", "CCD temperature is " + Cooling.imagingCCDTemperature);
                 return Cooling.imagingCCDTemperature;
@@ -456,6 +449,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CameraState", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CameraState Get", CurrentCameraState.ToString());
                 return CurrentCameraState;
@@ -466,6 +460,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CameraXSize", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CameraXSize Get", ccdWidth.ToString());
                 return ccdWidth;
@@ -476,6 +471,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CameraYSize", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CameraYSize Get", ccdHeight.ToString());
                 return ccdHeight;
@@ -487,6 +483,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             get
             {
                 // I removed the check that the camera requires StartExposureParams2
+                debug.LogMessage("CanAbortExposure", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CanAbortExposure Get", true.ToString());
                 return true;
             }
@@ -496,7 +494,10 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CanAsymmetricBin", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CanAsymmetricBin Get", false.ToString());
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 return false;
             }
         }
@@ -505,7 +506,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                bool fr = CameraName.Contains("STF-8300") || CameraName.Contains("STT-8300"); // Only STF-8300 can use fastreadout
+                debug.LogMessage("CanFastReadout", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                bool fr = cameraInfo.name.Contains("STF-8300") || cameraInfo.name.Contains("STT-8300"); // Only STF-8300 can use fastreadout
                 debug.LogMessage("CanFastReadout Get", fr.ToString());
                 return fr;
             }
@@ -515,6 +518,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CanGetCoolerPower", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CanGetCoolerPower Get", true.ToString());
                 return true;
             }
@@ -524,6 +529,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CanPulseGuide", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CanPulseGuide Get", false.ToString());
                 return false;
             }
@@ -533,6 +540,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CanSetCCDTemperature", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CanSetCCDTemperature Get", true.ToString());
                 return true;
             }
@@ -542,6 +551,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CanStopExposure", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (RequiresExposureParams2)
                 {
                     debug.LogMessage("CanStopExposure Get", true.ToString());
@@ -559,6 +570,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CoolerOn", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CoolerOn Get", "Cooler is " + Cooling.coolingEnabled.value.ToString());
                 return Cooling.coolingEnabled.value == 0 ? false : true;
@@ -567,6 +579,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             {
                 try
                 {
+                    debug.LogMessage("CoolerOn", "Set");
                     if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                     var tparams = new SBIG.SetTemperatureRegulationParams2();
                     if (value)
@@ -606,6 +619,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("CoolerPower", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("CoolerPower Get", "Cooler power is " + Cooling.imagingCCDPower.ToString());
                 return Cooling.imagingCCDPower;
@@ -616,6 +630,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ElectronsPerADU", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ElectronsPerADU Get", "Not implemented");
                 throw new ASCOM.PropertyNotImplementedException("ElectronsPerADU", false);
@@ -626,6 +641,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ExposureMax", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ExposureMax Get", "Exposure max is " + MAX_EXPOSURE_TIME.ToString());
                 return MAX_EXPOSURE_TIME;
@@ -636,6 +652,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ExposureMin", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ExposureMin Get", "Exposure min is " + MIN_EXPOSURE_TIME.ToString());
                 return MIN_EXPOSURE_TIME;
@@ -646,6 +663,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ExposureResolution", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ExposureResolution Get", "Exposure resolution min is " + EXPOSURE_RESOLTION.ToString());
                 return EXPOSURE_RESOLTION;
@@ -656,6 +674,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("FastReadout", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (CanFastReadout)
                 {
@@ -669,6 +688,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             }
             set
             {
+                debug.LogMessage("FastReadout", "Set");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (CanFastReadout)
                 {
@@ -778,9 +798,10 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("HasShutter", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("HasShutter Get", HasMechanicalShutter.ToString());
-                return HasMechanicalShutter;
+                debug.LogMessage("HasShutter Get", cameraInfo.mechanicalShutter.ToString());
+                return cameraInfo.mechanicalShutter;
             }
         }
 
@@ -788,6 +809,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("HeatSinkTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("HeatSinkTemperature Get", "Heatsink temperature is " + Cooling.heatsinkTemperature.ToString());
                 return Cooling.heatsinkTemperature;
@@ -798,6 +820,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ImageArray", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!cameraImageReady)
                 {
@@ -815,6 +838,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ImageArrayVariant", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!cameraImageReady)
                 {
@@ -841,6 +865,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ImageReady", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ImageReady Get", cameraImageReady.ToString());
                 return cameraImageReady;
@@ -851,6 +876,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("IsPulseGuiding", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("IsPulseGuiding Get", "Not implemented");
                 throw new ASCOM.PropertyNotImplementedException("IsPulseGuiding", false);
@@ -861,6 +887,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("LastExposureDuration", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!cameraImageReady)
                 {
@@ -876,6 +903,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("LastExposureStartTime", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!cameraImageReady)
                 {
@@ -891,6 +919,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("MaxADU", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("MaxADU Get", "60000");
                 return 50000;
@@ -901,6 +930,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("MaxBinX", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("MaxBinX Get", "3");
                 return 3;
             }
@@ -910,6 +941,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("MaxBinY", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("MaxBinY Get", "3");
                 return 3;
             }
@@ -956,6 +989,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("PixelSizeX", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("PixelSizeX Get", pixelSize.ToString());
                 return pixelSize;
             }
@@ -965,6 +1000,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("PixelSizeY", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("PixelSizeY Get", pixelSize.ToString());
                 return pixelSize;
             }
@@ -980,11 +1017,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("ReadoutMode", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ReadoutMode Get", "Binning is " + Binning);
                 return (short)Binning;
             }
             set
             {
+                debug.LogMessage("ReadoutMode", "Set");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ReadoutMode Set", "Setting binning to " + value);
                 Binning = (SBIG.READOUT_BINNING_MODE)value;
             }
@@ -994,10 +1035,10 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("ReadoutModes Get", "Returning readout modes");
+                debug.LogMessage("ReadoutModes", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 ArrayList list = new ArrayList();
-                foreach (var readoutmode in ReadoutModeList)
+                foreach (var readoutmode in cameraInfo.cameraReadoutModes)
                 {
                     list.Add(readoutmode.mode.ToString());
                 }
@@ -1009,8 +1050,10 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
-                debug.LogMessage("SensorName Get", "Camera name is "+CameraName);
-                return CameraName;
+                debug.LogMessage("SensorName", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                debug.LogMessage("SensorName Get", "Camera name is "+ cameraInfo.name);
+                return cameraInfo.name;
             }
         }
 
@@ -1018,10 +1061,12 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("SensorType", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 SensorType type;
-                if (ColorCamera)
+                if (cameraInfo.colourCamera)
                 {
-                    if (ColorCameraType == 0) type = SensorType.RGGB; // Guessing here
+                    if (cameraInfo.bayer == CameraInfo.TRUESENSE) type = SensorType.RGGB; // Guessing here
                     else type = SensorType.LRGB;
                 }
                 else type = SensorType.Monochrome;
@@ -1034,11 +1079,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         {
             get
             {
+                debug.LogMessage("SetCCDTemperature", "Get");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("SetCCDTemperature Get", "CCD temperature target is " + CCDTempTarget);
                 return CCDTempTarget;
             }
             set
             {
+                debug.LogMessage("SetCCDTemperature", "Set");
+                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (value > 100 || value < -100)
                     throw new ASCOM.InvalidValueException("Target temperature is too low of too high");
                 CCDTempTarget = value;
@@ -1053,6 +1102,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             cameraImageReady = false;
             cameraImageArray = null;
 
+            debug.LogMessage("StartExposure", "Get");
             if (!IsConnected) throw new NotConnectedException("Camera is not connected");
             debug.LogMessage("StartExposure", Duration.ToString() + " " + Light.ToString());
             if (Duration < 0.0) throw new InvalidValueException("StartExposure", Duration.ToString(), "0.0 upwards");
@@ -1135,25 +1185,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         // here are some useful properties and methods that can be used as required
         // to help with driver development
 
-        /// <summary>
-        /// Returns true if there is a valid connection to the driver hardware
-        /// </summary>
-        private bool IsConnected
-        {
-            get
-            {
-
-                bool temp = false;
-
-                if (server != null)
-                    temp = server.IsConnected;
-
-                debug.LogMessage("IsConnected", "connectionState=" + temp.ToString());
-                return temp;
-            }
-        }
-
-        private short ConvertReadoutModeToBinning(SBIG.READOUT_BINNING_MODE binning)
+        private short ConvertReadoutModeToXBinning(SBIG.READOUT_BINNING_MODE binning)
         {
             short bin = 0;
             switch (binning)
@@ -1195,15 +1227,57 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             return bin;
         }
 
-        private SBIG.READOUT_INFO GetCurrentReadoutMode(SBIG.READOUT_BINNING_MODE binning)
+        private short ConvertReadoutModeToYBinning(SBIG.READOUT_BINNING_MODE binning)
         {
-            return ReadoutModeList.Find(r => r.mode == Binning);
+            short bin = 0;
+            switch (binning)
+            {
+                case SBIG.READOUT_BINNING_MODE.RM_1X1:
+                    bin = 1;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_1X1_VOFFCHIP:
+                    bin = 1;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_2X2:
+                    bin = 2;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_2X2_VOFFCHIP:
+                    bin = 2;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_3X3:
+                    bin = 3;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_3X3_VOFFCHIP:
+                    bin = 3;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_9X9:
+                    bin = 9;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_NX1:
+                    bin = 0;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_NX2:
+                    bin = 0;
+                    break;
+                case SBIG.READOUT_BINNING_MODE.RM_NX3:
+                    bin = 0;
+                    break;
+                default:
+                    bin = 0;
+                    break;
+            }
+            return bin;
+        }
+
+        private CameraReadoutMode GetCurrentReadoutMode(SBIG.READOUT_BINNING_MODE binning)
+        {
+            return cameraInfo.cameraReadoutModes.Find(r => r.mode == Binning);
         }
 
         private SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short binning)
         {
-            double nominalPixelWidth = ReadoutModeList.Find(r1 => r1.mode == 0).pixel_width;
-            SBIG.READOUT_INFO ri = ReadoutModeList.Find(r => (r.pixel_width / nominalPixelWidth) == binning);
+            double nominalPixelWidth = cameraInfo.cameraReadoutModes.Find(r1 => r1.mode == 0).pixel_width;
+            CameraReadoutMode ri = cameraInfo.cameraReadoutModes.Find(r => (r.pixel_width / nominalPixelWidth) == binning);
             SBIG.READOUT_BINNING_MODE readout = ri.mode;
             return readout;
         }
@@ -1217,203 +1291,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             if (!IsConnected)
             {
                 throw new ASCOM.NotConnectedException(message);
-            }
-        }
-
-        private void GetCameraSpecs()
-        {
-            debug.LogMessage("Connected Set", $"Getting camera info");
-            if (!IsConnected) throw new NotConnectedException("Not conneted to server");
-
-            try
-            {
-                // query camera info
-                var gcir0 = server.CCD_INFO(new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_IMAGING
-                });
-                // now print it out
-                debug.LogMessage("Connected Set", $"Firmware version: {gcir0.firmwareVersion >> 8}.{gcir0.firmwareVersion & 0xFF}");
-                debug.LogMessage("Connected Set", $"Camera type: {gcir0.cameraType}");
-                CameraModel = gcir0.cameraType;
-                debug.LogMessage("Connected Set", $"Camera name: {gcir0.name}");
-                CameraName = gcir0.name;
-                debug.LogMessage("Connected Set", $"Readout modes: {gcir0.readoutModes}");
-                Binning = SBIG.READOUT_BINNING_MODE.RM_1X1;
-                for (int i = 0; i < gcir0.readoutModes; i++)
-                {
-                    SBIG.READOUT_INFO ri = gcir0.readoutInfo[i];
-                    ri.pixel_width = Utils.BCDToUInt(ri.pixel_width);
-                    ri.pixel_height = Utils.BCDToUInt(ri.pixel_height);
-                    ReadoutModeList.Add(ri);
-                    debug.LogMessage("Connected Set", $"    Binning mode: {ri.mode}");
-                    debug.LogMessage("Connected Set", $"    Width: {ri.width}");
-                    debug.LogMessage("Connected Set", $"    Height: {ri.height}"); // Don't trust this, there is at least 1 bug in the STF-8300 that reports a height of 0 for mode RM_NX1
-                    debug.LogMessage("Connected Set", $"    Gain: {ri.gain >> 8}.{ri.gain & 0xFF} e-/ADU");
-                    debug.LogMessage("Connected Set", $"    Pixel width: {ri.pixel_width}"); // The SBIG documentation is wrong: this isn't pixel size in microns, this is pixel binning size
-                    debug.LogMessage("Connected Set", $"    Pixel height: {ri.pixel_height}"); // The SBIG documentation is wrong: this isn't pixel size in microns, this is pixel binning size
-                }
-            }
-            catch (Exception e1)
-            {
-                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e1));
-                throw new ASCOM.DriverException(Utils.DisplayException(e1));
-            }
-
-            try
-            {
-                // get extended info
-                var gcir2 = server.CCD_INFO_EXTENDED(new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED
-                });
-                // print it out
-                debug.LogMessage("Connected Set", $"Bad columns: {gcir2.badColumns} = ");
-                debug.LogMessage("Connected Set",
-                    $"{gcir2.columns[0]}, {gcir2.columns[1] }, " +
-                    $"{gcir2.columns[2]}, { gcir2.columns[3]}");
-                debug.LogMessage("Connected Set", $"ABG: {gcir2.imagingABG}");
-                debug.LogMessage("Connected Set", $"Serial number: {gcir2.serialNumber}");
-            }
-            catch (Exception e2)
-            {
-                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e2));
-                throw new ASCOM.DriverException(Utils.DisplayException(e2));
-            }
-
-            try
-            {
-                // get extended info
-                var gcir3 = server.CCD_INFO_EXTENDED_PIXCEL(
-                    new SBIG.GetCCDInfoParams
-                    {
-                        request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED_5C
-                    });
-                // print it out
-                debug.LogMessage("Connected Set", $"Filter wheel: {gcir3.filterType}");
-                switch (gcir3.filterType)
-                {
-                    case SBIG.FILTER_TYPE.FW_UNKNOWN:
-                        debug.LogMessage("Connected Set", $"    Unknown");
-                        break;
-                    case SBIG.FILTER_TYPE.FW_VANE:
-                        debug.LogMessage("Connected Set", $"    Vane");
-                        break;
-                    case SBIG.FILTER_TYPE.FW_EXTERNAL:
-                        debug.LogMessage("Connected Set", $"    External");
-                        break;
-                    case SBIG.FILTER_TYPE.FW_FILTER_WHEEL:
-                        debug.LogMessage("Connected Set", $"    Standard");
-                        break;
-                    default:
-                        debug.LogMessage("Connected Set", $"    Unexpected");
-                        break;
-                }
-                if (gcir3.adSize == SBIG.AD_SIZE.AD_12_BITS) AdSize = 12;
-                else if (gcir3.adSize == SBIG.AD_SIZE.AD_16_BITS) AdSize = 16;
-                else AdSize = 16; // Go with 16 bits default
-            }
-            catch (Exception e3)
-            {
-                debug.LogMessage("Connected Set", "Not PixCel camera");
-            }
-
-            try
-            {
-                // get extended info
-                var gcir4 = server.CCD_INFO_EXTENDED2(new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED2_IMAGING
-                });
-                // print it out
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 0)) debug.LogMessage("Connected Set", $"CCD is frame transfer device");
-                else debug.LogMessage("Connected Set", $"CCD is full frame device");
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 1)) debug.LogMessage("Connected Set", $"Electronic shutter");
-                else debug.LogMessage("Connected Set", $"No electronic shutter");
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 2)) debug.LogMessage("Connected Set", $"Remote guide head present");
-                else debug.LogMessage("Connected Set", $"No remote guide head");
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 3)) debug.LogMessage("Connected Set", $"Supports Biorad TDI acquisition more");
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 4)) debug.LogMessage("Connected Set", $"AO8 detected");
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 5)) debug.LogMessage("Connected Set", $"Camera contains an internal frame buffer");
-                if (Utils.IsBitSet(gcir4.capabilitiesBits, 6))
-                {
-                    debug.LogMessage("Connected Set", $"Camera requires StartExposure2 command");
-                    RequiresExposureParams2 = true;
-                }
-                else
-                {
-                    debug.LogMessage("Connected Set", $"Camera requires StartExposure command");
-                    RequiresExposureParams2 = false;
-                }
-            }
-            catch (Exception e4)
-            {
-                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e4));
-                throw new ASCOM.DriverException(Utils.DisplayException(e4));
-            }
-
-            try
-            {
-                // get extended info
-                var gcir6 = server.CCD_INFO_EXTENDED3(new SBIG.GetCCDInfoParams
-                {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED3
-                });
-                // print it out
-                if (Utils.IsBitSet(gcir6.cameraBits, 0)) debug.LogMessage("Connected Set", $"STXL camera");
-                else debug.LogMessage("Connected Set", $"STX camera");
-                if (Utils.IsBitSet(gcir6.cameraBits, 1))
-                {
-                    HasMechanicalShutter = false;
-                    debug.LogMessage("Connected Set", $"No mechanical shutter");
-                }
-                else
-                {
-                    HasMechanicalShutter = true;
-                    debug.LogMessage("Connected Set", $"Mechanical shutter");
-                }
-                if (Utils.IsBitSet(gcir6.ccdBits, 0))
-                {
-                    debug.LogMessage("Connected Set", $"Color CCD");
-                    ColorCamera = true;
-                    if (Utils.IsBitSet(gcir6.ccdBits, 1))
-                    {
-                        debug.LogMessage("Connected Set", $"Truesense color matrix");
-                        ColorCameraType = 1;
-                    }
-                    else
-                    {
-                        debug.LogMessage("Connected Set", $"Bayer color matrix");
-                        ColorCameraType = 0;
-                    }
-                }
-                else
-                {
-                    ColorCamera = false;
-                    debug.LogMessage("Connected Set", $"Mono CDD");
-                }
-            }
-            catch (Exception e5)
-            {
-                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e5));
-                throw new ASCOM.DriverException(Utils.DisplayException(e5));
-            }
-
-            cameraNumX = ccdWidth;
-            cameraNumY = ccdHeight;
-
-            try
-            {
-                // query temperature
-                Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
-                debug.LogMessage("Connected", "CCD temperature is " + Cooling.imagingCCDTemperature);
-                debug.LogMessage("Connected", "CCD power is " + Cooling.imagingCCDPower);
-                debug.LogMessage("Connected", "CCD cooler is " + Cooling.coolingEnabled.value.ToString());
-            }
-            catch (Exception e6)
-            {
-                debug.LogMessage("Connected Set", "Error: " + Utils.DisplayException(e6));
-                throw new ASCOM.DriverException(Utils.DisplayException(e6));
             }
         }
 
