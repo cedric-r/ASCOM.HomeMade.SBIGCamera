@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 0.21.48
-AppVersion=0.21.48
+AppVerName=ASCOM HomeMade SBig Camera Driver 0.22.6
+AppVersion=0.22.6
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=0.21.48
+VersionInfoVersion=0.22.6
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes
@@ -40,6 +40,7 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Exceptions.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.HomeMade.SBIGCommon.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.HomeMade.SBIGClient.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera\bin\Debug\ASCOM.HomeMade.SBIGCamera.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.HomeMade.SBIGImagingCamera.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.HomeMade.SBIGImagingCamera.dll.config"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGFW\bin\Debug\ASCOM.HomeMade.SBIGFW.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion

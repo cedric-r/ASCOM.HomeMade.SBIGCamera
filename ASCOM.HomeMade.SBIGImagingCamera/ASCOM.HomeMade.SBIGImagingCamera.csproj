@@ -85,7 +85,6 @@
     <Compile Include="..\ASCOM.HomeMade.SBIGCommon\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="CoolingInfoThread.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -144,6 +143,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera.csproj">
+      <Project>{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}</Project>
+      <Name>ASCOM.HomeMade.SBIGCamera</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ASCOM.HomeMade.SBIGClient\ASCOM.HomeMade.SBIGClient.csproj">
       <Project>{87831011-E8FA-4797-928A-0F439F041218}</Project>
       <Name>ASCOM.HomeMade.SBIGClient</Name>

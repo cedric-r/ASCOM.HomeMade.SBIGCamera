@@ -72,7 +72,7 @@ namespace ASCOM.HomeMade.SBIGClient
                 // query camera info
                 var gcir0 = server.CCD_INFO(new SBIG.GetCCDInfoParams
                 {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_IMAGING
+                    request = CameraType == SBIG.CCD_REQUEST.CCD_IMAGING ? SBIG.CCD_INFO_REQUEST.CCD_INFO_IMAGING : SBIG.CCD_INFO_REQUEST.CCD_INFO_TRACKING
                 });
                 // now print it out
                 cameraInfo.firmwareVersion = (gcir0.firmwareVersion >> 8).ToString() + "." + (gcir0.firmwareVersion & 0xFF).ToString();
@@ -178,7 +178,7 @@ namespace ASCOM.HomeMade.SBIGClient
                 // get extended info
                 var gcir4 = server.CCD_INFO_EXTENDED2(new SBIG.GetCCDInfoParams
                 {
-                    request = SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED2_IMAGING
+                    request = CameraType == SBIG.CCD_REQUEST.CCD_IMAGING ? SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED2_IMAGING : SBIG.CCD_INFO_REQUEST.CCD_INFO_EXTENDED2_TRACKING
                 });
                 // print it out
                 if (Utils.IsBitSet(gcir4.capabilitiesBits, 0))

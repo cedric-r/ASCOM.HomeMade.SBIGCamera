@@ -28,7 +28,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ASCOM.HomeMade.SBIGImagingCamera
+namespace ASCOM.HomeMade.SBIGCamera
 {
     public class CoolingInfoThread : ReferenceCountedObjectBase
     {

@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ASCOM.HomeMade.SBIGCamera</RootNamespace>
+    <AssemblyName>ASCOM.HomeMade.SBIGCamera</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>ASCOMDriverTemplate.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ASCOM.Astrometry, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Astrometry.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Attributes, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Attributes.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Cache, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Cache.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Controls, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.DeviceInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.DeviceInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.DriverAccess, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.DriverAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Exceptions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Exceptions.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Internal.Extensions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Internal.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.SettingsProvider, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.SettingsProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Utilities, Version=6.0.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Utilities.dll</HintPath>
+    </Reference>
+    <Reference Include="ASCOM.Utilities.Video, Version=6.1.0.0, Culture=neutral, PublicKeyToken=565de7938946fba7, processorArchitecture=MSIL">
+      <HintPath>..\packages\ASCOM.Platform.6.5.2\lib\net40\ASCOM.Utilities.Video.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\ASCOM.HomeMade.SBIGCommon\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="CoolingInfoThread.cs" />
+    <Compile Include="SBIGCamera.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGClient\ASCOM.HomeMade.SBIGClient.csproj">
+      <Project>{87831011-e8fa-4797-928a-0f439f041218}</Project>
+      <Name>ASCOM.HomeMade.SBIGClient</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGCommon\ASCOM.HomeMade.SBIGCommon.csproj">
+      <Project>{13cdac16-2b3b-4691-9607-e8f6b695cf7d}</Project>
+      <Name>ASCOM.HomeMade.SBIGCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGHub\ASCOM.HomeMade.SBIGHub.csproj">
+      <Project>{c708e487-e3a9-4073-a545-294b88674225}</Project>
+      <Name>ASCOM.HomeMade.SBIGHub</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SbigSharp\SbigSharp.csproj">
+      <Project>{3be45310-83c8-4294-a30b-585ce4996940}</Project>
+      <Name>SbigSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ASCOMDriverTemplate.snk" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
