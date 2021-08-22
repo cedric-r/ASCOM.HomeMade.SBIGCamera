@@ -37,6 +37,7 @@ using ASCOM.HomeMade.SBIGCommon;
 using System.Reflection;
 using ASCOM.HomeMade.SBIGClient;
 using ASCOM.HomeMade.SBIGHub;
+using System.Linq;
 
 namespace ASCOM.HomeMade.SBIGCamera
 {
@@ -1228,13 +1229,13 @@ namespace ASCOM.HomeMade.SBIGCamera
                     bin = 9;
                     break;
                 case SBIG.READOUT_BINNING_MODE.RM_NX1:
-                    bin = 0;
+                    bin = 1;
                     break;
                 case SBIG.READOUT_BINNING_MODE.RM_NX2:
-                    bin = 0;
+                    bin = 1;
                     break;
                 case SBIG.READOUT_BINNING_MODE.RM_NX3:
-                    bin = 0;
+                    bin = 1;
                     break;
                 default:
                     bin = 0;
@@ -1251,7 +1252,7 @@ namespace ASCOM.HomeMade.SBIGCamera
         protected SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short binning)
         {
             double nominalPixelWidth = cameraInfo.cameraReadoutModes.Find(r1 => r1.mode == 0).pixel_width;
-            CameraReadoutMode ri = cameraInfo.cameraReadoutModes.Find(r => (r.pixel_width / nominalPixelWidth) == binning);
+            CameraReadoutMode ri = cameraInfo.cameraReadoutModes.FindAll(r => (r.pixel_width / nominalPixelWidth) == binning).OrderBy(rm => rm.mode).First();
             SBIG.READOUT_BINNING_MODE readout = ri.mode;
             return readout;
         }

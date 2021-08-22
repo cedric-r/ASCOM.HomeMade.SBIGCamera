@@ -31,6 +31,7 @@ using ASCOM.HomeMade.SBIGCommon;
 using ASCOM.HomeMade.SBIGClient;
 using ASCOM.HomeMade.SBIGHub;
 using System.Diagnostics;
+using System.Threading;
 
 namespace ASCOM.HomeMade.SBIGFW
 {
@@ -302,7 +303,7 @@ namespace ASCOM.HomeMade.SBIGFW
 
         #region IFilterWheel Implementation
         private bool FilterWheelPresent = false;
-        private short CurrentFilter = -1;
+        private short CurrentFilter = 0;
         private static int FWPositions = 0;
 
         private SBIG.CFWResults FWCommand(SBIG.CFWParams command)
@@ -319,6 +320,11 @@ namespace ASCOM.HomeMade.SBIGFW
                     cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_OPEN_DEVICE
                 });
+
+                command.inPtr = UIntPtr.Zero;
+                command.inPtr = UIntPtr.Zero;
+                command.outLength = 0;
+                command.inLength = 0;
 
                 var fwresultsToReturn = server.CC_CFW(command);
 
@@ -358,14 +364,16 @@ namespace ASCOM.HomeMade.SBIGFW
         private void WaitFWIdle()
         {
             SBIG.CFWResults results = new SBIG.CFWResults();
-            while (results.cfwStatus != SBIG.CFW_STATUS.CFWS_IDLE)
+            int i = 0;
+            while (results.cfwStatus == SBIG.CFW_STATUS.CFWS_BUSY && i<100)
             {
-                CurrentFilter = -1;
                 results = FWCommand(new SBIG.CFWParams
                 {
                     cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
                 });
+                Thread.Sleep(100);
+                i++;
             }
         }
 
@@ -385,13 +393,13 @@ namespace ASCOM.HomeMade.SBIGFW
         {
             try
             {
-                WaitFWIdle();
                 SBIG.CFWResults results = FWCommand(new SBIG.CFWParams
                 {
                     cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
                 });
-                CurrentFilter = (short)(results.cfwPosition - 1);
+                if (!(results.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN && results.cfwStatus == SBIG.CFW_STATUS.CFWS_IDLE))
+                    CurrentFilter = (short)(results.cfwPosition - 1);
                 return results;
             }
             catch (Exception e)
@@ -403,7 +411,6 @@ namespace ASCOM.HomeMade.SBIGFW
 
         private SBIG.CFWResults SetFWPosition(short position)
         {
-            WaitFWIdle();
             SBIG.CFWResults results = FWCommand(
                 new SBIG.CFWParams
                 {
@@ -411,7 +418,7 @@ namespace ASCOM.HomeMade.SBIGFW
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_GOTO,
                     cfwParam1 = (uint)position
                 });
-            WaitFWIdle();
+            CurrentFilter = (short)(position - 1);
             return results;
         }
 
@@ -598,7 +605,10 @@ namespace ASCOM.HomeMade.SBIGFW
                 {
                     SBIG.CFWResults fwresults = GetFWPosition();
                     debug.LogMessage("Position Get", "FW position is " + fwresults.cfwPosition);
-                    return CurrentFilter;
+                    if (fwresults.cfwStatus == SBIG.CFW_STATUS.CFWS_BUSY)
+                        return -1;
+                    else
+                        return CurrentFilter;
                 }
                 catch(Exception e)
                 {
@@ -671,6 +681,7 @@ namespace ASCOM.HomeMade.SBIGFW
                 debug.LogMessage("Connected", "FW has " + fwresults.cfwResult2 + " positions");
                 FWPositions = (int)fwresults.cfwResult2;
 
+                CurrentFilter = 0;
                 SBIG.CFWResults fwfilter = GetFWPosition();
                 debug.LogMessage("Connected", "FW position is " + GetFWFilterName(fwfilter));
             }
