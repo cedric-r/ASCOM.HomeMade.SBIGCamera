@@ -216,11 +216,14 @@ namespace ASCOM.HomeMade.SBIGCamera
 
                             cameraInfo = GetCameraSpecs();
 
-                            debug.LogMessage("Camera", "Starting background cooler worker");
-                            Shutdown = false;
-                            bw = new BackgroundWorker();
-                            bw.DoWork += bw_DoWork;
-                            bw.RunWorkerAsync();
+                            if (CameraType != SBIG.CCD_REQUEST.CCD_TRACKING)
+                            {
+                                debug.LogMessage("Camera", "Starting background cooler worker");
+                                Shutdown = false;
+                                bw = new BackgroundWorker();
+                                bw.DoWork += bw_DoWork;
+                                bw.RunWorkerAsync();
+                            }
                         }
                     }
                     else
@@ -495,8 +498,16 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CanGetCoolerPower", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("CanGetCoolerPower Get", true.ToString());
-                return true;
+                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING)
+                {
+                    debug.LogMessage("CanGetCoolerPower Get", false.ToString());
+                    return false;
+                }
+                else
+                {
+                    debug.LogMessage("CanGetCoolerPower Get", true.ToString());
+                    return true;
+                }
             }
         }
 
@@ -517,8 +528,16 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CanSetCCDTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("CanSetCCDTemperature Get", true.ToString());
-                return true;
+                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING)
+                {
+                    debug.LogMessage("CanSetCCDTemperature Get", false.ToString());
+                    return false;
+                }
+                else
+                {
+                    debug.LogMessage("CanSetCCDTemperature Get", true.ToString());
+                    return true;
+                }
             }
         }
 
