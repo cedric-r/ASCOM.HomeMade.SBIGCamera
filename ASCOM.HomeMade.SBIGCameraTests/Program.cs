@@ -40,8 +40,9 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             FilterWheel fw = new FilterWheel();
             fw.Connected = true;
 
-            System.Console.WriteLine("Setting FW position to 2");
-            fw.Position = 2;
+            System.Console.WriteLine("Setting FW position to 3");
+            fw.Position = 3;
+            System.Console.WriteLine("FW position:"+ fw.Position); 
             
             System.Console.WriteLine("Setting CCD temperature to 20");
             camera.SetCCDTemperature= 20.0;
