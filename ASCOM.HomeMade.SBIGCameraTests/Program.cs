@@ -32,10 +32,9 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             SBIGCommon.Debug.TraceEnabled = true;
 
             SBIGImagingCamera.Camera camera = new SBIGImagingCamera.Camera();
-            var binx = camera.PixelSizeX;
             System.Console.WriteLine("Connecting camera");
             camera.Connected = true;
-            binx = camera.PixelSizeX;
+            var binx = camera.PixelSizeX;
 
             System.Console.WriteLine("Connecting FW");
             FilterWheel fw = new FilterWheel();

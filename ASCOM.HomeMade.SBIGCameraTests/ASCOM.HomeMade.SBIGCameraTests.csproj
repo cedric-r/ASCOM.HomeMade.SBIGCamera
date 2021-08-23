@@ -52,6 +52,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera.csproj">
+      <Project>{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}</Project>
+      <Name>ASCOM.HomeMade.SBIGCamera</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ASCOM.HomeMade.SBIGClient\ASCOM.HomeMade.SBIGClient.csproj">
+      <Project>{87831011-e8fa-4797-928a-0f439f041218}</Project>
+      <Name>ASCOM.HomeMade.SBIGClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ASCOM.HomeMade.SBIGCommon\ASCOM.HomeMade.SBIGCommon.csproj">
       <Project>{13cdac16-2b3b-4691-9607-e8f6b695cf7d}</Project>
       <Name>ASCOM.HomeMade.SBIGCommon</Name>

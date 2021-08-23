@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGHub
 {
-    public class ISBIGCamera: ReferenceCountedObjectBase
+    public abstract class ISBIGCamera: ReferenceCountedObjectBase
     {
         public SBIG.CAMERA_TYPE CameraModel;
         public SBIG.CCD_REQUEST CameraType;
@@ -44,5 +44,10 @@ namespace ASCOM.HomeMade.SBIGHub
         public Array cameraImageArray;
         public object[,] cameraImageArrayVariant;
         public bool FastReadoutRequested = false;
+
+        public short BinX;
+        public short BinY;
+
+        public abstract SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short x, short y);
     }
 }
