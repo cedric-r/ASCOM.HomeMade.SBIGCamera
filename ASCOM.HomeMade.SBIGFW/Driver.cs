@@ -398,8 +398,14 @@ namespace ASCOM.HomeMade.SBIGFW
                     cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
                 });
-                if (!(results.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN && results.cfwStatus == SBIG.CFW_STATUS.CFWS_IDLE))
+                if (results.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN && results.cfwStatus == SBIG.CFW_STATUS.CFWS_IDLE) // For brain dead FWs
+                {
+                    results.cfwPosition = (SBIG.CFW_POSITION)CurrentFilter + 1;
+                }
+                else
+                {
                     CurrentFilter = (short)(results.cfwPosition - 1);
+                }
                 return results;
             }
             catch (Exception e)
@@ -684,6 +690,10 @@ namespace ASCOM.HomeMade.SBIGFW
                 CurrentFilter = 0;
                 SBIG.CFWResults fwfilter = GetFWPosition();
                 debug.LogMessage("Connected", "FW position is " + GetFWFilterName(fwfilter));
+                if (fwfilter.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN)
+                    CurrentFilter = 0; // For brain dead FWs, we assume they start at 0 when switched on
+                else
+                    CurrentFilter = (short)(fwfilter.cfwPosition-1);
             }
             else
             {
