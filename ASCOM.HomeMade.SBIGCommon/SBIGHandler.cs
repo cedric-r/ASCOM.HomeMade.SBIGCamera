@@ -58,9 +58,24 @@ namespace ASCOM.HomeMade.SBIGCommon
             debug = new Debug(deviceId, Path.Combine(strPath, "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
         }
 
+        private static bool cameraLock = false;
         public SBIGResponse Transmit(SBIGRequest request)
         {
-            return HandleMessage(request);
+            SBIGResponse temp = null;
+            try
+            {
+                Utils.AcquireLock(ref cameraLock);
+                temp = HandleMessage(request);
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                Utils.ReleaseLock(ref cameraLock);
+            }
+            return temp;
         }
 
         private SBIGResponse HandleMessage(SBIGRequest request)
