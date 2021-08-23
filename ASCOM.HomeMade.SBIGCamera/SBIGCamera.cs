@@ -46,6 +46,13 @@ namespace ASCOM.HomeMade.SBIGCamera
     /// </summary>
     public abstract class SBIGCamera : ISBIGCameraSpecs, ICameraV3, ICameraV2
     {
+        public class BinningDefinition
+        {
+            public SBIG.READOUT_BINNING_MODE mode;
+            public short binx;
+            public short biny;
+        }
+
         /// <summary>
         /// ASCOM DeviceID (COM ProgID) for this driver.
         /// The DeviceID is used by ASCOM applications to load the driver at runtime.
@@ -55,6 +62,9 @@ namespace ASCOM.HomeMade.SBIGCamera
 
         protected BackgroundWorker imagingWorker = null;
         protected ImageTakerThread imagetaker = null;
+        protected List<BinningDefinition> BinningModes = new List<BinningDefinition>();
+        protected short binX = 1;
+        protected short binY = 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -72,6 +82,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             debug = new ASCOM.HomeMade.SBIGCommon.Debug(DriverID, Path.Combine(strPath, "SBIGCamera_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
 
             debug.LogMessage("Camera", "Starting initialisation");
+
+            BinningModes = GenerateBinningModes();
 
             debug.LogMessage(DriverID + " v" + DriverVersion);
             int nProcessID = Process.GetCurrentProcess().Id;
@@ -349,14 +361,14 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public short BinX
+        public new short BinX
         {
             get
             {
                 debug.LogMessage("BinX", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("BinX Get", "Bin size is " + ConvertReadoutModeToXBinning(Binning));
-                return (short)ConvertReadoutModeToXBinning(Binning);
+                debug.LogMessage("BinX Get", "Bin size is " + binX);
+                return binX;
             }
             set
             {
@@ -364,18 +376,20 @@ namespace ASCOM.HomeMade.SBIGCamera
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
                 if (value > MaxBinX) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinX);
-                Binning = ConvertBinningToReadout(value);
+                binX = value; // Only square pixels
+                binY = value;
+                Binning = ConvertBinningToReadout(binY, binY);
             }
         }
 
-        public short BinY
+        public new short BinY
         {
             get
             {
                 debug.LogMessage("BinY", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("BinY Get", "Bin size is " + ConvertReadoutModeToYBinning(Binning));
-                return (short)ConvertReadoutModeToYBinning(Binning);
+                debug.LogMessage("BinY Get", "Bin size is " + binY);
+                return binY;
             }
             set
             {
@@ -383,7 +397,9 @@ namespace ASCOM.HomeMade.SBIGCamera
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
                 if (value > MaxBinY) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinY);
-                Binning = ConvertBinningToReadout(value);
+                binX = value; // Only square pixels
+                binY = value;
+                Binning = ConvertBinningToReadout(binY, binY);
             }
         }
 
@@ -1006,7 +1022,10 @@ namespace ASCOM.HomeMade.SBIGCamera
                 debug.LogMessage("ReadoutMode", "Set");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ReadoutMode Set", "Setting binning to " + value);
-                Binning = (SBIG.READOUT_BINNING_MODE)value;
+                BinningDefinition bindef = BinningModes.First<BinningDefinition>(r => ((short)r.mode) == value);
+                Binning = bindef.mode;
+                binX = bindef.binx; // Override BinX and BinY choices
+                binY = bindef.biny;
             }
         }
 
@@ -1164,101 +1183,27 @@ namespace ASCOM.HomeMade.SBIGCamera
         // here are some useful properties and methods that can be used as required
         // to help with driver development
 
-        protected short ConvertReadoutModeToXBinning(SBIG.READOUT_BINNING_MODE binning)
+         protected List<BinningDefinition> GenerateBinningModes()
         {
-            short bin = 0;
-            switch (binning)
-            {
-                case SBIG.READOUT_BINNING_MODE.RM_1X1:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_1X1_VOFFCHIP:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_2X2:
-                    bin = 2;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_2X2_VOFFCHIP:
-                    bin = 2;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_3X3:
-                    bin = 3;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_3X3_VOFFCHIP:
-                    bin = 3;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_9X9:
-                    bin = 9;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_NX1:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_NX2:
-                    bin = 2;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_NX3:
-                    bin = 3;
-                    break;
-                default:
-                    bin = 0;
-                    break;
-            }
-            return bin;
+            List<BinningDefinition> temp = new List<BinningDefinition>();
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_1X1, binx = 1, biny = 1 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_1X1_VOFFCHIP, binx = 1, biny = 1 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_2X2, binx = 2, biny = 2 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_2X2_VOFFCHIP, binx = 2, biny = 2 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_3X3, binx = 3, biny = 3 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_3X3_VOFFCHIP, binx = 3, biny = 3 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_9X9, binx = 9, biny = 9 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_NX1, binx = 1, biny = 1 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_NX2, binx = 2, biny = 2 });
+            temp.Add(new BinningDefinition() { mode = SBIG.READOUT_BINNING_MODE.RM_NX3, binx = 3, biny = 3 });
+            return temp;
         }
 
-        protected short ConvertReadoutModeToYBinning(SBIG.READOUT_BINNING_MODE binning)
+        public override SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short x, short y)
         {
-            short bin = 0;
-            switch (binning)
-            {
-                case SBIG.READOUT_BINNING_MODE.RM_1X1:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_1X1_VOFFCHIP:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_2X2:
-                    bin = 2;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_2X2_VOFFCHIP:
-                    bin = 2;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_3X3:
-                    bin = 3;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_3X3_VOFFCHIP:
-                    bin = 3;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_9X9:
-                    bin = 9;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_NX1:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_NX2:
-                    bin = 1;
-                    break;
-                case SBIG.READOUT_BINNING_MODE.RM_NX3:
-                    bin = 1;
-                    break;
-                default:
-                    bin = 0;
-                    break;
-            }
-            return bin;
-        }
-
-        protected CameraReadoutMode GetCurrentReadoutMode(SBIG.READOUT_BINNING_MODE binning)
-        {
-            return cameraInfo.cameraReadoutModes.Find(r => r.mode == Binning);
-        }
-
-        protected SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short binning)
-        {
-            double nominalPixelWidth = cameraInfo.cameraReadoutModes.Find(r1 => r1.mode == 0).pixel_width;
-            CameraReadoutMode ri = cameraInfo.cameraReadoutModes.FindAll(r => (r.pixel_width / nominalPixelWidth) == binning).OrderBy(rm => rm.mode).First();
-            SBIG.READOUT_BINNING_MODE readout = ri.mode;
-            return readout;
+            BinningDefinition bindef = BinningModes.First<BinningDefinition>(r => r.binx == x && r.biny == y);
+            CameraReadoutMode ri = cameraInfo.cameraReadoutModes.First(r => r.mode == bindef.mode);
+            return ri.mode;
         }
 
         protected SBIG.QueryTemperatureStatusResults2 GetTECStatus()

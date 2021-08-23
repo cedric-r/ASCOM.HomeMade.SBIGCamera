@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace ASCOM.HomeMade.SBIGClient
 {
-    public class ISBIGCameraSpecs : ISBIGCamera
+    public abstract class ISBIGCameraSpecs : ISBIGCamera
     {
         protected SBIGCommon.Debug debug = null;
 

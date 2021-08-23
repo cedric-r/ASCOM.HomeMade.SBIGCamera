@@ -89,6 +89,10 @@ namespace ASCOM.HomeMade.SBIGClient
                     debug.LogMessage("ImageTakerThread TakeImage", "This driver does not support legacy calls. Using new call anyway");
                     //throw new InvalidOperationException("This driver does not support legacy calls");
                 }
+                
+                debug.LogMessage("ImageTakerThread TakeImage", "BinX="+ camera.BinX+", BinY="+ camera.BinY+", Mode="+camera.Binning.ToString());
+                debug.LogMessage("ImageTakerThread TakeImage", "left=" + camera.cameraStartX + ", top=" + camera.cameraStartY + ", width=" + camera.cameraNumX+", height="+ camera.cameraNumY);
+                debug.LogMessage("ImageTakerThread TakeImage", "cameratype=" + camera.CameraType + ", exposureTime=" + (camera.durationRequest * 100) + ", fastreadout=" + camera.FastReadoutRequested.ToString() + ", light=" + camera.lightRequest.ToString());
                 SBIG.StartExposureParams2 exposureParams2 = new SBIG.StartExposureParams2()
                 {
                     ccd = camera.CameraType,
