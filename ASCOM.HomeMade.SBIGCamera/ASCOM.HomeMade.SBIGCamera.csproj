@@ -84,7 +84,6 @@
     <Compile Include="..\ASCOM.HomeMade.SBIGCommon\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="CoolingInfoThread.cs" />
     <Compile Include="SBIGCamera.cs" />
   </ItemGroup>
   <ItemGroup>

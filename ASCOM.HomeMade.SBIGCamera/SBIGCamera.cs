@@ -53,9 +53,7 @@ namespace ASCOM.HomeMade.SBIGCamera
         internal string DriverID { get { return "ASCOM.HomeMade.SBIGCamera"; } }
         // TODO Change the descriptive string for your driver then remove this line
 
-        protected BackgroundWorker bw = null;
         protected BackgroundWorker imagingWorker = null;
-        protected bool Shutdown = false;
         protected ImageTakerThread imagetaker = null;
 
         /// <summary>
@@ -82,17 +80,6 @@ namespace ASCOM.HomeMade.SBIGCamera
             CameraType = SBIG.CCD_REQUEST.CCD_IMAGING;
 
             debug.LogMessage("Camera", "Completed initialisation");
-        }
-
-        protected void bw_DoWork(object sender, DoWorkEventArgs e)
-        {
-            CoolingInfoThread cool = new CoolingInfoThread(IPAddress);
-            while (!Shutdown)
-            {
-                Cooling = cool.GetCoolingInfo();
-                Thread.Sleep(500);
-            }
-            cool.Close();
         }
 
         //
@@ -162,7 +149,6 @@ namespace ASCOM.HomeMade.SBIGCamera
                 {
                     if (IsConnected)
                     {
-                        Shutdown = true;
                         server.Close();
                         server = null;
                     }
@@ -215,15 +201,6 @@ namespace ASCOM.HomeMade.SBIGCamera
                             debug.LogMessage("Connected Set", $"Connected to camera");
 
                             cameraInfo = GetCameraSpecs();
-
-                            if (CameraType != SBIG.CCD_REQUEST.CCD_TRACKING)
-                            {
-                                debug.LogMessage("Camera", "Starting background cooler worker");
-                                Shutdown = false;
-                                bw = new BackgroundWorker();
-                                bw.DoWork += bw_DoWork;
-                                bw.RunWorkerAsync();
-                            }
                         }
                     }
                     else
@@ -231,7 +208,6 @@ namespace ASCOM.HomeMade.SBIGCamera
                         debug.LogMessage("Connected Set", "Disconnection requested");
                         if (IsConnected)
                         {
-                            Shutdown = true;
                             try
                             {
                                 AbortExposure();
@@ -389,7 +365,6 @@ namespace ASCOM.HomeMade.SBIGCamera
                 if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
                 if (value > MaxBinX) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinX);
                 Binning = ConvertBinningToReadout(value);
-
             }
         }
 
@@ -418,8 +393,12 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CCDTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                Cooling = GetTECStatus();
                 debug.LogMessage("CCDTemperature Get", "CCD temperature is " + Cooling.imagingCCDTemperature);
-                return Cooling.imagingCCDTemperature;
+                if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
+                    return Cooling.imagingCCDTemperature;
+                else
+                    return Cooling.trackingCCDTemperature;
             }
         }
 
@@ -566,6 +545,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CoolerOn", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                Cooling = GetTECStatus();
                 debug.LogMessage("CoolerOn Get", "Cooler is " + Cooling.coolingEnabled.value.ToString());
                 return Cooling.coolingEnabled.value == 0 ? false : true;
             }
@@ -584,7 +564,7 @@ namespace ASCOM.HomeMade.SBIGCamera
                         }
                         else
                         {
-                            tparams.ccdSetpoint = Cooling.ambientTemperature;
+                            tparams.ccdSetpoint = Cooling.imagingCCDTemperature;
                         }
                         tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_ON;
                     }
@@ -598,7 +578,7 @@ namespace ASCOM.HomeMade.SBIGCamera
                     {
                         debug.LogMessage("CoolerOn Set", "Cooler Off");
                     }
-
+                    Cooling = GetTECStatus();
                 }
                 catch (Exception e)
                 {
@@ -615,8 +595,12 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CoolerPower", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                Cooling = GetTECStatus();
                 debug.LogMessage("CoolerPower Get", "Cooler power is " + Cooling.imagingCCDPower.ToString());
-                return Cooling.imagingCCDPower;
+                if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
+                    return Cooling.imagingCCDPower;
+                else
+                    return Cooling.trackingCCDPower;
             }
         }
 
@@ -805,6 +789,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("HeatSinkTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+                Cooling = GetTECStatus();
                 debug.LogMessage("HeatSinkTemperature Get", "Heatsink temperature is " + Cooling.heatsinkTemperature.ToString());
                 return Cooling.heatsinkTemperature;
             }
@@ -1274,6 +1259,13 @@ namespace ASCOM.HomeMade.SBIGCamera
             CameraReadoutMode ri = cameraInfo.cameraReadoutModes.FindAll(r => (r.pixel_width / nominalPixelWidth) == binning).OrderBy(rm => rm.mode).First();
             SBIG.READOUT_BINNING_MODE readout = ri.mode;
             return readout;
+        }
+
+        protected SBIG.QueryTemperatureStatusResults2 GetTECStatus()
+        {
+            debug.LogMessage("SBIGCanera GetTECStatus", "Getting cooling information");
+            // query temperature
+            return server.CC_QUERY_TEMPERATURE_STATUS();
         }
 
         /// <summary>
