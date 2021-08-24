@@ -182,7 +182,8 @@ namespace ASCOM.HomeMade.SBIGCommon
                             if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan(duration * TimeSpan.TicksPerSecond / 100)))
                                 temp = true;
                         }
-                        //bool inProgress = server.ExposureInProgress();
+                        if (!temp)
+                            temp = ExposureInProgress(); // Double check
                         response.payload = temp;
                         break;
                     case "ReadoutData":
