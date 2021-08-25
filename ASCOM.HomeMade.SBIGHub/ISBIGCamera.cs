@@ -32,6 +32,8 @@ namespace ASCOM.HomeMade.SBIGHub
         public SBIG.CCD_REQUEST CameraType;
         public bool RequiresExposureParams2 = true;
         public SBIG.READOUT_BINNING_MODE Binning = 0;
+        protected short binX = 1;
+        protected short binY = 1;
         public CameraStates CurrentCameraState = CameraStates.cameraIdle;
         public double durationRequest = 0;
         public bool lightRequest = false;
@@ -45,9 +47,44 @@ namespace ASCOM.HomeMade.SBIGHub
         public object[,] cameraImageArrayVariant;
         public bool FastReadoutRequested = false;
 
-        public short BinX;
-        public short BinY;
+        public short BinX
+        {
+            get
+            {
+                return GetBinX();
+            }
+            set
+            {
+                SetBinX(value);
+            }
+        }
+
+        public short BinY
+        {
+            get
+            {
+                return GetBinY();
+            }
+            set
+            {
+                SetBinY(value);
+            }
+        }
+
+        protected bool IsConnected
+        {
+            get
+            {
+                return GetConnected();
+            }
+        }
 
         public abstract SBIG.READOUT_BINNING_MODE ConvertBinningToReadout(short x, short y);
+        protected abstract short GetBinX();
+        protected abstract void SetBinX(short value);
+        protected abstract short GetBinY();
+        protected abstract void SetBinY(short value);
+
+        protected abstract bool GetConnected();
     }
 }

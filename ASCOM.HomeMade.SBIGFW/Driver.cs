@@ -315,24 +315,12 @@ namespace ASCOM.HomeMade.SBIGFW
                     throw new NotConnectedException("Not connected to the server");
                 }
 
-                var fwresults = server.CC_CFW(new SBIG.CFWParams
-                {
-                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
-                    cfwCommand = SBIG.CFW_COMMAND.CFWC_OPEN_DEVICE
-                });
-
                 command.inPtr = UIntPtr.Zero;
                 command.inPtr = UIntPtr.Zero;
                 command.outLength = 0;
                 command.inLength = 0;
 
                 var fwresultsToReturn = server.CC_CFW(command);
-
-                fwresults = server.CC_CFW(new SBIG.CFWParams
-                {
-                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
-                    cfwCommand = SBIG.CFW_COMMAND.CFWC_CLOSE_DEVICE
-                });
 
                 return fwresultsToReturn;
             }
@@ -398,28 +386,46 @@ namespace ASCOM.HomeMade.SBIGFW
                     cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
                     cfwCommand = SBIG.CFW_COMMAND.CFWC_QUERY
                 });
-                if (!(results.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN && results.cfwStatus == SBIG.CFW_STATUS.CFWS_IDLE))
+                if (results.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN && results.cfwStatus == SBIG.CFW_STATUS.CFWS_IDLE) // For brain dead FWs
+                {
+                    results.cfwPosition = (SBIG.CFW_POSITION)CurrentFilter + 1;
+                }
+                else if (results.cfwStatus == SBIG.CFW_STATUS.CFWS_IDLE)
+                {
                     CurrentFilter = (short)(results.cfwPosition - 1);
+                }
+                else
+                {
+                    results.cfwPosition = 0;
+                }
                 return results;
             }
             catch (Exception e)
             {
                 debug.LogMessage("GetFWData", "Error: " + Utils.DisplayException(e));
-                throw new ASCOM.DriverException("Error getting DW data");
+                throw new ASCOM.DriverException("Error getting FW position");
             }
         }
 
         private SBIG.CFWResults SetFWPosition(short position)
         {
-            SBIG.CFWResults results = FWCommand(
-                new SBIG.CFWParams
-                {
-                    cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
-                    cfwCommand = SBIG.CFW_COMMAND.CFWC_GOTO,
-                    cfwParam1 = (uint)position
-                });
-            CurrentFilter = (short)(position - 1);
-            return results;
+            try
+            {
+                SBIG.CFWResults results = FWCommand(
+                    new SBIG.CFWParams
+                    {
+                        cfwModel = SBIG.CFW_MODEL_SELECT.CFWSEL_AUTO,
+                        cfwCommand = SBIG.CFW_COMMAND.CFWC_GOTO,
+                        cfwParam1 = (uint)position
+                    });
+                CurrentFilter = (short)(position - 1);
+                return results;
+            }
+            catch (Exception e)
+            {
+                debug.LogMessage("GetFWData", "Error: " + Utils.DisplayException(e));
+                throw new ASCOM.DriverException("Error setting FW position");
+            }
         }
 
         private string GetFWTypeName(SBIG.CFWResults fwresults)
@@ -604,7 +610,9 @@ namespace ASCOM.HomeMade.SBIGFW
                 try
                 {
                     SBIG.CFWResults fwresults = GetFWPosition();
-                    debug.LogMessage("Position Get", "FW position is " + fwresults.cfwPosition);
+                    debug.LogMessage("Position Get", "FW position is " + fwresults.cfwPosition.ToString());
+                    debug.LogMessage("Position Get", "CurrentFilter is " + CurrentFilter);
+                    debug.LogMessage("Position Get", "FW status is " + fwresults.cfwStatus.ToString());
                     if (fwresults.cfwStatus == SBIG.CFW_STATUS.CFWS_BUSY)
                         return -1;
                     else
@@ -681,9 +689,14 @@ namespace ASCOM.HomeMade.SBIGFW
                 debug.LogMessage("Connected", "FW has " + fwresults.cfwResult2 + " positions");
                 FWPositions = (int)fwresults.cfwResult2;
 
+                WaitFWIdle();
                 CurrentFilter = 0;
                 SBIG.CFWResults fwfilter = GetFWPosition();
                 debug.LogMessage("Connected", "FW position is " + GetFWFilterName(fwfilter));
+                if (fwfilter.cfwPosition == SBIG.CFW_POSITION.CFWP_UNKNOWN)
+                    CurrentFilter = 0; // For brain dead FWs, we assume they start at 0 when switched on
+                else
+                    CurrentFilter = (short)(fwfilter.cfwPosition-1);
             }
             else
             {

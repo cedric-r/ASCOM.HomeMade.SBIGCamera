@@ -63,8 +63,6 @@ namespace ASCOM.HomeMade.SBIGCamera
         protected BackgroundWorker imagingWorker = null;
         protected ImageTakerThread imagetaker = null;
         protected List<BinningDefinition> BinningModes = new List<BinningDefinition>();
-        protected short binX = 1;
-        protected short binY = 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -361,48 +359,6 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public new short BinX
-        {
-            get
-            {
-                debug.LogMessage("BinX", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("BinX Get", "Bin size is " + binX);
-                return binX;
-            }
-            set
-            {
-                debug.LogMessage("BinX Set", value.ToString());
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
-                if (value > MaxBinX) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinX);
-                binX = value; // Only square pixels
-                binY = value;
-                Binning = ConvertBinningToReadout(binY, binY);
-            }
-        }
-
-        public new short BinY
-        {
-            get
-            {
-                debug.LogMessage("BinY", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("BinY Get", "Bin size is " + binY);
-                return binY;
-            }
-            set
-            {
-                debug.LogMessage("BinY Set", value.ToString());
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
-                if (value > MaxBinY) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinY);
-                binX = value; // Only square pixels
-                binY = value;
-                Binning = ConvertBinningToReadout(binY, binY);
-            }
-        }
-
         public double CCDTemperature
         {
             get
@@ -618,6 +574,55 @@ namespace ASCOM.HomeMade.SBIGCamera
                 else
                     return Cooling.trackingCCDPower;
             }
+        }
+
+        protected override short GetBinX()
+        {
+            debug.LogMessage("BinX", "Get");
+            if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+            debug.LogMessage("BinX Get", "Bin size is " + binX);
+            return binX;
+        }
+
+        protected override void SetBinX(short value)
+        {
+            debug.LogMessage("BinX Set", value.ToString());
+            if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+            if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
+            if (value > MaxBinX) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinX);
+            binX = value; // Only square pixels
+            binY = value;
+            Binning = ConvertBinningToReadout(binY, binY);
+        }
+
+        protected override short GetBinY()
+        {
+            debug.LogMessage("BinY", "Get");
+            if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+            debug.LogMessage("BinY Get", "Bin size is " + binY);
+            return binY;
+        }
+
+        protected override void SetBinY(short value)
+        {
+            debug.LogMessage("BinY Set", value.ToString());
+            if (!IsConnected) throw new NotConnectedException("Camera is not connected");
+            if (value < 1) throw new ASCOM.InvalidValueException("Bin cannot be 0 or less");
+            if (value > MaxBinY) throw new ASCOM.InvalidValueException("Bin cannot be above " + MaxBinY);
+            binX = value; // Only square pixels
+            binY = value;
+            Binning = ConvertBinningToReadout(binY, binY);
+        }
+
+        protected override  bool GetConnected()
+        {
+            bool temp = false;
+
+            if (server != null)
+                temp = server.IsConnected;
+
+            debug.LogMessage("IsConnected", "connectionState=" + temp.ToString());
+            return temp;
         }
 
         public double ElectronsPerADU
