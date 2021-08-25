@@ -143,12 +143,12 @@ namespace ASCOM.HomeMade.SBIGClient
 
                 if (StopExposure) return;
 
-                //camera.cameraImageArray = new int[exposureParams2.height, exposureParams2.width];
-                //for (int i = 0; i < exposureParams2.height; i++)
-                //for (int j = 0; j < exposureParams2.width; j++)
-                //camera.cameraImageArray[i, j] = data[i, j];
-                camera.cameraImageArray = Utils.RotateMatrixCounterClockwiseAndConvertToInt(data);
-
+                //camera.cameraImageArray = data;
+                camera.cameraImageArray = new int[exposureParams2.width, exposureParams2.height];
+                for (int i = 0; i < exposureParams2.width; i++)
+                    for (int j = 0; j < exposureParams2.height; j++)
+                        camera.cameraImageArray.SetValue((Int32)(UInt16)data[(j * exposureParams2.width) + i], i, j);
+                //camera.cameraImageArray = Utils.RotateMatrixCounterClockwiseAndConvertToInt(data);
                 data = null;
                 debug.LogMessage("ImageTakerThread TakeImage", "Finishing readout");
 
