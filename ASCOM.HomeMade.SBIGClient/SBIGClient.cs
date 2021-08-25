@@ -220,13 +220,13 @@ namespace ASCOM.HomeMade.SBIGClient
             return (bool)response.payload;
         }
 
-        public UInt16[,] ReadoutData(SBIG.StartExposureParams2 sep2)
+        public UInt16[] ReadoutData(SBIG.StartExposureParams2 sep2)
         {
             debug.LogMessage("SBIGClient", "ReadoutData");
             if (!IsConnected) throw new ApplicationException("Not connected to server");
             SBIGResponse response = SendMessage("ReadoutData", 0, sep2);
             if (response.error != null) throw response.error;
-            return (UInt16[,])response.payload;
+            return (UInt16[])response.payload;
         }
         #endregion
 

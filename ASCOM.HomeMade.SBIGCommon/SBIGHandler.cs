@@ -189,7 +189,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                     case "ReadoutData":
                         SBIG.StartExposureParams2 p8 = (SBIG.StartExposureParams2)request.parameters;
                         if (!exposures.Keys.Contains(p8.ccd)) exposures.Remove(p8.ccd);
-                        var data = new UInt16[p8.height, p8.width];
+                        var data = new UInt16[p8.width * p8.height];
                         try
                         {
                             Utils.AcquireLock(ref lockAccess);
@@ -397,14 +397,14 @@ namespace ASCOM.HomeMade.SBIGCommon
         }
 
         private static bool lockReadout = false;
-        public void ReadoutDataAndEnd(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
+        public void ReadoutDataAndEnd(SBIG.StartExposureParams2 sep2, ref UInt16[] data)
         {
             try
             {
                 Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
                 UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
-                new SBIG.EndReadoutParams()
+                    new SBIG.EndReadoutParams()
                     {
                         ccd = sep2.ccd
                     });
