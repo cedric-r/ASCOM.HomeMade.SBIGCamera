@@ -36,18 +36,18 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             camera.Connected = true;
             var binx = camera.PixelSizeX;
 
-            System.Console.WriteLine("Connecting FW");
-            FilterWheel fw = new FilterWheel();
-            fw.Connected = true;
+            //System.Console.WriteLine("Connecting FW");
+            //FilterWheel fw = new FilterWheel();
+            //fw.Connected = true;
 
-            System.Console.WriteLine("Setting FW position to 3");
-            fw.Position = 3;
-            System.Console.WriteLine("FW position:"+ fw.Position); 
+            //System.Console.WriteLine("Setting FW position to 3");
+            //fw.Position = 3;
+            //System.Console.WriteLine("FW position:"+ fw.Position); 
             
-            System.Console.WriteLine("Setting CCD temperature to 20");
-            camera.SetCCDTemperature= 20.0;
-            System.Console.WriteLine("Setting cooler on");
-            camera.CoolerOn = true;
+            //System.Console.WriteLine("Setting CCD temperature to 20");
+            //camera.SetCCDTemperature= 20.0;
+            //System.Console.WriteLine("Setting cooler on");
+            //camera.CoolerOn = true;
 
             // Take bin 2 images
             camera.NumX = camera.CameraXSize/2;
