@@ -36,7 +36,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         void UnivDrvCommand<TParams, TResults>(SBIG.PAR_COMMAND command, TParams Params, out TResults pResults) where TParams : SBIG.IParams where TResults : SBIG.IResults;
         void AbortExposure(SBIG.StartExposureParams2 sep2);
         void EndReadout(SBIG.CCD_REQUEST ccd);
-        bool ExposureInProgress();
+        bool ExposureInProgress(SBIG.CCD_REQUEST ccd);
         void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data);
     }
 }
