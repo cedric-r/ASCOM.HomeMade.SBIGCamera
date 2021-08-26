@@ -178,7 +178,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                         if (exposures.Keys.Contains(p11.ccd))
                         {
                             long duration = (long)exposures[p11.ccd].duration;
-                            if (duration > SBIG.EXP_FAST_READOUT) duration -= SBIG.EXP_FAST_READOUT;
+                            if (duration >= SBIG.EXP_FAST_READOUT) duration -= SBIG.EXP_FAST_READOUT;
                             if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan(duration * TimeSpan.TicksPerSecond / 100)))
                                 temp = true;
                         }
