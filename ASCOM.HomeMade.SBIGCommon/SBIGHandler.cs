@@ -183,12 +183,12 @@ namespace ASCOM.HomeMade.SBIGCommon
                                 temp = true;
                         }
                         if (!temp)
-                            temp = ExposureInProgress(p11.ccd); // Double check
+                            temp = ExposureInProgress(p11.ccd); // Double check wth the camera
                         response.payload = temp;
                         break;
                     case "ReadoutData":
                         SBIG.StartExposureParams2 p8 = (SBIG.StartExposureParams2)request.parameters;
-                        if (!exposures.Keys.Contains(p8.ccd)) exposures.Remove(p8.ccd);
+                        if (exposures.Keys.Contains(p8.ccd)) exposures.Remove(p8.ccd);
                         var data = new UInt16[p8.width * p8.height];
                         try
                         {
@@ -403,11 +403,12 @@ namespace ASCOM.HomeMade.SBIGCommon
             {
                 Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
-                UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
+                /*UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
                     new SBIG.EndReadoutParams()
                     {
                         ccd = sep2.ccd
                     });
+                */
             }
             catch (Exception)
             {

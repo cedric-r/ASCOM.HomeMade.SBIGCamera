@@ -5461,17 +5461,23 @@ namespace SbigSharp
             GCHandle dataGCH = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             IntPtr dataPtr = dataGCH.AddrOfPinnedObject();
 
-            // get the image from the camera, line by line
-            for (int y = 0; y < sep2.height; y++)
+            try
             {
-                _UnivDrvCommand(
-                    PAR_COMMAND.CC_READOUT_LINE,
-                    rlpGCH.AddrOfPinnedObject(),
-                    dataPtr + (y * sep2.width * sizeof(UInt16)));
+                // get the image from the camera, line by line
+                for (int y = 0; y < sep2.height; y++)
+                {
+                    _UnivDrvCommand(
+                        PAR_COMMAND.CC_READOUT_LINE,
+                        rlpGCH.AddrOfPinnedObject(),
+                        dataPtr + (y * sep2.width * sizeof(UInt16)));
+                }
+                // cleanup our memory goo
             }
-            // cleanup our memory goo
-            rlpGCH.Free();
-            dataGCH.Free();
+            finally
+            {
+                rlpGCH.Free();
+                dataGCH.Free();
+            }
         }
 
         /// <summary>
