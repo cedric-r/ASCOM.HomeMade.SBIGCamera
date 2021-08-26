@@ -56,7 +56,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             camera.StartY = 0;
             camera.BinX = 2;
             camera.BinY = 2;
-
+            /*
             System.Console.WriteLine("Taking 10 imaging exposures");
             for (int i = 0; i < 1; i++)
             {
@@ -71,7 +71,7 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             System.Console.WriteLine("Waiting to abort");
             Thread.Sleep(5000);
             camera.AbortExposure();
-
+            */
             SBIGGuidingCamera.Camera guidingCamera = new SBIGGuidingCamera.Camera();
             System.Console.WriteLine("Connecting guidingCamera");
             guidingCamera.Connected = true;
@@ -80,16 +80,16 @@ namespace ASCOM.HomeMade.SBIGCameraTests
             guidingCamera.NumY = guidingCamera.CameraYSize;
             guidingCamera.StartX = 0;
             guidingCamera.StartY = 0;
-            System.Console.WriteLine("Taking guiding exposure");
-            guidingCamera.StartExposure(10.0, true);
-            while (!guidingCamera.ImageReady) Thread.Sleep(100);
-            var image = guidingCamera.ImageArray;
+            //System.Console.WriteLine("Taking guiding exposure");
+            //guidingCamera.StartExposure(10.0, true);
+            //while (!guidingCamera.ImageReady) Thread.Sleep(100);
+            //var image = guidingCamera.ImageArray;
 
             bool end1 = false;
             bool end2 = false;
             Task.Factory.StartNew(() => {
                 System.Console.WriteLine("Taking exposure parallel exposure imaging");
-                camera.StartExposure(10.0, true);
+                camera.StartExposure(120.0, true);
                 while (!camera.ImageReady) Thread.Sleep(100);
                 var i1 = camera.ImageArray;
                 System.Console.WriteLine("Imaging exposure done");

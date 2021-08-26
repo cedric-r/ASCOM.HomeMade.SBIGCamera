@@ -303,11 +303,14 @@ namespace ASCOM.HomeMade.SBIGClient
 
             try
             {
-                // query temperature
-                Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
-                debug.LogMessage("Connected", "CCD temperature is " + Cooling.imagingCCDTemperature);
-                debug.LogMessage("Connected", "CCD power is " + Cooling.imagingCCDPower);
-                debug.LogMessage("Connected", "CCD cooler is " + Cooling.coolingEnabled.value.ToString());
+                if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
+                {
+                    // query temperature
+                    Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
+                    debug.LogMessage("Connected", "CCD temperature is " + Cooling.imagingCCDTemperature);
+                    debug.LogMessage("Connected", "CCD power is " + Cooling.imagingCCDPower);
+                    debug.LogMessage("Connected", "CCD cooler is " + Cooling.coolingEnabled.value.ToString());
+                }
             }
             catch (Exception e6)
             {
