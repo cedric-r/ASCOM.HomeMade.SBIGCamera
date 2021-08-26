@@ -5361,7 +5361,7 @@ namespace SbigSharp
         /// Is the exposure in progress?
         /// </summary>
         /// <returns>Yes or No</returns>
-        public static bool ExposureInProgress()
+        public static bool ExposureInProgress(CCD_REQUEST ccd)
         {
             var qcsp = new QueryCommandStatusParams()
             {
@@ -5375,17 +5375,38 @@ namespace SbigSharp
 
             UnivDrvCommand(PAR_COMMAND.CC_QUERY_COMMAND_STATUS, qcsp, out qcsr);
 
-            return (PAR_ERROR.CE_EXPOSURE_IN_PROGRESS == qcsr.status) &&
-                (PAR_ERROR.CE_NO_EXPOSURE_IN_PROGRESS != qcsr.status);
+            int rawState;
+            if (ccd == SBIG.CCD_REQUEST.CCD_IMAGING)
+            {
+                rawState = ((ushort)qcsr.status & 0x3);
+            }
+            else
+            {
+                rawState = ((ushort)qcsr.status & 0xF) >> 2;
+            }
+
+            // The 2 least significant bits represent Ccd camera status. Bit 0 is "Complete" if set, and "In Progress" otherwise. Bit 1 is "Command Active" if set, and "Idle" otherwise.
+            if ((rawState & 0x2) == 0)
+            {
+                return false;
+            }
+            else if ((rawState & 0x1) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
         /// Waits for any exposure in progress to complete.
         /// </summary>
-        public static void WaitExposure()
+        public static void WaitExposure(CCD_REQUEST ccd)
         {
             // wait for the exposure to be done
-            while (ExposureInProgress()) ;
+            while (ExposureInProgress(ccd)) ;
         }
 
         /// <summary>
@@ -5483,7 +5504,7 @@ namespace SbigSharp
         /// <returns>2D UInt16 array of Data.</returns>
         public static UInt16[,] WaitEndAndReadoutExposure(StartExposureParams2 sep2)
         {
-            WaitExposure();
+            WaitExposure(sep2.ccd);
 
             var data = new UInt16[sep2.height, sep2.width];
             _ReadoutData(sep2, ref data);
@@ -5499,7 +5520,7 @@ namespace SbigSharp
         /// <returns>2D UInt16 array of Data.</returns>
         public static UInt32[,] WaitEndAndReadoutExposure32(StartExposureParams2 sep2)
         {
-            WaitExposure();
+            WaitExposure(sep2.ccd);
 
             var data = new UInt16[sep2.height, sep2.width];
             _ReadoutData(sep2, ref data);

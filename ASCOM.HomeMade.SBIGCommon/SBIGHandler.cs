@@ -178,12 +178,12 @@ namespace ASCOM.HomeMade.SBIGCommon
                         if (exposures.Keys.Contains(p11.ccd))
                         {
                             long duration = (long)exposures[p11.ccd].duration;
-                            if (duration > SBIG.EXP_FAST_READOUT) duration -= SBIG.EXP_FAST_READOUT;
+                            if (duration >= SBIG.EXP_FAST_READOUT) duration -= SBIG.EXP_FAST_READOUT;
                             if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan(duration * TimeSpan.TicksPerSecond / 100)))
                                 temp = true;
                         }
                         if (!temp)
-                            temp = ExposureInProgress(); // Double check
+                            temp = ExposureInProgress(p11.ccd); // Double check
                         response.payload = temp;
                         break;
                     case "ReadoutData":
@@ -374,9 +374,9 @@ namespace ASCOM.HomeMade.SBIGCommon
             });
         }
 
-        public bool ExposureInProgress()
+        public bool ExposureInProgress(SBIG.CCD_REQUEST ccd = SBIG.CCD_REQUEST.CCD_IMAGING)
         {
-            return SBIG.ExposureInProgress();
+            return SBIG.ExposureInProgress(ccd);
         }
 
         public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
