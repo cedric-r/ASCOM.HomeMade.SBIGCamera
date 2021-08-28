@@ -1026,11 +1026,18 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("ReadoutMode", "Set");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("ReadoutMode Set", "Setting binning to " + value);
-                BinningDefinition bindef = BinningModes.First<BinningDefinition>(r => ((short)r.mode) == value);
-                Binning = bindef.mode;
-                binX = bindef.binx; // Override BinX and BinY choices
-                binY = bindef.biny;
+                if (!CanFastReadout)
+                {
+                    debug.LogMessage("ReadoutMode Set", "Setting binning to " + value);
+                    BinningDefinition bindef = BinningModes.First<BinningDefinition>(r => ((short)r.mode) == value);
+                    Binning = bindef.mode;
+                    binX = bindef.binx; // Override BinX and BinY choices
+                    binY = bindef.biny;
+                }
+                else
+                {
+                    throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
+                }
             }
         }
 
@@ -1040,12 +1047,19 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("ReadoutModes", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                ArrayList list = new ArrayList();
-                foreach (var readoutmode in cameraInfo.cameraReadoutModes)
+                if (!CanFastReadout)
                 {
-                    list.Add(readoutmode.mode.ToString());
+                    ArrayList list = new ArrayList();
+                    foreach (var readoutmode in cameraInfo.cameraReadoutModes)
+                    {
+                        list.Add(readoutmode.mode.ToString());
+                    }
+                    return list;
                 }
-                return list;
+                else
+                {
+                    throw new ASCOM.PropertyNotImplementedException("ReadoutModes not implemented. See CanFastReadout");
+                }
             }
         }
 
