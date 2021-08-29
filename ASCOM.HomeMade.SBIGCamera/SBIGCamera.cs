@@ -59,6 +59,8 @@ namespace ASCOM.HomeMade.SBIGCamera
         /// </summary>
         internal string DriverID { get { return "ASCOM.HomeMade.SBIGCamera"; } }
         // TODO Change the descriptive string for your driver then remove this line
+        protected DateTime lastTECRead = DateTime.Now;
+        protected static TimeSpan TEMPERATURETTL = TimeSpan.FromMilliseconds(500); // In ms
 
         protected BackgroundWorker imagingWorker = null;
         protected ImageTakerThread imagetaker = null;
@@ -365,7 +367,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CCDTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Cooling = GetTECStatus();
+                GetTECStatus();
                 debug.LogMessage("CCDTemperature Get", "CCD temperature is " + Cooling.imagingCCDTemperature);
                 if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
                     return Cooling.imagingCCDTemperature;
@@ -517,7 +519,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CoolerOn", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Cooling = GetTECStatus();
+                GetTECStatus();
                 debug.LogMessage("CoolerOn Get", "Cooler is " + Cooling.coolingEnabled.value.ToString());
                 return Cooling.coolingEnabled.value == 0 ? false : true;
             }
@@ -550,7 +552,7 @@ namespace ASCOM.HomeMade.SBIGCamera
                     {
                         debug.LogMessage("CoolerOn Set", "Cooler Off");
                     }
-                    Cooling = GetTECStatus();
+                    GetTECStatus();
                 }
                 catch (Exception e)
                 {
@@ -567,7 +569,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CoolerPower", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Cooling = GetTECStatus();
+                GetTECStatus();
                 debug.LogMessage("CoolerPower Get", "Cooler power is " + Cooling.imagingCCDPower.ToString());
                 if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
                     return Cooling.imagingCCDPower;
@@ -810,7 +812,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("HeatSinkTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                Cooling = GetTECStatus();
+                GetTECStatus();
                 debug.LogMessage("HeatSinkTemperature Get", "Heatsink temperature is " + Cooling.heatsinkTemperature.ToString());
                 return Cooling.heatsinkTemperature;
             }
@@ -1225,11 +1227,15 @@ namespace ASCOM.HomeMade.SBIGCamera
             return ri.mode;
         }
 
-        protected SBIG.QueryTemperatureStatusResults2 GetTECStatus()
+        protected void GetTECStatus()
         {
-            debug.LogMessage("SBIGCanera GetTECStatus", "Getting cooling information");
-            // query temperature
-            return server.CC_QUERY_TEMPERATURE_STATUS();
+            debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information");
+            if (DateTime.Now > lastTECRead + TEMPERATURETTL)
+            {
+                debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information from camera");
+                Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
+                lastTECRead = DateTime.Now;
+            }
         }
 
         /// <summary>
