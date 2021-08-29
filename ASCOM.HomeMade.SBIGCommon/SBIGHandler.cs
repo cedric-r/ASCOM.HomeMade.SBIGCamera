@@ -403,12 +403,12 @@ namespace ASCOM.HomeMade.SBIGCommon
             {
                 Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
-                /*UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
+                UnivDrvCommand(SBIG.PAR_COMMAND.CC_END_READOUT,
                     new SBIG.EndReadoutParams()
                     {
                         ccd = sep2.ccd
                     });
-                */
+                
             }
             catch (Exception)
             {
