@@ -1,0 +1,137 @@
+<html dir="LTR" xmlns="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:MSHelp="http://msdn.microsoft.com/mshelp" xmlns:tool="http://www.microsoft.com/tooltip" xmlns:ndoc="urn:ndoc-preprocess">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Windows-1252" />
+    <title>FillTile Method</title>
+    <link rel="stylesheet" type="text/css" href="ndoc.css"> </link>
+    <link rel="stylesheet" type="text/css" href="user.css"> </link>
+    <script type="text/javascript" src="ndoc.js"> </script>
+  </head>
+  <body style="display: none;">
+    <input type="hidden" id="userDataCache" class="userDataStyle" />
+    <input type="hidden" id="hiddenScrollOffset" />
+    <img id="dropDownImage" style="display:none; height:0; width:0;" src="drpdown.gif" />
+    <img id="dropDownHoverImage" style="display:none; height:0; width:0;" src="drpdown_orange.gif" />
+    <img id="collapseImage" style="display:none; height:0; width:0;" src="collapse.gif" />
+    <img id="expandImage" style="display:none; height:0; width:0;" src="exp.gif" />
+    <img id="collapseAllImage" style="display:none; height:0; width:0;" src="collall.gif" />
+    <img id="expandAllImage" style="display:none; height:0; width:0;" src="expall.gif" />
+    <img id="copyImage" style="display:none; height:0; width:0;" src="copycode.gif" />
+    <img id="copyHoverImage" style="display:none; height:0; width:0;" src="copycodeHighlight.gif" />
+    <div id="header">
+      <table width="100%" id="topTable">
+        <tr id="headerTableRow1">
+          <td align="left">
+            <span id="runningHeaderText">An NDoc documented library</span>
+          </td>
+        </tr>
+        <tr id="headerTableRow2">
+          <td align="left">
+            <span id="nsrTitle">ImageTiler.FillTile Method</span>
+          </td>
+        </tr>
+        <tr id="headerTableRow3">
+          <td>
+            <a id="seeAlsoSectionLink" href="#seeAlsoToggle" onclick="OpenSection(seeAlsoToggle)">See Also</a>
+            <a id="exampleSectionLink" href="#codeExampleToggle" onclick="OpenSection(codeExampleToggle)">Example</a>
+          </td>
+        </tr>
+      </table>
+      <table width="100%" id="bottomTable" cellspacing="0" cellpadding="0">
+        <tr>
+          <td>
+            <span onclick="ExpandCollapseAll(toggleAllImage)" style="cursor:default;" onkeypress="ExpandCollapseAll_CheckKey(toggleAllImage)" tabindex="0">
+              <img ID="toggleAllImage" class="toggleAll" src="collall.gif" />
+              <label id="collapseAllLabel" for="toggleAllImage" style="display: none;">
+							Collapse All
+						</label>
+              <label id="expandAllLabel" for="toggleAllImage" style="display: none;">
+							Expand All
+						</label>
+            </span>
+            <span id="languageFilterToolTip" style="cursor:default;" onmouseover="languageFilterImage.src=dropDownHoverImage.src;" onfocusin="languageFilterImage.src=dropDownHoverImage.src;" onmouseout="languageFilterImage.src=dropDownImage.src;" onfocusout="languageFilterImage.src=dropDownImage.src;" tabindex="0">
+              <img id="languageFilterImage" src="drpdown.gif" />
+              <label id="showAllLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: All
+			</label>
+              <label id="multipleLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: Multiple
+			</label>
+              <label id="vbLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: Visual Basic
+			</label>
+              <label id="csLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: C#
+			</label>
+              <label id="cLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: C++
+			</label>
+              <label id="jsharpLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: J#
+			</label>
+              <label id="jsLabel" for="languageFilterImage" style="display: none;">
+				Language Filter: JScript
+			</label>
+            </span>
+          </td>
+        </tr>
+      </table>
+      <span style="display:none" id="languageSpan">
+        <input id="vbDeclarationCheckbox" type="checkbox" name="languageFilter" onClick="SetLanguage(this)" />
+        <label class="languageFilter" for="vbDeclarationCheckbox">
+				Visual Basic (Declaration)
+			</label>
+        <br />
+        <input id="vbUsageCheckbox" type="checkbox" name="languageFilter" onClick="SetLanguage(this)" />
+        <label class="languageFilter" for="vbUsageCheckbox">
+				Visual Basic (Usage)
+			</label>
+        <br />
+        <input id="csCheckbox" type="checkbox" name="languageFilter" onClick="SetLanguage(this)" />
+        <label class="languageFilter" for="csCheckbox">
+				C#
+			</label>
+        <br />
+        <input id="cCheckbox" type="checkbox" name="languageFilter" onClick="SetLanguage(this)" />
+        <label class="languageFilter" for="cCheckbox">
+				C++
+			</label>
+        <br />
+        <input id="jsharpCheckbox" type="checkbox" name="languageFilter" onClick="SetLanguage(this)" />
+        <label class="languageFilter" for="jsharpCheckbox">
+				J#
+			</label>
+        <br />
+        <input id="jsCheckbox" type="checkbox" name="languageFilter" onClick="SetLanguage(this)" />
+        <label class="languageFilter" for="jsCheckbox">
+				JScript
+			</label>
+        <br />
+      </span>
+    </div>
+    <div id="mainSection">
+      <div id="mainBody">
+        <div id="allHistory" class="saveHistory" onsave="saveAll()" onload="loadAll()" />
+        <p>Fill the subset.</p>
+        <br />
+        <b>Namespace: </b>
+        <a href="N_nom_tam_image.html">nom.tam.image</a>
+        <br />
+        <b>Assembly: </b>CSharpFITS_v1.1 (in CSharpFITS_v1.1.dll)
+		<br /><h1 class="heading"><span onclick="ExpandCollapse(syntaxToggle)" style="cursor:default;" onkeypress="ExpandCollapse_CheckKey(syntaxToggle)" tabindex="0"><img id="syntaxToggle" class="toggle" name="toggleSwitch" src="collapse.gif" />Syntax</span></h1><div id="syntaxSection" class="section" name="collapseableSection"><div id="syntaxCodeBlocks" class="code"><span codeLanguage="VisualBasicDeclaration"><table width="100%" cellspacing="0" cellpadding="0"><tr><th align="left">Visual Basic (Declaration)</th></tr><tr><td class="syntax">Protected Overridable Sub FillTile( _ <br />   ByVal data As <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a>,  _ <br />   ByVal o As <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a>,  _ <br />   ByVal dims As <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">Integer</a>(),  _ <br />   ByVal corners As <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">Integer</a>(),  _ <br />   ByVal lengths As <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">Integer</a>() _ <br />)</td></tr></table></span><span codeLanguage="CSharp"><table width="100%" cellspacing="0" cellpadding="0"><tr><th align="left">C#</th></tr><tr><td class="syntax">protected virtual <a href="http://msdn2.microsoft.com/en-us/library/System.Void" target="_top">void</a> FillTile(<br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a> data, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a> o, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[] dims, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[] corners, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[] lengths<br />)</td></tr></table></span><span codeLanguage="ManagedCPlusPlus"><table width="100%" cellspacing="0" cellpadding="0"><tr><th align="left">C++</th></tr><tr><td class="syntax">protected:<br /> virtual <a href="http://msdn2.microsoft.com/en-us/library/System.Void" target="_top">void</a> FillTile(<br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a> data, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a> o, <br />   array&lt;<a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>&gt;^ dims, <br />   array&lt;<a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>&gt;^ corners, <br />   array&lt;<a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>&gt;^ lengths<br />)</td></tr></table></span><span codeLanguage="JSharp"><table width="100%" cellspacing="0" cellpadding="0"><tr><th align="left">J#</th></tr><tr><td class="syntax">protected virtual <a href="http://msdn2.microsoft.com/en-us/library/System.Void" target="_top">void</a> FillTile(<br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a> data, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a> o, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[] dims, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[] corners, <br />   <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[] lengths<br />)</td></tr></table></span><span codeLanguage="JScript"><table width="100%" cellspacing="0" cellpadding="0"><tr><th align="left">JScript</th></tr><tr><td class="syntax">protected virtual 
+				function FillTile(<br />   data : <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a>, <br />   o : <a href="http://msdn2.microsoft.com/en-us/library/System.Array" target="_top">Array</a>, <br />   dims : <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[], <br />   corners : <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[], <br />   lengths : <a href="http://msdn2.microsoft.com/en-us/library/System.Int32" target="_top">int</a>[]<br />)</td></tr></table></span></div><h4 class="subHeading">
+					Parameters
+				</h4><dl paramName="data"><dt><i>data</i></dt><dd>The memory-resident data image. This may be null if the image is to be read from a file. This should be a multi-dimensional primitive array.</dd></dl><dl paramName="o"><dt><i>o</i></dt><dd>The tile to be filled. This is a simple primitive array.</dd></dl><dl paramName="dims"><dt><i>dims</i></dt><dd>The dimensions of the full image.</dd></dl><dl paramName="corners"><dt><i>corners</i></dt><dd>The indices of the corner of the image.</dd></dl><dl paramName="lengths"><dt><i>lengths</i></dt><dd>The dimensions of the subset.</dd></dl></div><h1 class="heading"><span style="cursor:default;" onclick="ExpandCollapse(seeAlsoToggle)" onkeypress="ExpandCollapse_CheckKey(seeAlsoToggle)" tabindex="0"><img id="seeAlsoToggle" class="toggle" name="toggleSwitch" src="collapse.gif" />See Also</span></h1><div id="seeAlsoSection" class="section" name="collapseableSection"><a href="T_nom_tam_image_ImageTiler.html">ImageTiler Class</a><br /><a href="N_nom_tam_image.html">nom.tam.image Namespace</a></div></div>
+      <DIV CLASS="footer">
+        <p>
+          <center>
+            <font color="red">
+              <i>
+                Syntax based on .NET Framework version 2.0.<br />
+                Documentation version 1.0.0.0.
+              </i>
+            </font>
+          </center>
+        </p>
+      </DIV><!--[if gte IE 5]><tool:tip element="languageFilterToolTip" avoidmouse="false" /><![endif]--></div>
+  </body>
+</html>

@@ -80,6 +80,10 @@
       <Project>{64308775-bd4a-469c-bcab-3ed830b811af}</Project>
       <Name>ASCOM.HomeMade.SBIGImagingCamera</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CSharpFits\src\CSharpFITS.csproj">
+      <Project>{93c93a99-d18f-495e-8ac9-6b6f6f7f273e}</Project>
+      <Name>CSharpFITS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SbigSharp\SbigSharp.csproj">
       <Project>{3BE45310-83C8-4294-A30B-585CE4996940}</Project>
       <Name>SbigSharp</Name>

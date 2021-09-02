@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8C997E1B-43C5-4993-A2C8-0C5159DD0F01}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CSharpFitsTests</RootNamespace>
+    <AssemblyName>CSharpFitsTests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework, Version=3.2.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\src\packages\NUnit.3.2.0\lib\net45\nunit.framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="nom\tam\fits\AsciiTableTest.cs" />
+    <Compile Include="nom\tam\fits\BinaryTableTest.cs" />
+    <Compile Include="nom\tam\fits\FitsCopyTest.cs" />
+    <Compile Include="nom\tam\fits\FitsReaderTest.cs" />
+    <Compile Include="nom\tam\fits\HeaderCardTest.cs" />
+    <Compile Include="nom\tam\fits\HeaderTest.cs" />
+    <Compile Include="nom\tam\fits\ImageTest.cs" />
+    <Compile Include="nom\tam\fits\RandomGroupsTest.cs" />
+    <Compile Include="nom\tam\fits\TestDate.cs" />
+    <Compile Include="nom\tam\fits\TilerTest.cs" />
+    <Compile Include="nom\tam\util\ArrayFuncsTester.cs" />
+    <Compile Include="nom\tam\util\BufferedFileTester.cs" />
+    <Compile Include="nom\tam\util\ByteFormatParseTester.cs" />
+    <Compile Include="nom\tam\util\HashedListTester.cs" />
+    <Compile Include="util\TestFileSetup.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+    <None Include="resources\nom\tam\fits\test\ad43021000gis25670_lo.totsky.gz" />
+    <None Include="resources\nom\tam\fits\test\ht1.fits" />
+    <None Include="resources\nom\tam\fits\test\rp600245n00_im1.fits.Z" />
+    <None Include="resources\nom\tam\fits\test\test.fits" />
+    <None Include="resources\nom\tam\fits\test\test.fits.bz2" />
+    <None Include="resources\nom\tam\fits\test\test.fits.gz" />
+    <None Include="resources\nom\tam\fits\test\test.fits.Z" />
+    <None Include="resources\nom\tam\fits\test\test_dup.fits" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\CSharpFITS.csproj">
+      <Project>{93c93a99-d18f-495e-8ac9-6b6f6f7f273e}</Project>
+      <Name>CSharpFITS</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

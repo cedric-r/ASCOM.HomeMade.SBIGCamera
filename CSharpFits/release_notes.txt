@@ -1,0 +1,27 @@
+Release Notes
+--------------
+Release date - 16 January 2008
+
+Release Identification:
+-----------------------
+This release contains CSharpFITS version 1.1 source code, DLL and documenation.
+
+Release Availability:
+---------------------
+The release is available for download on 
+http://vo.iucaa.ernet.in/~voi/
+
+Features:
+---------
+1.GZip support for handling compressed FITS files is added.
+2.CSharpFITS v1.1 includes all feautres and bug fixes from nom.tam.fits v99.5 (fits library in java).
+
+System Requirements:
+--------------------
+Microsoft Visual Studio supporting .NET framework version 2.0 
+
+Product Support Information/Feedback address:
+---------------------------------------------
+For feedback contact voindia@vo.iucaa.ernet.in.
+
+

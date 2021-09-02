@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGClient",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGCamera", "ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera.csproj", "{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpFITS", "CSharpFits\src\CSharpFITS.csproj", "{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
