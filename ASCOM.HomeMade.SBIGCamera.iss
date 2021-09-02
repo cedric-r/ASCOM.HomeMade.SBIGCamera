@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 1.0.1
-AppVersion=1.0.1
+AppVerName=ASCOM HomeMade SBig Camera Driver 1.0.2
+AppVersion=1.0.2
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=1.0.1
+VersionInfoVersion=1.0.2
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes
@@ -47,6 +47,8 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGFW\bin\Debug\ASCO
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGFW\bin\Debug\ASCOM.HomeMade.SBIGFW.dll.config"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGHub\bin\Debug\ASCOM.HomeMade.SBIGHub.Server.exe"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGHub\bin\Debug\ASCOM.HomeMade.SBIGHub.Server.exe.config"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCameraTests\bin\Debug\CSharpFITS.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCameraTests\bin\Debug\CSharpFITS.xml"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGGuidingCamera\bin\Debug\ASCOM.HomeMade.SBIGGuidingCamera.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGGuidingCamera\bin\Debug\ASCOM.HomeMade.SBIGGuidingCamera.dll.config"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\ASCOM.Internal.Extensions.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion

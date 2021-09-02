@@ -1020,6 +1020,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             get
             {
                 debug.LogMessage("ReadoutMode", "Get");
+                throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ReadoutMode Get", "Binning is " + Binning);
                 return (short)Binning;
@@ -1027,6 +1028,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             set
             {
                 debug.LogMessage("ReadoutMode", "Set");
+                throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!CanFastReadout)
                 {
@@ -1048,6 +1050,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             get
             {
                 debug.LogMessage("ReadoutModes", "Get");
+                throw new ASCOM.PropertyNotImplementedException("ReadoutModes not implemented. See CanFastReadout");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!CanFastReadout)
                 {
