@@ -142,6 +142,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "ASCOM SBIG Camera Driver.";
+            this.TopMost = true;
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
