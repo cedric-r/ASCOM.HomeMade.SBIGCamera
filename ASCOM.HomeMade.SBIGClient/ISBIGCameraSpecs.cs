@@ -33,7 +33,6 @@ namespace ASCOM.HomeMade.SBIGClient
         protected SBIGCommon.Debug debug = null;
 
         protected SBIGClient server = null;
-        public static string IPAddress = "";
 
         public CameraInfo cameraInfo = new CameraInfo();
         protected SBIG.QueryTemperatureStatusResults2 Cooling;

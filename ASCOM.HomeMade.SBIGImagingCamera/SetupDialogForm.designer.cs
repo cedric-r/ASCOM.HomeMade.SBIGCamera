@@ -36,6 +36,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             this.chkTrace = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.hideReadoutCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.SuspendLayout();
             // 
@@ -88,11 +89,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             // chkTrace
             // 
             this.chkTrace.AutoSize = true;
-            this.chkTrace.Location = new System.Drawing.Point(77, 118);
+            this.chkTrace.Location = new System.Drawing.Point(15, 126);
             this.chkTrace.Name = "chkTrace";
-            this.chkTrace.Size = new System.Drawing.Size(69, 17);
+            this.chkTrace.Size = new System.Drawing.Size(85, 17);
             this.chkTrace.TabIndex = 6;
-            this.chkTrace.Text = "Trace on";
+            this.chkTrace.Text = "Debug trace";
             this.chkTrace.UseVisualStyleBackColor = true;
             // 
             // textBox1
@@ -111,11 +112,22 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             this.label2.TabIndex = 9;
             this.label2.Text = "IP address (leave blank for USB):";
             // 
+            // hideReadoutCheckBox
+            // 
+            this.hideReadoutCheckBox.AutoSize = true;
+            this.hideReadoutCheckBox.Location = new System.Drawing.Point(15, 103);
+            this.hideReadoutCheckBox.Name = "hideReadoutCheckBox";
+            this.hideReadoutCheckBox.Size = new System.Drawing.Size(92, 17);
+            this.hideReadoutCheckBox.TabIndex = 12;
+            this.hideReadoutCheckBox.Text = "Hide Readout";
+            this.hideReadoutCheckBox.UseVisualStyleBackColor = true;
+            // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(350, 175);
+            this.Controls.Add(this.hideReadoutCheckBox);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.chkTrace);
@@ -145,5 +157,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private System.Windows.Forms.CheckBox chkTrace;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox hideReadoutCheckBox;
     }
 }

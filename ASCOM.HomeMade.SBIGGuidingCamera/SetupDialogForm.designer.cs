@@ -33,9 +33,10 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             this.cmdCancel = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.picASCOM = new System.Windows.Forms.PictureBox();
-            this.chkTrace = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.hideReadoutCheckBox = new System.Windows.Forms.CheckBox();
+            this.chkTrace = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.SuspendLayout();
             // 
@@ -85,16 +86,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             this.picASCOM.Click += new System.EventHandler(this.BrowseToAscom);
             this.picASCOM.DoubleClick += new System.EventHandler(this.BrowseToAscom);
             // 
-            // chkTrace
-            // 
-            this.chkTrace.AutoSize = true;
-            this.chkTrace.Location = new System.Drawing.Point(77, 118);
-            this.chkTrace.Name = "chkTrace";
-            this.chkTrace.Size = new System.Drawing.Size(69, 17);
-            this.chkTrace.TabIndex = 6;
-            this.chkTrace.Text = "Trace on";
-            this.chkTrace.UseVisualStyleBackColor = true;
-            // 
             // textBox1
             // 
             this.textBox1.Location = new System.Drawing.Point(182, 70);
@@ -111,14 +102,35 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             this.label2.TabIndex = 9;
             this.label2.Text = "IP address (leave blank for USB):";
             // 
+            // hideReadoutCheckBox
+            // 
+            this.hideReadoutCheckBox.AutoSize = true;
+            this.hideReadoutCheckBox.Location = new System.Drawing.Point(15, 96);
+            this.hideReadoutCheckBox.Name = "hideReadoutCheckBox";
+            this.hideReadoutCheckBox.Size = new System.Drawing.Size(92, 17);
+            this.hideReadoutCheckBox.TabIndex = 14;
+            this.hideReadoutCheckBox.Text = "Hide Readout";
+            this.hideReadoutCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // chkTrace
+            // 
+            this.chkTrace.AutoSize = true;
+            this.chkTrace.Location = new System.Drawing.Point(15, 119);
+            this.chkTrace.Name = "chkTrace";
+            this.chkTrace.Size = new System.Drawing.Size(85, 17);
+            this.chkTrace.TabIndex = 13;
+            this.chkTrace.Text = "Debug trace";
+            this.chkTrace.UseVisualStyleBackColor = true;
+            // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(350, 175);
+            this.Controls.Add(this.hideReadoutCheckBox);
+            this.Controls.Add(this.chkTrace);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.chkTrace);
             this.Controls.Add(this.picASCOM);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cmdCancel);
@@ -142,8 +154,9 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         private System.Windows.Forms.Button cmdCancel;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox picASCOM;
-        private System.Windows.Forms.CheckBox chkTrace;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox hideReadoutCheckBox;
+        private System.Windows.Forms.CheckBox chkTrace;
     }
 }

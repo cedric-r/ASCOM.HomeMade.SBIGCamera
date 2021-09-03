@@ -60,6 +60,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         internal string DriverID { get { return driverID; } }
 
+        public static string IPAddress = "";
+        public static bool HideReadout = true;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -96,6 +98,15 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 debug.LogMessage("Description Get", driverDescription);
                 return driverDescription;
             }
+        }
+        protected override string GetIPAddress()
+        {
+            return IPAddress;
+        }
+
+        protected override bool GetHideReadout()
+        {
+            return HideReadout;
         }
 
         /// <summary>
@@ -139,6 +150,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     IPAddress = driverProfile.GetValue(driverID, "IPAddress", "", "");
                 }
                 catch (Exception) { }
+                try
+                {
+                    HideReadout = Convert.ToBoolean(driverProfile.GetValue(driverID, "HideReadout", "", "True"));
+                }
+                catch (Exception) { }
             }
         }
 
@@ -152,6 +168,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 driverProfile.DeviceType = "Camera";
                 driverProfile.WriteValue(driverID, "TraceDebug", ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled.ToString());
                 driverProfile.WriteValue(driverID, "IPAddress", IPAddress);
+                driverProfile.WriteValue(driverID, "HideReadout", HideReadout.ToString());
             }
         }
     }

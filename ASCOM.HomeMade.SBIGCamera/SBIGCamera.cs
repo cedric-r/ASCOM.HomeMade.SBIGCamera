@@ -201,7 +201,7 @@ namespace ASCOM.HomeMade.SBIGCamera
 
                     if (value)
                     {
-                        bool connectionState = server.Connect(IPAddress);
+                        bool connectionState = server.Connect(GetIPAddress());
 
                         if (!connectionState)
                         {
@@ -1020,7 +1020,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             get
             {
                 debug.LogMessage("ReadoutMode", "Get");
-                throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
+                if (GetHideReadout())
+                    throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("ReadoutMode Get", "Binning is " + Binning);
                 return (short)Binning;
@@ -1028,7 +1029,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             set
             {
                 debug.LogMessage("ReadoutMode", "Set");
-                throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
+                if (GetHideReadout())
+                    throw new ASCOM.PropertyNotImplementedException("ReadoutMode not implemented. See CanFastReadout");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!CanFastReadout)
                 {
@@ -1050,7 +1052,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             get
             {
                 debug.LogMessage("ReadoutModes", "Get");
-                throw new ASCOM.PropertyNotImplementedException("ReadoutModes not implemented. See CanFastReadout");
+                if (GetHideReadout())
+                    throw new ASCOM.PropertyNotImplementedException("ReadoutModes not implemented. See CanFastReadout");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 if (!CanFastReadout)
                 {
@@ -1153,7 +1156,7 @@ namespace ASCOM.HomeMade.SBIGCamera
         {
             try
             {
-                imagetaker = new ImageTakerThread(this, IPAddress);
+                imagetaker = new ImageTakerThread(this, GetIPAddress());
                 imagetaker.TakeImage();
                 imagetaker = null;
             }
@@ -1241,6 +1244,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
+        protected abstract bool GetHideReadout();
+
         /// <summary>
         /// Use this function to throw an exception if we aren't connected to the hardware
         /// </summary>
@@ -1263,6 +1268,8 @@ namespace ASCOM.HomeMade.SBIGCamera
                 return Path.GetDirectoryName(path);
             }
         }
+
+        protected abstract string GetIPAddress();
         #endregion
     }
 }
