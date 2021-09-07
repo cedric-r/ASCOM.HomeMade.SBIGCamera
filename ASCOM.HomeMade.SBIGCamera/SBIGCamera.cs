@@ -1091,8 +1091,8 @@ namespace ASCOM.HomeMade.SBIGCamera
                 SensorType type;
                 if (cameraInfo.colourCamera)
                 {
-                    if (cameraInfo.bayer == CameraInfo.TRUESENSE) type = SensorType.RGGB; // Guessing here
-                    else type = SensorType.LRGB;
+                    if (cameraInfo.bayer == CameraInfo.TRUESENSE) type = SensorType.LRGB; // Guessing here
+                    else type = SensorType.RGGB;
                 }
                 else type = SensorType.Monochrome;
                 debug.LogMessage("SensorType Get", "Camera type is " + type.ToString());
