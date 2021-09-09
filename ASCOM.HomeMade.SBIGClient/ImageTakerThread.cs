@@ -35,11 +35,11 @@ namespace ASCOM.HomeMade.SBIGClient
         private Debug debug = null;
         private const string driverID = "ASCOM.HomeMade.SBIGImagingCamera.ImageTaker";
         private SBIGClient server = null;
-        private ISBIGCamera camera = null;
+        private ISBIGCameraSpecs camera = null;
         private string IPAddress = "";
         public bool StopExposure = false;
 
-        public ImageTakerThread(ISBIGCamera callerCamera, string ipAddress)
+        public ImageTakerThread(ISBIGCameraSpecs callerCamera, string ipAddress)
         {
             IPAddress = ipAddress;
             camera = callerCamera;
@@ -148,6 +148,22 @@ namespace ASCOM.HomeMade.SBIGClient
                 for (int i = 0; i < exposureParams2.width; i++)
                     for (int j = 0; j < exposureParams2.height; j++)
                         camera.cameraImageArray.SetValue((Int32)(UInt16)data[(j * exposureParams2.width) + i], i, j);
+
+                if (camera.cameraInfo.colourCamera)
+                {
+                    if (camera.cameraInfo.bayer != CameraInfo.TRUESENSE)
+                    {
+                        // If we have a colour camera that isn't TRUESENSE, it's BGGR. However ASCOM expects to return RBBG so we need to map. Let's swap R and B
+                        for (int x = 0; x < exposureParams2.width; x += 2)
+                            for (int y = 0; y < exposureParams2.height; y += 2)
+                            {
+                                int bluePixel = (int)camera.cameraImageArray.GetValue(x, y);
+                                int redPixel = (int)camera.cameraImageArray.GetValue(x+1, y+1);
+                                camera.cameraImageArray.SetValue(bluePixel, x + 1, y + 1);
+                                camera.cameraImageArray.SetValue(redPixel, x, y);
+                            }
+                    }
+                }
                 //camera.cameraImageArray = Utils.RotateMatrixCounterClockwiseAndConvertToInt(data);
                 data = null;
                 debug.LogMessage("ImageTakerThread TakeImage", "Finishing readout");

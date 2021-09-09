@@ -5464,7 +5464,7 @@ namespace SbigSharp
             try
             {
                 // get the image from the camera, line by line
-                for (int y = sep2.height-1; y >=0; y--)
+                for (int y = 0; y < sep2.height; y++)
                 {
                     _UnivDrvCommand(
                         PAR_COMMAND.CC_READOUT_LINE,
