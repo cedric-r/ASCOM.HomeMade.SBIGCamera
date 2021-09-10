@@ -46,6 +46,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled = chkTrace.Checked;
             Camera.IPAddress = textBox1.Text;
             Camera.HideReadout = hideReadoutCheckBox.Checked;
+            Camera.BayerPattern = (SBIGClient.SBIGBayerPattern)bayerPatternComboBox.SelectedItem;
         }
 
         private void cmdCancel_Click(object sender, EventArgs e) // Cancel button event handler
@@ -75,7 +76,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             chkTrace.Checked = ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled;
             textBox1.Text = Camera.IPAddress;
             hideReadoutCheckBox.Checked = Camera.HideReadout;
-            // set the list of com ports to those that are currently available
+            foreach (SBIGClient.SBIGBayerPattern pattern in Enum.GetValues(typeof(SBIGClient.SBIGBayerPattern)))
+            {
+                bayerPatternComboBox.Items.Add(pattern);
+            }
+            bayerPatternComboBox.SelectedItem = Camera.BayerPattern;
         }
     }
 }

@@ -1,4 +1,6 @@
 
+using System;
+
 namespace ASCOM.HomeMade.SBIGImagingCamera
 {
     partial class SetupDialogForm
@@ -29,6 +31,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SetupDialogForm));
             this.cmdOK = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -37,6 +41,9 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.hideReadoutCheckBox = new System.Windows.Forms.CheckBox();
+            this.bayerPatternComboBox = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.ascomOptionsToolTip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.picASCOM)).BeginInit();
             this.SuspendLayout();
             // 
@@ -44,7 +51,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             // 
             this.cmdOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOK.Location = new System.Drawing.Point(281, 112);
+            this.cmdOK.Location = new System.Drawing.Point(281, 138);
             this.cmdOK.Name = "cmdOK";
             this.cmdOK.Size = new System.Drawing.Size(59, 24);
             this.cmdOK.TabIndex = 0;
@@ -56,7 +63,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(281, 142);
+            this.cmdCancel.Location = new System.Drawing.Point(281, 168);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(59, 25);
             this.cmdCancel.TabIndex = 1;
@@ -89,7 +96,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             // chkTrace
             // 
             this.chkTrace.AutoSize = true;
-            this.chkTrace.Location = new System.Drawing.Point(15, 126);
+            this.chkTrace.Location = new System.Drawing.Point(12, 168);
             this.chkTrace.Name = "chkTrace";
             this.chkTrace.Size = new System.Drawing.Size(85, 17);
             this.chkTrace.TabIndex = 6;
@@ -115,18 +122,46 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
             // hideReadoutCheckBox
             // 
             this.hideReadoutCheckBox.AutoSize = true;
-            this.hideReadoutCheckBox.Location = new System.Drawing.Point(15, 103);
+            this.hideReadoutCheckBox.Location = new System.Drawing.Point(12, 145);
             this.hideReadoutCheckBox.Name = "hideReadoutCheckBox";
             this.hideReadoutCheckBox.Size = new System.Drawing.Size(92, 17);
             this.hideReadoutCheckBox.TabIndex = 12;
             this.hideReadoutCheckBox.Text = "Hide Readout";
+            this.ascomOptionsToolTip.SetToolTip(this.hideReadoutCheckBox, "Readout mode is confusing on SBIG cameras because they set binning, resolution, a" +
+        "nd read out mode (e.g. fast readout).\r\nBy default they are disabled to avoid con" +
+        "fusing astronomy software.");
             this.hideReadoutCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // bayerPatternComboBox
+            // 
+            this.bayerPatternComboBox.FormattingEnabled = true;
+            this.bayerPatternComboBox.Location = new System.Drawing.Point(182, 100);
+            this.bayerPatternComboBox.Name = "bayerPatternComboBox";
+            this.bayerPatternComboBox.Size = new System.Drawing.Size(100, 21);
+            this.bayerPatternComboBox.TabIndex = 13;
+            this.ascomOptionsToolTip.SetToolTip(this.bayerPatternComboBox, resources.GetString("bayerPatternComboBox.ToolTip"));
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 103);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(109, 13);
+            this.label3.TabIndex = 14;
+            this.label3.Text = "Image sensor pattern:";
+            this.ascomOptionsToolTip.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
+            // 
+            // ascomOptionsToolTip
+            // 
+            this.ascomOptionsToolTip.ToolTipTitle = resources.GetString("ascomOptionsToolTip.ToolTipTitle");
             // 
             // SetupDialogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(350, 175);
+            this.ClientSize = new System.Drawing.Size(350, 201);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.bayerPatternComboBox);
             this.Controls.Add(this.hideReadoutCheckBox);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label2);
@@ -159,5 +194,8 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.CheckBox hideReadoutCheckBox;
+        private System.Windows.Forms.ComboBox bayerPatternComboBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ToolTip ascomOptionsToolTip;
     }
 }

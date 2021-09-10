@@ -62,6 +62,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
 
         public static string IPAddress = "";
         public static bool HideReadout = true;
+        public static SBIGBayerPattern BayerPattern = SBIGBayerPattern.Mono;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -109,6 +110,11 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         protected override bool GetHideReadout()
         {
             return HideReadout;
+        }
+
+        public override SBIGBayerPattern GetBayerPattern()
+        {
+            return BayerPattern;
         }
 
         /// <summary>

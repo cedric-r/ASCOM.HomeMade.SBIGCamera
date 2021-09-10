@@ -318,6 +318,11 @@ namespace ASCOM.HomeMade.SBIGClient
             }
             return cameraInfo;
         }
+
+        public  virtual SBIGBayerPattern GetBayerPattern()
+        {
+            return SBIGBayerPattern.Mono;
+        }
     }
 
     public class CameraInfo

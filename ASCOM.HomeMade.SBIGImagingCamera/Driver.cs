@@ -62,6 +62,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
 
         public static string IPAddress = "";
         public static bool HideReadout = true;
+        public static SBIGBayerPattern BayerPattern = SBIGBayerPattern.BGGR;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
@@ -107,6 +108,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         protected override bool GetHideReadout()
         {
             return HideReadout;
+        }
+
+        public override SBIGBayerPattern GetBayerPattern()
+        {
+            return BayerPattern;
         }
 
         /// <summary>
@@ -155,6 +161,11 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     HideReadout = Convert.ToBoolean(driverProfile.GetValue(driverID, "HideReadout", "", "True"));
                 }
                 catch (Exception) { }
+                try
+                {
+                    BayerPattern = (SBIGBayerPattern)Convert.ToInt32(driverProfile.GetValue(driverID, "BayerPattern", "", ((int)SBIGBayerPattern.BGGR).ToString()));
+                }
+                catch (Exception) { }
             }
         }
 
@@ -169,6 +180,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 driverProfile.WriteValue(driverID, "TraceDebug", ASCOM.HomeMade.SBIGCommon.Debug.TraceEnabled.ToString());
                 driverProfile.WriteValue(driverID, "IPAddress", IPAddress);
                 driverProfile.WriteValue(driverID, "HideReadout", HideReadout.ToString());
+                driverProfile.WriteValue(driverID, "BayerPattern", ((int)BayerPattern).ToString());
             }
         }
     }

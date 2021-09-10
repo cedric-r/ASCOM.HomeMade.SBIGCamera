@@ -89,6 +89,7 @@
     <Compile Include="ImageTakerThread.cs" />
     <Compile Include="ISBIGCameraSpecs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SBIGBayerPattern.cs" />
     <Compile Include="SBIGClient.cs" />
   </ItemGroup>
   <ItemGroup>
