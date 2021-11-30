@@ -32,3 +32,6 @@
 /ASCOM.HomeMade.SBIGCommon/obj
 /CSharpFits/src/bin/Debug
 /CSharpFits/src/obj/Debug
+/.vs
+/ASCOM.HomeMade.SBIGCameraTests/obj/Release
+/ASCOM.HomeMade.SBIGHub/obj/Release
