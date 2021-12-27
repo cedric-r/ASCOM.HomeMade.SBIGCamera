@@ -88,13 +88,21 @@ namespace ASCOM.HomeMade.SBIGHub
         /// checking Connected and if it's false setting up the port before setting connected to true.
         /// It could also be put here.
         /// </summary>
-        public static void Connect(string ipAddress)
+        public static bool Connect(string ipAddress)
         {
             lock (lockObject)
             {
+                bool connected = false;
                 if (s_z == 0)
-                    SBIGHandlerShared.Connect(ipAddress);
-                s_z++;
+                {
+                    connected = SBIGHandlerShared.Connect(ipAddress);
+                }
+                if (connected || s_z > 0)
+                {
+                    s_z++;
+                    return true;
+                }
+                return false;
             }
         }
 

@@ -923,8 +923,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("MaxADU", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("MaxADU Get", "60000");
-                return 50000;
+                debug.LogMessage("MaxADU Get", "65000");
+                return 65000; // Pretty much meaningless
             }
         }
 

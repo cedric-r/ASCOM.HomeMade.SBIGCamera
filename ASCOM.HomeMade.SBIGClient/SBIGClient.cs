@@ -109,8 +109,7 @@ namespace ASCOM.HomeMade.SBIGClient
             debug.LogMessage("SBIGClient", "Connect");
             IPAddress = ipAddress;
             if (IsConnected) throw new ApplicationException("Already connected to server");
-            SharedResources.Connect(IPAddress);
-            IsConnected = true;
+            IsConnected = SharedResources.Connect(IPAddress);
             return IsConnected;
         }
 

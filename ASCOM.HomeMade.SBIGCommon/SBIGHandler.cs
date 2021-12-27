@@ -291,7 +291,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                 var cameraType = SBIG.EstablishLink();
 
                 CameraType = SBIG.EstablishLink();
-                debug.LogMessage("Connected Set", $"Connected to USB camera");
+                debug.LogMessage("Connected Set", $"Connected to camera");
 
                 return true;
             }
