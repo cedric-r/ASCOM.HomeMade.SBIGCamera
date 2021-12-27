@@ -5435,49 +5435,70 @@ namespace SbigSharp
         {
             // prepare the CCD for readout
             AbortExposure(sep2);
-            // then telling it where and how we're going to read
-            UnivDrvCommand(
-                PAR_COMMAND.CC_START_READOUT,
-                new StartReadoutParams
-                {
-                    ccd = sep2.ccd,
-                    readoutMode = sep2.readoutMode,
-                    left = sep2.left,
-                    top = sep2.top,
-                    width = sep2.width,
-                    height = sep2.height
-                });
-
-            // put the data into it
-            var rlp = new ReadoutLineParams
-            {
-                ccd = sep2.ccd,
-                readoutMode = sep2.readoutMode,
-                pixelStart = sep2.left,
-                pixelLength = sep2.width
-            };
-
-            var rlpGCH = GCHandle.Alloc(rlp, GCHandleType.Pinned);
-            GCHandle dataGCH = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            IntPtr dataPtr = dataGCH.AddrOfPinnedObject();
 
             try
             {
-                // get the image from the camera, line by line
-                for (int y = 0; y < sep2.height; y++)
+                // Freeze the TEC for the readout duration
+                UnivDrvCommand(
+                    PAR_COMMAND.CC_SET_TEMPERATURE_REGULATION,
+                    new SBIG.SetTemperatureRegulationParams2() { regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_FREEZE });
+
+                // then telling it where and how we're going to read
+                UnivDrvCommand(
+                    PAR_COMMAND.CC_START_READOUT,
+                    new StartReadoutParams
+                    {
+                        ccd = sep2.ccd,
+                        readoutMode = sep2.readoutMode,
+                        left = sep2.left,
+                        top = sep2.top,
+                        width = sep2.width,
+                        height = sep2.height
+                    });
+
+                // put the data into it
+                var rlp = new ReadoutLineParams
                 {
-                    _UnivDrvCommand(
-                        PAR_COMMAND.CC_READOUT_LINE,
-                        rlpGCH.AddrOfPinnedObject(),
-                        dataPtr + (y * sep2.width * sizeof(UInt16)));
+                    ccd = sep2.ccd,
+                    readoutMode = sep2.readoutMode,
+                    pixelStart = sep2.left,
+                    pixelLength = sep2.width
+                };
+
+                var rlpGCH = GCHandle.Alloc(rlp, GCHandleType.Pinned);
+                GCHandle dataGCH = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                IntPtr dataPtr = dataGCH.AddrOfPinnedObject();
+
+                try
+                {
+                    // get the image from the camera, line by line
+                    for (int y = 0; y < sep2.height; y++)
+                    {
+                        _UnivDrvCommand(
+                            PAR_COMMAND.CC_READOUT_LINE,
+                            rlpGCH.AddrOfPinnedObject(),
+                            dataPtr + (y * sep2.width * sizeof(UInt16)));
+                    }
+                    // cleanup our memory goo
                 }
-                // cleanup our memory goo
+                finally
+                {
+                    rlpGCH.Free();
+                    dataGCH.Free();
+                }
+            }
+            catch (Exception e)
+            {
+                throw;
             }
             finally
             {
-                rlpGCH.Free();
-                dataGCH.Free();
+                // Freeze the TEC for the readout duration
+                UnivDrvCommand(
+                    PAR_COMMAND.CC_SET_TEMPERATURE_REGULATION,
+                    new SBIG.SetTemperatureRegulationParams2() { regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_UNFREEZE });
             }
+
         }
 
         /// <summary>
