@@ -174,11 +174,15 @@ namespace ASCOM.HomeMade.SBIGClient
             catch (Exception e)
             {
                 debug.LogMessage("ImageTakerThread TakeImage", "Error: " + Utils.DisplayException(e));
-                throw;
+                //throw;
             }
             finally
             {
-                server.Disconnect();
+                try
+                {
+                    server.Disconnect();
+                }
+                catch(Exception) { }
             }
         }
 
