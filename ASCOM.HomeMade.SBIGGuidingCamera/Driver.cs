@@ -88,6 +88,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             debug.LogMessage("Process ID: " + nProcessID);
 
             CameraType = SBIG.CCD_REQUEST.CCD_TRACKING;
+            if (cameraInfo.STXLCamera) CameraType = SBIG.CCD_REQUEST.CCD_EXT_TRACKING;
 
             debug.LogMessage("Camera", "Completed initialisation");
         }

@@ -451,7 +451,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CanGetCoolerPower", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING)
+                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING || CameraType == SBIG.CCD_REQUEST.CCD_EXT_TRACKING)
                 {
                     debug.LogMessage("CanGetCoolerPower Get", false.ToString());
                     return false;
@@ -481,7 +481,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             {
                 debug.LogMessage("CanSetCCDTemperature", "Get");
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING)
+                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING || CameraType == SBIG.CCD_REQUEST.CCD_EXT_TRACKING)
                 {
                     debug.LogMessage("CanSetCCDTemperature Get", false.ToString());
                     return false;
