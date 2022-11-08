@@ -101,7 +101,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                         break;
                     case "AbortExposure":
                         SBIG.StartExposureParams2 p0 = (SBIG.StartExposureParams2)request.parameters;
-                        if (!exposures.Keys.Contains(p0.ccd)) exposures.Remove(p0.ccd);
+                        if (exposures.Keys.Contains(p0.ccd)) exposures.Remove(p0.ccd);
                         try
                         {
                             Utils.AcquireLock(ref lockAccess);
@@ -125,8 +125,8 @@ namespace ASCOM.HomeMade.SBIGCommon
                     case "CC_START_EXPOSURE2":
                         SBIG.StartExposureParams2 p2 = (SBIG.StartExposureParams2)request.parameters;
                         Exposure exposure = new Exposure() { ccd = p2.ccd, start = DateTime.Now, duration = p2.exposureTime };
-                        if (!exposures.Keys.Contains(p2.ccd)) exposures.Remove(p2.ccd);
-                        exposures[p2.ccd] = exposure;
+                        if (exposures.Keys.Contains(p2.ccd)) exposures.Remove(p2.ccd);
+                        exposures.Add(p2.ccd, exposure);
                         UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p2);
                         response.payload = null;
                         break;
@@ -168,7 +168,7 @@ namespace ASCOM.HomeMade.SBIGCommon
                         break;
                     case "EndReadout":
                         SBIG.CCD_REQUEST ccd = (SBIG.CCD_REQUEST)request.parameters;
-                        if (!exposures.Keys.Contains(ccd)) exposures.Remove(ccd);
+                        if (exposures.Keys.Contains(ccd)) exposures.Remove(ccd);
                         EndReadout(ccd);
                         response.payload = null;
                         break;
