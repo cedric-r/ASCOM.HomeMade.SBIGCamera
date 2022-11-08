@@ -68,7 +68,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         /// Initializes a new instance of the <see cref="HomeMade"/> class.
         /// Must be public for COM registration.
         /// </summary>
-        public Camera()
+        public Camera() : base()
         {
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
             strPath = Path.Combine(strPath, driverID);
@@ -88,9 +88,18 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             debug.LogMessage("Process ID: " + nProcessID);
 
             CameraType = SBIG.CCD_REQUEST.CCD_TRACKING;
-            if (cameraInfo.STXLCamera) CameraType = SBIG.CCD_REQUEST.CCD_EXT_TRACKING;
 
             debug.LogMessage("Camera", "Completed initialisation");
+        }
+
+        protected override void AdjustSettings()
+        {
+            // This is a cheat for the STXL that needs to know the type of camera but the information is only available at connection time. This is nasty design!
+            if (cameraInfo.STXLCamera)
+            {
+                debug.LogMessage("Camera", "Camera is STXL, setting to external guiding chip");
+                CameraType = SBIG.CCD_REQUEST.CCD_EXT_TRACKING;
+            }
         }
 
         public new string Description

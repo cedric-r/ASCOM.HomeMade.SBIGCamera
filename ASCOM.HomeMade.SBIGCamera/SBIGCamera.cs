@@ -94,6 +94,8 @@ namespace ASCOM.HomeMade.SBIGCamera
             debug.LogMessage("Camera", "Completed initialisation");
         }
 
+        protected virtual void AdjustSettings() { }
+
         //
         // PUBLIC COM INTERFACE ICameraV2 IMPLEMENTATION
         //
@@ -186,6 +188,7 @@ namespace ASCOM.HomeMade.SBIGCamera
                 {
                     debug.LogMessage("Connected", "Already connected");
                     cameraInfo = GetCameraSpecs();
+                    AdjustSettings();
 
                     return;
                 }
@@ -213,6 +216,7 @@ namespace ASCOM.HomeMade.SBIGCamera
                             debug.LogMessage("Connected Set", $"Connected to camera");
 
                             cameraInfo = GetCameraSpecs();
+                            AdjustSettings();
                         }
                     }
                     else
