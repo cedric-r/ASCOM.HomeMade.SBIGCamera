@@ -129,7 +129,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("CCDTemperature", "Get - exception");
-                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("Cooler not implemented on guiding sensor");
             }
         }
 
@@ -147,12 +147,12 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("CoolerOn", "Get = false");
-                return false;
+                throw new ASCOM.PropertyNotImplementedException("CoolerOn not implemented on guiding sensor");
             }
             set
             {
                 debug.LogMessage("CoolerOn", "Set - exception");
-                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("CoolerOn not implemented on guiding sensor");
             }
         }
         public override double CoolerPower
@@ -160,7 +160,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("CoolerPower", "Get - exception");
-                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("CoolerPower not implemented on guiding sensor");
             }
         }
 
@@ -169,7 +169,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("HeatSinkTemperature", "Get - exception");
-                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("HeatSinkTemperature not implemented on guiding sensor");
             }
         }
 
@@ -178,19 +178,19 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("SetCCDTemperature", "Get - exception");
-                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature not implemented on guiding sensor");
             }
             set
             {
                 debug.LogMessage("SetCCDTemperature", "Set - exception");
-                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature not implemented on guiding sensor");
             }
         }
 
         protected override void GetTECStatus()
         {
             debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information - exception");
-            throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            throw new ASCOM.MethodNotImplementedException("GetTECStatus not implemented on guiding sensor");
         }
 
         public override bool CanSetCCDTemperature
