@@ -365,20 +365,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public virtual double CCDTemperature
-        {
-            get
-            {
-                debug.LogMessage("CCDTemperature", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                GetTECStatus();
-                debug.LogMessage("CCDTemperature Get", "CCD temperature is " + Cooling.imagingCCDTemperature);
-                if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
-                    return Cooling.imagingCCDTemperature;
-                else
-                    return Cooling.trackingCCDTemperature;
-            }
-        }
+        public abstract double CCDTemperature { get; }
 
         public CameraStates CameraState
         {
@@ -449,24 +436,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public virtual bool CanGetCoolerPower
-        {
-            get
-            {
-                debug.LogMessage("CanGetCoolerPower", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING || CameraType == SBIG.CCD_REQUEST.CCD_EXT_TRACKING)
-                {
-                    debug.LogMessage("CanGetCoolerPower Get", false.ToString());
-                    return false;
-                }
-                else
-                {
-                    debug.LogMessage("CanGetCoolerPower Get", true.ToString());
-                    return true;
-                }
-            }
-        }
+        public virtual bool CanGetCoolerPower { get; }
 
         public bool CanPulseGuide
         {
@@ -479,24 +449,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public virtual bool CanSetCCDTemperature
-        {
-            get
-            {
-                debug.LogMessage("CanSetCCDTemperature", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (CameraType == SBIG.CCD_REQUEST.CCD_TRACKING || CameraType == SBIG.CCD_REQUEST.CCD_EXT_TRACKING)
-                {
-                    debug.LogMessage("CanSetCCDTemperature Get", false.ToString());
-                    return false;
-                }
-                else
-                {
-                    debug.LogMessage("CanSetCCDTemperature Get", true.ToString());
-                    return true;
-                }
-            }
-        }
+        public virtual bool CanSetCCDTemperature { get; }
 
         public bool CanStopExposure
         {
@@ -517,70 +470,9 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public virtual bool CoolerOn
-        {
-            get
-            {
-                debug.LogMessage("CoolerOn", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                GetTECStatus();
-                debug.LogMessage("CoolerOn Get", "Cooler is " + Cooling.coolingEnabled.value.ToString());
-                return Cooling.coolingEnabled.value == 0 ? false : true;
-            }
-            set
-            {
-                try
-                {
-                    debug.LogMessage("CoolerOn", "Set");
-                    if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                    var tparams = new SBIG.SetTemperatureRegulationParams2();
-                    if (value)
-                    {
-                        if (CCDTempTargetSet)
-                        {
-                            tparams.ccdSetpoint = CCDTempTarget;
-                        }
-                        else
-                        {
-                            tparams.ccdSetpoint = Cooling.imagingCCDTemperature;
-                        }
-                        tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_ON;
-                    }
-                    else tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_OFF;
-                    server.CC_SET_TEMPERATURE_REGULATION2(tparams);
-                    if (value)
-                    {
-                        debug.LogMessage("CoolerOn Set", "Coller On at " + tparams.ccdSetpoint);
-                    }
-                    else
-                    {
-                        debug.LogMessage("CoolerOn Set", "Cooler Off");
-                    }
-                    GetTECStatus();
-                }
-                catch (Exception e)
-                {
-                    debug.LogMessage("CoolerOn Set", "Error: " + Utils.DisplayException(e));
-                    throw new ASCOM.DriverException(Utils.DisplayException(e));
-                }
+        public virtual bool CoolerOn { get; set; }
 
-            }
-        }
-
-        public virtual double CoolerPower
-        {
-            get
-            {
-                debug.LogMessage("CoolerPower", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                GetTECStatus();
-                debug.LogMessage("CoolerPower Get", "Cooler power is " + Cooling.imagingCCDPower.ToString());
-                if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
-                    return Cooling.imagingCCDPower;
-                else
-                    return Cooling.trackingCCDPower;
-            }
-        }
+        public virtual double CoolerPower { get; }
 
         protected override short GetBinX()
         {
@@ -810,17 +702,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public virtual double HeatSinkTemperature
-        {
-            get
-            {
-                debug.LogMessage("HeatSinkTemperature", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                GetTECStatus();
-                debug.LogMessage("HeatSinkTemperature Get", "Heatsink temperature is " + Cooling.heatsinkTemperature.ToString());
-                return Cooling.heatsinkTemperature;
-            }
-        }
+        public virtual double HeatSinkTemperature { get; }
 
         public object ImageArray
         {
@@ -1104,27 +986,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public virtual double SetCCDTemperature
-        {
-            get
-            {
-                debug.LogMessage("SetCCDTemperature", "Get");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                debug.LogMessage("SetCCDTemperature Get", "CCD temperature target is " + CCDTempTarget);
-                return CCDTempTarget;
-            }
-            set
-            {
-                debug.LogMessage("SetCCDTemperature", "Set");
-                if (!IsConnected) throw new NotConnectedException("Camera is not connected");
-                if (value > 100 || value < -100)
-                    throw new ASCOM.InvalidValueException("Target temperature is too low of too high");
-                CCDTempTarget = value;
-                CCDTempTargetSet = true;
-                if (CoolerOn) CoolerOn = true;
-                debug.LogMessage("SetCCDTemperature Set", "CCD temperature target is " + CCDTempTarget);
-            }
-        }
+        public virtual double SetCCDTemperature { get; set; }
 
         public void StartExposure(double Duration, bool Light)
         {
@@ -1237,16 +1099,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             return ri.mode;
         }
 
-        protected virtual void GetTECStatus()
-        {
-            debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information");
-            if (DateTime.Now > lastTECRead + TEMPERATURETTL)
-            {
-                debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information from camera");
-                Cooling = server.CC_QUERY_TEMPERATURE_STATUS();
-                lastTECRead = DateTime.Now;
-            }
-        }
+        protected abstract void GetTECStatus();
 
         protected abstract bool GetHideReadout();
 
