@@ -44,7 +44,7 @@ namespace ASCOM.HomeMade.SBIGClient
         /// <summary>
         /// Returns true if there is a valid connection to the driver hardware
         /// </summary>
-        protected bool IsConnected
+        protected override bool IsConnected
         {
             get
             {

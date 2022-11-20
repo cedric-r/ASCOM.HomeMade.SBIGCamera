@@ -365,7 +365,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public double CCDTemperature
+        public virtual double CCDTemperature
         {
             get
             {
@@ -449,7 +449,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public bool CanGetCoolerPower
+        public virtual bool CanGetCoolerPower
         {
             get
             {
@@ -479,7 +479,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public bool CanSetCCDTemperature
+        public virtual bool CanSetCCDTemperature
         {
             get
             {
@@ -517,7 +517,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public bool CoolerOn
+        public virtual bool CoolerOn
         {
             get
             {
@@ -567,7 +567,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public double CoolerPower
+        public virtual double CoolerPower
         {
             get
             {
@@ -810,7 +810,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public double HeatSinkTemperature
+        public virtual double HeatSinkTemperature
         {
             get
             {
@@ -1104,7 +1104,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             }
         }
 
-        public double SetCCDTemperature
+        public virtual double SetCCDTemperature
         {
             get
             {
@@ -1237,7 +1237,7 @@ namespace ASCOM.HomeMade.SBIGCamera
             return ri.mode;
         }
 
-        protected void GetTECStatus()
+        protected virtual void GetTECStatus()
         {
             debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information");
             if (DateTime.Now > lastTECRead + TEMPERATURETTL)

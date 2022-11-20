@@ -71,7 +71,7 @@ namespace ASCOM.HomeMade.SBIGHub
             }
         }
 
-        protected bool IsConnected
+        protected virtual bool IsConnected
         {
             get
             {

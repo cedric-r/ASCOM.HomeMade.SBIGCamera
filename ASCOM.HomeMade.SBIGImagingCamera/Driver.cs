@@ -18,10 +18,6 @@
  */
 
 using ASCOM;
-using ASCOM.Astrometry;
-using ASCOM.Astrometry.AstroUtils;
-using ASCOM.DeviceInterface;
-using ASCOM.Utilities;
 using SbigSharp;
 using System;
 using System.Collections;
@@ -38,6 +34,7 @@ using System.Reflection;
 using ASCOM.HomeMade.SBIGClient;
 using ASCOM.HomeMade.SBIGHub;
 using ASCOM.HomeMade.SBIGCamera;
+using ASCOM.Utilities;
 
 namespace ASCOM.HomeMade.SBIGImagingCamera
 {
@@ -46,7 +43,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
     /// </summary>
     [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2991")]
     [ClassInterface(ClassInterfaceType.None)]
-    [ServedClassName(Camera.driverDescription)]
     [ProgId(Camera.driverID)]
     [ComVisible(true)]
     public class Camera : SBIGCamera.SBIGCamera

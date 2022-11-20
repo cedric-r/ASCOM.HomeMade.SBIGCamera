@@ -18,10 +18,6 @@
  */
 
 using ASCOM;
-using ASCOM.Astrometry;
-using ASCOM.Astrometry.AstroUtils;
-using ASCOM.DeviceInterface;
-using ASCOM.Utilities;
 using SbigSharp;
 using System;
 using System.Collections;
@@ -37,6 +33,7 @@ using ASCOM.HomeMade.SBIGCommon;
 using ASCOM.HomeMade.SBIGClient;
 using ASCOM.HomeMade.SBIGHub;
 using ASCOM.HomeMade.SBIGCamera;
+using ASCOM.Utilities;
 
 namespace ASCOM.HomeMade.SBIGGuidingCamera
 {
@@ -45,7 +42,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
     /// </summary>
     [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2992")]
     [ClassInterface(ClassInterfaceType.None)]
-    [ServedClassName(Camera.driverDescription)]
     [ProgId(Camera.driverID)]
     [ComVisible(true)]
     public class Camera : SBIGCamera.SBIGCamera
@@ -125,6 +121,84 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
         public override SBIGBayerPattern GetBayerPattern()
         {
             return BayerPattern;
+        }
+
+        public override double CCDTemperature
+        {
+            get
+            {
+                debug.LogMessage("CCDTemperature", "Get");
+                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            }
+        }
+
+        public override bool CanGetCoolerPower
+        {
+            get
+            {
+                debug.LogMessage("CanGetCoolerPower", "Get");
+                return false;
+            }
+        }
+
+        public override bool CoolerOn
+        {
+            get
+            {
+                debug.LogMessage("CoolerOn", "Get");
+                return false;
+            }
+            set
+            {
+                debug.LogMessage("CoolerOn", "Set");
+                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            }
+        }
+        public override double CoolerPower
+        {
+            get
+            {
+                debug.LogMessage("CoolerPower", "Get");
+                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            }
+        }
+
+        public override double HeatSinkTemperature
+        {
+            get
+            {
+                debug.LogMessage("HeatSinkTemperature", "Get");
+                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            }
+        }
+
+        public override double SetCCDTemperature
+        {
+            get
+            {
+                debug.LogMessage("SetCCDTemperature", "Get");
+                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            }
+            set
+            {
+                debug.LogMessage("SetCCDTemperature", "Set");
+                throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+            }
+        }
+
+        protected override void GetTECStatus()
+        {
+            debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information");
+            throw new ASCOM.MethodNotImplementedException("Cooler not implemented on guiding sensor");
+        }
+
+        public override bool CanSetCCDTemperature
+        {
+            get
+            {
+                debug.LogMessage("CanSetCCDTemperature", "Get");
+                return false;
+            }
         }
 
         /// <summary>
