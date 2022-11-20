@@ -43,6 +43,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
     /// </summary>
     [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2991")]
     [ClassInterface(ClassInterfaceType.None)]
+    [ServedClassName(Camera.driverDescription)]
     [ProgId(Camera.driverID)]
     [ComVisible(true)]
     public class Camera : SBIGCamera.SBIGCamera
