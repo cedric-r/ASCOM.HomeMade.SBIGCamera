@@ -188,7 +188,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     }
                     else tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_OFF;
                     server.CC_SET_TEMPERATURE_REGULATION2(tparams);
-                    coolerSwitchedon = value;
                     if (value)
                     {
                         debug.LogMessage("CoolerOn Set", "Coller On at " + tparams.ccdSetpoint);
@@ -198,6 +197,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                         debug.LogMessage("CoolerOn Set", "Cooler Off");
                     }
                     GetTECStatus();
+                    coolerSwitchedon = value;
                 }
                 catch (Exception e)
                 {
