@@ -198,6 +198,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     else
                     {
                         debug.LogMessage("CoolerOn Set", "Cooler Off");
+                        CCDTempTargetSet = false;
                     }
                     GetTECStatus();
                 }
