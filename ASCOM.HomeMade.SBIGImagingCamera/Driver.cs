@@ -122,8 +122,14 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 GetTECStatus();
                 debug.LogMessage("CCDTemperature Get", "CCD temperature is " + Cooling.imagingCCDTemperature);
+
                 if (CameraType == SBIG.CCD_REQUEST.CCD_IMAGING)
+                {
+                    // Check if we think the cooler should be on
+                    CheckCoolerStatus();
+
                     return Cooling.imagingCCDTemperature;
+                }
                 else
                     return Cooling.trackingCCDTemperature;
             }
@@ -182,7 +188,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     {
                         debug.LogMessage("CoolerOn", "Setting cooler off");
                         tparams.regulation = SBIG.TEMPERATURE_REGULATION.REGULATION_OFF;
-                        CCDTempTargetSet = false;
                     }
                     server.CC_SET_TEMPERATURE_REGULATION2(tparams);
                     coolerSwitchedon = value;
@@ -239,9 +244,6 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                 if (!IsConnected) throw new NotConnectedException("Camera is not connected");
                 debug.LogMessage("SetCCDTemperature Get", "CCD temperature target is " + CCDTempTarget);
 
-                // Check if we think the cooler should be on
-                CheckCoolerStatus();
-
                 return CCDTempTarget;
             }
             set
@@ -252,7 +254,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     throw new ASCOM.InvalidValueException("Target temperature is too low of too high");
                 CCDTempTarget = value;
                 CCDTempTargetSet = true;
-                CoolerOn = true;
+                //CoolerOn = true;
                 debug.LogMessage("SetCCDTemperature Set", "CCD temperature target is " + CCDTempTarget);
             }
         }
@@ -260,7 +262,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
         private void CheckCoolerStatus()
         {
             // Recent issue with my camera that switches cooler off without reason
-            if (coolerSwitchedon && Cooling.coolingEnabled.value == 0)
+            if (coolerSwitchedon && Cooling.coolingEnabled.value == 0 && CCDTempTargetSet)
             {
                 // The cooler should be switched on since we recorded switching it on, but not off
                 debug.LogMessage("CheckCoolerStatus", "Cooler is off but should be on. Switching back on");
