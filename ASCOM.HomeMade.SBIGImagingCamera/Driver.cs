@@ -254,7 +254,7 @@ namespace ASCOM.HomeMade.SBIGImagingCamera
                     throw new ASCOM.InvalidValueException("Target temperature is too low of too high");
                 CCDTempTarget = value;
                 CCDTempTargetSet = true;
-                //CoolerOn = true;
+                CoolerOn = true;
                 debug.LogMessage("SetCCDTemperature Set", "CCD temperature target is " + CCDTempTarget);
             }
         }
