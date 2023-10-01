@@ -17,11 +17,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="vcruntime140.dll" />
     <None Remove="x64\HomeMade.SBIGUDrv.dll" />
     <None Remove="x86\HomeMade.SBIGUDrv.dll" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="vcruntime140.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="x64\HomeMade.SBIGUDrv.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

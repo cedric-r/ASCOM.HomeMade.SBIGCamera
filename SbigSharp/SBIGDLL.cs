@@ -36,12 +36,12 @@ namespace SbigSharp
             if (Environment.Is64BitProcess)
             {
                 //File.AppendAllText(@"c:\temp\SBIGDLL.txt", "Loading DLL from " + Path.Combine(AssemblyDirectory, @"x64\HomeMade.SBIGUDrv.dll") + "\n");
-                LoadLibrary(Path.Combine(AssemblyDirectory, @"x64\HomeMade.SBIGUDrv.dll"));
+                LoadLibrary(Path.Combine(Path.Combine(AssemblyDirectory, @"x64"), "HomeMade.SBIGUDrv.dll"));
             }
             else
             {
                 //File.AppendAllText(@"c:\temp\SBIGDLL.txt", "Loading DLL from " + Path.Combine(AssemblyDirectory, @"x86\HomeMade.SBIGUDrv.dll") + "\n");
-                LoadLibrary(Path.Combine(AssemblyDirectory, @"x86\HomeMade.SBIGUDrv.dll"));
+                LoadLibrary(Path.Combine(Path.Combine(AssemblyDirectory, @"x86"), "HomeMade.SBIGUDrv.dll"));
             }
         }
 
