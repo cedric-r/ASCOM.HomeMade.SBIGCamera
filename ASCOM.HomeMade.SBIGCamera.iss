@@ -1,13 +1,13 @@
 [Setup]
 AppID={{3a7e63ad-c913-44f0-9489-e1744c9c2991}}
 AppName=ASCOM HomeMade Camera
-AppVerName=ASCOM HomeMade SBig Camera Driver 1.2.20.14
-AppVersion=1.2.20.14
+AppVerName=ASCOM HomeMade SBig Camera Driver 1.3.1.0
+AppVersion=1.3.1.0
 AppPublisher=Cedric Raguenaud <cedric@raguenaud.earth>
 AppPublisherURL=mailto:cedric@raguenaud.earth
 AppSupportURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
 AppUpdatesURL=https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera
-VersionInfoVersion=1.2.20.14
+VersionInfoVersion=1.3.1.0
 MinVersion=0,6.1
 DefaultDirName="{cf}\ASCOM\Camera\HomeMade SBIGCamera\"
 DisableDirPage=yes
@@ -62,6 +62,8 @@ Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\x86\HomeMade.SBIGUDrv.dll"; DestDir: "{app}\x86\"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\x64\HomeMade.SBIGUDrv.dll"; DestDir: "{app}\x64\"; Flags: comparetimestamp overwritereadonly ignoreversion
 Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGImagingCamera\bin\Debug\vcruntime140.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGExternalCamera\bin\Debug\ASCOM.HomeMade.SBIGExternalCamera.dll"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
+Source: "k:\astro\ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGExternalCamera\bin\Debug\ASCOM.HomeMade.SBIGExternalCamera.dll.config"; DestDir: "{app}"; Flags: comparetimestamp overwritereadonly ignoreversion
 
 ; Only if driver is .NET
 [Run]

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31515.178
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SbigSharp", "SbigSharp\SbigSharp.csproj", "{3BE45310-83C8-4294-A30B-585CE4996940}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGCamera", "ASCOM.HomeMade.SBIGCamera\ASCOM.HomeMade.SBIGCamera.csproj", "{7165F878-B500-4BA3-BDAA-9F0740EBDA6A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpFITS", "CSharpFits\src\CSharpFITS.csproj", "{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASCOM.HomeMade.SBIGExternalCamera", "ASCOM.HomeMade.SBIGExternalCamera\ASCOM.HomeMade.SBIGExternalCamera.csproj", "{43EE5773-72CD-4E8C-81E1-5D35F47B2B82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93C93A99-D18F-495E-8AC9-6B6F6F7F273E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43EE5773-72CD-4E8C-81E1-5D35F47B2B82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43EE5773-72CD-4E8C-81E1-5D35F47B2B82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43EE5773-72CD-4E8C-81E1-5D35F47B2B82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43EE5773-72CD-4E8C-81E1-5D35F47B2B82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

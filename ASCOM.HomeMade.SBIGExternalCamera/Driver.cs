@@ -35,25 +35,24 @@ using ASCOM.HomeMade.SBIGHub;
 using ASCOM.HomeMade.SBIGCamera;
 using ASCOM.Utilities;
 
-namespace ASCOM.HomeMade.SBIGGuidingCamera
+namespace ASCOM.HomeMade.SBIGExternalCamera
 {
     /// <summary>
     /// ASCOM Camera Driver for HomeMade.
     /// </summary>
-    [Guid("3a7e63ad-c913-44f0-9489-e1744c9c2992")]
+    [Guid("3a7e63ad-c913-44f0-9489-e1944c9c2992")]
     [ClassInterface(ClassInterfaceType.None)]
     [ServedClassName(Camera.driverDescription)]
     [ProgId(Camera.driverID)]
     [ComVisible(true)]
     public class Camera : SBIGCamera.SBIGCamera
     {
-        private double PIXELINMICRONS = 7.4;
-        public const string driverID = "ASCOM.HomeMade.SBIGGuidingCamera";
+        public const string driverID = "ASCOM.HomeMade.SBIGExternalCamera";
 
         /// <summary>
         /// Driver description that displays in the ASCOM Chooser.
         /// </summary>
-        public const string driverDescription = "ASCOM SBIG Guiding Camera Driver";
+        public const string driverDescription = "ASCOM SBIG External Camera Driver";
 
         internal string DriverID { get { return driverID; } }
 
@@ -74,7 +73,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
                 System.IO.Directory.CreateDirectory(strPath);
             }
             catch (Exception) { }
-            debug = new ASCOM.HomeMade.SBIGCommon.Debug(driverID, Path.Combine(strPath, "SBIGGuidingCamera_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
+            debug = new ASCOM.HomeMade.SBIGCommon.Debug(driverID, Path.Combine(strPath, "SBIGExternalCamera_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
 
             if (!ASCOM.HomeMade.SBIGCommon.Debug.Testing) ReadProfile(); // Read device configuration from the ASCOM Profile store
 
@@ -84,7 +83,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             int nProcessID = Process.GetCurrentProcess().Id;
             debug.LogMessage("Process ID: " + nProcessID);
 
-            CameraType = SBIG.CCD_REQUEST.CCD_TRACKING;
+            CameraType = SBIG.CCD_REQUEST.CCD_EXT_TRACKING;
 
             debug.LogMessage("Camera", "Completed initialisation");
         }
@@ -123,7 +122,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("CCDTemperature", "Get - exception");
-                throw new ASCOM.PropertyNotImplementedException("Cooler not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("Cooler not implemented on external sensor");
             }
         }
 
@@ -141,12 +140,12 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("CoolerOn", "Get = false");
-                throw new ASCOM.PropertyNotImplementedException("CoolerOn not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("CoolerOn not implemented on external sensor");
             }
             set
             {
                 debug.LogMessage("CoolerOn", "Set - exception");
-                throw new ASCOM.PropertyNotImplementedException("CoolerOn not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("CoolerOn not implemented on external sensor");
             }
         }
         public override double CoolerPower
@@ -154,7 +153,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("CoolerPower", "Get - exception");
-                throw new ASCOM.PropertyNotImplementedException("CoolerPower not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("CoolerPower not implemented on external sensor");
             }
         }
 
@@ -163,7 +162,7 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("HeatSinkTemperature", "Get - exception");
-                throw new ASCOM.PropertyNotImplementedException("HeatSinkTemperature not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("HeatSinkTemperature not implemented on external sensor");
             }
         }
 
@@ -172,19 +171,19 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             get
             {
                 debug.LogMessage("SetCCDTemperature", "Get - exception");
-                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature not implemented on external sensor");
             }
             set
             {
                 debug.LogMessage("SetCCDTemperature", "Set - exception");
-                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature not implemented on guiding sensor");
+                throw new ASCOM.PropertyNotImplementedException("SetCCDTemperature not implemented on external sensor");
             }
         }
 
         protected override void GetTECStatus()
         {
             debug.LogMessage("SBIGCamera GetTECStatus", "Getting cooling information - exception");
-            throw new ASCOM.MethodNotImplementedException("GetTECStatus not implemented on guiding sensor");
+            throw new ASCOM.MethodNotImplementedException("GetTECStatus not implemented on external sensor");
         }
 
         public override bool CanSetCCDTemperature
