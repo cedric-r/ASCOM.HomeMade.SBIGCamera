@@ -89,10 +89,6 @@ namespace ASCOM.HomeMade.SBIGGuidingCamera
             debug.LogMessage("Camera", "Completed initialisation");
         }
 
-        protected override void AdjustSettings()
-        {
-        }
-
         public new string Description
         {
             // TODO customise this device description
