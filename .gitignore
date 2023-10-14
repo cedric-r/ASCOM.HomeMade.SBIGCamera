@@ -35,3 +35,5 @@
 /.vs
 /ASCOM.HomeMade.SBIGCameraTests/obj/Release
 /ASCOM.HomeMade.SBIGHub/obj/Release
+/ASCOM.HomeMade.SBIGExternalCamera/bin/Debug
+/ASCOM.HomeMade.SBIGExternalCamera/obj
