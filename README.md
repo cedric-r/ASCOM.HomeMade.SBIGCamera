@@ -13,6 +13,11 @@ For information, I've tested only with an STF-8300M with FW8 and an STT-8300M wi
 - Cooling management.
 - FW access (USB and Ethernet).
 
+The following ascom cameras are installed:
+- ASCOM.HomeMade.SBIGImagingCamera for main imaging camera.
+- ASCOM.HomeMade.SBIGGuidingCamera for the internal guiding sensor in STT and STX cameras.
+- ASCOM.HomeMade.SBIGExternalCamera for the remote head in STX cameras.
+
 If you just want to install the drivers and test them, run the installer: https://github.com/cedric-r/ASCOM.HomeMade.SBIGCamera/blob/main/HomeMade%20SBIG%20Camera%20Setup.exe
 
 Note that the 64 bits driver uses an unofficial version of the SBIG library released by DL for Prism but isn't part of their official distribution (it officially doesn't exist).
@@ -22,3 +27,4 @@ This work uses SbigSharp code written by eliotg (https://github.com/eliotg/SbigS
 Task list:<br>
 <strike>- Provide access to guiding camera of the STT.</strike><br>
 <strike>- Support network cameras, not just USB.</strike>
+<strike>- Support for STX remote head.</strike>
