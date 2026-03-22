@@ -28,7 +28,7 @@ namespace ASCOM.HomeMade.SBIGCommon
 {
     public class MemoryController
     {
-        private const int MAXMEMORY = 500;
+        private const int MaxMemoryMB = 500;
 
         public MemoryController()
         {
@@ -38,7 +38,7 @@ namespace ASCOM.HomeMade.SBIGCommon
         public void ControlMemory()
         {
             float memoryUsed = MemoryUsed();
-            if (memoryUsed>MAXMEMORY)
+            if (memoryUsed > MaxMemoryMB)
             {
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();

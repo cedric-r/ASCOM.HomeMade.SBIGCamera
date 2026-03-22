@@ -25,9 +25,29 @@ using SbigSharp;
 
 namespace ASCOM.HomeMade.SBIGCommon
 {
+    public enum MessageType
+    {
+        Ping,
+        Connect,
+        Disconnect,
+        AbortExposure,
+        SetTemperatureRegulation,
+        StartExposure,
+        QueryTemperatureStatus,
+        CcdInfo,
+        CcdInfoExtended,
+        CcdInfoExtended2,
+        CcdInfoExtended3,
+        CcdInfoExtendedPixcel,
+        EndReadout,
+        ExposureInProgress,
+        ReadoutData,
+        CcfCfw
+    }
+
     public class SBIGRequest
     {
-        public string type;
+        public MessageType type;
         public ushort command;
         public object parameters = null;
     }

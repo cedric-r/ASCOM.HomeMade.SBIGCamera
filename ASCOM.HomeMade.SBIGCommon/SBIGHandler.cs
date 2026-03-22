@@ -39,7 +39,9 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public const string deviceId = "ASCOM.HomeMade.SBIGCamera";
         private static Dictionary<SBIG.CCD_REQUEST, Exposure> exposures = new Dictionary<SBIG.CCD_REQUEST, Exposure>();
-        private static bool lockAccess = false;
+        private static readonly object _cameraLockObject = new object();
+        private static readonly object _accessLockObject = new object();
+        private static readonly object _readoutLockObject = new object();
         private Debug debug = null;
         private bool _Connected = false;
 
@@ -58,24 +60,12 @@ namespace ASCOM.HomeMade.SBIGCommon
             debug = new Debug(deviceId, Path.Combine(strPath, "SBIGCommon_" + DateTime.Now.Year + DateTime.Now.Month + DateTime.Now.Day + DateTime.Now.Hour + DateTime.Now.Minute + DateTime.Now.Second + DateTime.Now.Millisecond + ".log"));
         }
 
-        private static bool cameraLock = false;
         public SBIGResponse Transmit(SBIGRequest request)
         {
-            SBIGResponse temp = null;
-            try
+            lock (_cameraLockObject)
             {
-                Utils.AcquireLock(ref cameraLock);
-                temp = HandleMessage(request);
+                return HandleMessage(request);
             }
-            catch(Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref cameraLock);
-            }
-            return temp;
         }
 
         private SBIGResponse HandleMessage(SBIGRequest request)
@@ -87,133 +77,126 @@ namespace ASCOM.HomeMade.SBIGCommon
 
                 switch (request.type)
                 {
-                    case "PING":
+                    case MessageType.Ping:
                         response.payload = true;
                         break;
-                    case "Connect":
-                        string ip = "";
-                        ip = (string)request.parameters;
-                        response.payload = Connect(ip);
+                    case MessageType.Connect:
+                        response.payload = Connect((string)request.parameters);
                         break;
-                    case "Disconnect":
+                    case MessageType.Disconnect:
                         Disconnect();
                         response.payload = null;
                         break;
-                    case "AbortExposure":
-                        SBIG.StartExposureParams2 p0 = (SBIG.StartExposureParams2)request.parameters;
-                        if (exposures.Keys.Contains(p0.ccd)) exposures.Remove(p0.ccd);
+                    case MessageType.AbortExposure:
+                        SBIG.StartExposureParams2 abortParams = (SBIG.StartExposureParams2)request.parameters;
+                        if (exposures.Keys.Contains(abortParams.ccd)) exposures.Remove(abortParams.ccd);
                         try
                         {
-                            Utils.AcquireLock(ref lockAccess);
-                            AbortExposure(p0);
+                            lock (_accessLockObject)
+                            {
+                                AbortExposure(abortParams);
+                            }
                         }
                         catch (Exception ex)
                         {
                             debug.LogMessage("SBIGService HandleMessage", "Error: " + Utils.DisplayException(ex));
                         }
-                        finally
+                        response.payload = null;
+                        break;
+                    case MessageType.SetTemperatureRegulation:
+                        SBIG.SetTemperatureRegulationParams2 tempRegParams = (SBIG.SetTemperatureRegulationParams2)request.parameters;
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, tempRegParams);
+                        response.payload = null;
+                        break;
+                    case MessageType.StartExposure:
+                        SBIG.StartExposureParams2 startExpParams = (SBIG.StartExposureParams2)request.parameters;
+                        Exposure exposure = new Exposure() { ccd = startExpParams.ccd, start = DateTime.Now, duration = startExpParams.exposureTime };
+                        if (exposures.Keys.Contains(startExpParams.ccd)) exposures.Remove(startExpParams.ccd);
+                        exposures.Add(startExpParams.ccd, exposure);
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, startExpParams);
+                        response.payload = null;
+                        break;
+                    case MessageType.QueryTemperatureStatus:
+                        SBIG.QueryTemperatureStatusParams tempStatusParams = (SBIG.QueryTemperatureStatusParams)request.parameters;
+                        SBIG.QueryTemperatureStatusResults2 tempStatusResult = new SBIG.QueryTemperatureStatusResults2();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, tempStatusParams, out tempStatusResult);
+                        response.payload = tempStatusResult;
+                        break;
+                    case MessageType.CcdInfo:
+                        SBIG.GetCCDInfoParams ccdInfoParams = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults0 ccdInfoResult = new SBIG.GetCCDInfoResults0();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, ccdInfoParams, out ccdInfoResult);
+                        response.payload = ccdInfoResult;
+                        break;
+                    case MessageType.CcdInfoExtended:
+                        SBIG.GetCCDInfoParams ccdExtParams = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults2 ccdExtResult = new SBIG.GetCCDInfoResults2();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, ccdExtParams, out ccdExtResult);
+                        response.payload = ccdExtResult;
+                        break;
+                    case MessageType.CcdInfoExtended2:
+                        SBIG.GetCCDInfoParams ccdExt2Params = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults4 ccdExt2Result = new SBIG.GetCCDInfoResults4();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, ccdExt2Params, out ccdExt2Result);
+                        response.payload = ccdExt2Result;
+                        break;
+                    case MessageType.CcdInfoExtended3:
+                        SBIG.GetCCDInfoParams ccdExt3Params = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults6 ccdExt3Result = new SBIG.GetCCDInfoResults6();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, ccdExt3Params, out ccdExt3Result);
+                        response.payload = ccdExt3Result;
+                        break;
+                    case MessageType.CcdInfoExtendedPixcel:
+                        SBIG.GetCCDInfoParams ccdPixcelParams = (SBIG.GetCCDInfoParams)request.parameters;
+                        SBIG.GetCCDInfoResults3 ccdPixcelResult = new SBIG.GetCCDInfoResults3();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, ccdPixcelParams, out ccdPixcelResult);
+                        response.payload = ccdPixcelResult;
+                        break;
+                    case MessageType.EndReadout:
+                        SBIG.CCD_REQUEST endReadoutCcd = (SBIG.CCD_REQUEST)request.parameters;
+                        if (exposures.Keys.Contains(endReadoutCcd)) exposures.Remove(endReadoutCcd);
+                        EndReadout(endReadoutCcd);
+                        response.payload = null;
+                        break;
+                    case MessageType.ExposureInProgress:
+                        bool inProgress = false;
+                        SBIG.StartExposureParams2 inProgressParams = (SBIG.StartExposureParams2)request.parameters;
+                        if (exposures.Keys.Contains(inProgressParams.ccd))
                         {
-                            Utils.ReleaseLock(ref lockAccess);
-                        }
-                        response.payload = null;
-                        break;
-                    case "CC_SET_TEMPERATURE_REGULATION2":
-                        SBIG.SetTemperatureRegulationParams2 p1 = (SBIG.SetTemperatureRegulationParams2)request.parameters;
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p1);
-                        response.payload = null;
-                        break;
-                    case "CC_START_EXPOSURE2":
-                        SBIG.StartExposureParams2 p2 = (SBIG.StartExposureParams2)request.parameters;
-                        Exposure exposure = new Exposure() { ccd = p2.ccd, start = DateTime.Now, duration = p2.exposureTime };
-                        if (exposures.Keys.Contains(p2.ccd)) exposures.Remove(p2.ccd);
-                        exposures.Add(p2.ccd, exposure);
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p2);
-                        response.payload = null;
-                        break;
-                    case "CC_QUERY_TEMPERATURE_STATUS":
-                        SBIG.QueryTemperatureStatusParams p3 = (SBIG.QueryTemperatureStatusParams)request.parameters;
-                        SBIG.QueryTemperatureStatusResults2 result3 = new SBIG.QueryTemperatureStatusResults2();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p3, out result3);
-                        response.payload = result3;
-                        break;
-                    case "CCD_INFO":
-                        SBIG.GetCCDInfoParams p4 = (SBIG.GetCCDInfoParams)request.parameters;
-                        SBIG.GetCCDInfoResults0 result4 = new SBIG.GetCCDInfoResults0();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p4, out result4);
-                        response.payload = result4;
-                        break;
-                    case "CCD_INFO_EXTENDED":
-                        SBIG.GetCCDInfoParams p5 = (SBIG.GetCCDInfoParams)request.parameters;
-                        SBIG.GetCCDInfoResults2 result5 = new SBIG.GetCCDInfoResults2();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p5, out result5);
-                        response.payload = result5;
-                        break;
-                    case "CCD_INFO_EXTENDED2":
-                        SBIG.GetCCDInfoParams p6 = (SBIG.GetCCDInfoParams)request.parameters;
-                        SBIG.GetCCDInfoResults4 result6 = new SBIG.GetCCDInfoResults4();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p6, out result6);
-                        response.payload = result6;
-                        break;
-                    case "CCD_INFO_EXTENDED3":
-                        SBIG.GetCCDInfoParams p7 = (SBIG.GetCCDInfoParams)request.parameters;
-                        SBIG.GetCCDInfoResults6 result7 = new SBIG.GetCCDInfoResults6();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p7, out result7);
-                        response.payload = result7;
-                        break;
-                    case "CCD_INFO_EXTENDED_PIXCEL":
-                        SBIG.GetCCDInfoParams p10 = (SBIG.GetCCDInfoParams)request.parameters;
-                        SBIG.GetCCDInfoResults3 result10 = new SBIG.GetCCDInfoResults3();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p10, out result10);
-                        response.payload = result10;
-                        break;
-                    case "EndReadout":
-                        SBIG.CCD_REQUEST ccd = (SBIG.CCD_REQUEST)request.parameters;
-                        if (exposures.Keys.Contains(ccd)) exposures.Remove(ccd);
-                        EndReadout(ccd);
-                        response.payload = null;
-                        break;
-                    case "ExposureInProgress":
-                        bool temp = false;
-                        SBIG.StartExposureParams2 p11 = (SBIG.StartExposureParams2)request.parameters;
-                        if (exposures.Keys.Contains(p11.ccd))
-                        {
-                            long duration = (long)exposures[p11.ccd].duration;
+                            long duration = (long)exposures[inProgressParams.ccd].duration;
                             if (duration >= SBIG.EXP_FAST_READOUT) duration -= SBIG.EXP_FAST_READOUT;
-                            if (DateTime.Now < (exposures[p11.ccd].start + new TimeSpan(duration * TimeSpan.TicksPerSecond / 100)))
-                                temp = true;
+                            if (DateTime.Now < (exposures[inProgressParams.ccd].start + new TimeSpan(duration * TimeSpan.TicksPerSecond / 100)))
+                                inProgress = true;
                         }
-                        if (!temp)
-                            temp = ExposureInProgress(p11.ccd); // Double check wth the camera
-                        response.payload = temp;
+                        if (!inProgress)
+                            inProgress = ExposureInProgress(inProgressParams.ccd); // Double check with the camera
+                        response.payload = inProgress;
                         break;
-                    case "ReadoutData":
-                        SBIG.StartExposureParams2 p8 = (SBIG.StartExposureParams2)request.parameters;
-                        if (exposures.Keys.Contains(p8.ccd)) exposures.Remove(p8.ccd);
-                        var data = new UInt16[p8.width * p8.height];
+                    case MessageType.ReadoutData:
+                        SBIG.StartExposureParams2 readoutParams = (SBIG.StartExposureParams2)request.parameters;
+                        if (exposures.Keys.Contains(readoutParams.ccd)) exposures.Remove(readoutParams.ccd);
+                        var data = new UInt16[readoutParams.width * readoutParams.height];
                         try
                         {
-                            Utils.AcquireLock(ref lockAccess);
-                            ReadoutDataAndEnd(p8, ref data);
+                            lock (_accessLockObject)
+                            {
+                                ReadoutDataAndEnd(readoutParams, ref data);
+                            }
                         }
                         catch (Exception ex)
                         {
                             debug.LogMessage("SBIGService HandleMessage", "Error: " + Utils.DisplayException(ex));
-                        }
-                        finally
-                        {
-                            Utils.ReleaseLock(ref lockAccess);
                         }
                         response.payload = data;
                         break;
-                    case "CC_CFW":
-                        SBIG.CFWParams p9 = (SBIG.CFWParams)request.parameters;
-                        SBIG.CFWResults result9 = new SBIG.CFWResults();
-                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, p9, out result9);
-                        response.payload = result9;
+                    case MessageType.CcfCfw:
+                        SBIG.CFWParams cfwParams = (SBIG.CFWParams)request.parameters;
+                        SBIG.CFWResults cfwResult = new SBIG.CFWResults();
+                        UnivDrvCommand((SBIG.PAR_COMMAND)request.command, cfwParams, out cfwResult);
+                        response.payload = cfwResult;
                         break;
                     default:
                         throw new NotImplementedException("Message type " + request.type + " not implemented");
-                        break;
                 }
                 return response;
             }
@@ -256,20 +239,11 @@ namespace ASCOM.HomeMade.SBIGCommon
             if (!cameraFound && String.IsNullOrEmpty(ipAddress))
             {
                 debug.LogMessage("Connected Set", $"No camera found");
-                if (String.IsNullOrEmpty(ipAddress))
+                try
                 {
-                    try
-                    {
-                        debug.LogMessage("Disconnect", "Disconnecting device");
-                        // clean up
-                        SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DRIVER);
-                    }
-                    catch (Exception e)
-                    {
-                        //debug.LogMessage("Connected", "Error: " + DisplayException(e));
-                    }
-
+                    SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_CLOSE_DRIVER);
                 }
+                catch (Exception) { }
                 return false;
             }
             else
@@ -288,8 +262,6 @@ namespace ASCOM.HomeMade.SBIGCommon
                     SBIG.UnivDrvCommand(SBIG.PAR_COMMAND.CC_OPEN_DEVICE, 
                         new SBIG.OpenDeviceParams(ipAddress));
                 }
-                var cameraType = SBIG.EstablishLink();
-
                 CameraType = SBIG.EstablishLink();
                 debug.LogMessage("Connected Set", $"Connected to camera");
 
@@ -345,23 +317,14 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public void AbortExposure(SBIG.StartExposureParams2 sep2)
         {
-            try
+            lock (_readoutLockObject)
             {
-                Utils.AcquireLock(ref lockReadout);
                 UnivDrvCommand(
                 SBIG.PAR_COMMAND.CC_END_EXPOSURE,
                 new SBIG.EndExposureParams()
                 {
                     ccd = sep2.ccd
                 });
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockReadout);
             }
         }
 
@@ -381,37 +344,18 @@ namespace ASCOM.HomeMade.SBIGCommon
 
         public void ReadoutData(SBIG.StartExposureParams2 sep2, ref UInt16[,] data)
         {
-            try
+            lock (_readoutLockObject)
             {
-                Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockReadout);
             }
         }
 
-        private static bool lockReadout = false;
         public void ReadoutDataAndEnd(SBIG.StartExposureParams2 sep2, ref UInt16[] data)
         {
-            try
+            lock (_readoutLockObject)
             {
-                Utils.AcquireLock(ref lockReadout);
                 SBIG.ReadoutData(sep2, ref data);
                 EndReadout(sep2.ccd);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                Utils.ReleaseLock(ref lockReadout);
             }
         }
     }

@@ -124,7 +124,6 @@ namespace ASCOM.HomeMade.SBIGClient
                     return;
                 }
 
-                //cameraImageArray = SBIG.WaitEndAndReadoutExposure32(exposureParams2);
                 while (server.ExposureInProgress(exposureParams2)) 
                 {
                     if (StopExposure)
@@ -163,7 +162,6 @@ namespace ASCOM.HomeMade.SBIGClient
                                     camera.cameraImageArray.SetValue(redPixel, x, y);
                                 }
                         }
-                //camera.cameraImageArray = Utils.RotateMatrixCounterClockwiseAndConvertToInt(data);
                 data = null;
                 debug.LogMessage("ImageTakerThread TakeImage", "Finishing readout");
 
@@ -174,7 +172,9 @@ namespace ASCOM.HomeMade.SBIGClient
             catch (Exception e)
             {
                 debug.LogMessage("ImageTakerThread TakeImage", "Error: " + Utils.DisplayException(e));
-                //throw;
+                camera.LastError = e;
+                camera.cameraImageReady = false;
+                camera.CurrentCameraState = CameraStates.cameraIdle;
             }
             finally
             {

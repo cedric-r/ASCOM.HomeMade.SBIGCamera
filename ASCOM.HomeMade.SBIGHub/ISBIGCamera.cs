@@ -46,6 +46,7 @@ namespace ASCOM.HomeMade.SBIGHub
         public Array cameraImageArray;
         public object[,] cameraImageArrayVariant;
         public bool FastReadoutRequested = false;
+        public Exception LastError = null;
 
         public short BinX
         {
