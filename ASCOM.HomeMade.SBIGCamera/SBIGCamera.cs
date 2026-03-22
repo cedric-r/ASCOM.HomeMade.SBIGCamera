@@ -60,7 +60,8 @@ namespace ASCOM.HomeMade.SBIGCamera
         internal string DriverID { get { return "ASCOM.HomeMade.SBIGCamera"; } }
         // TODO Change the descriptive string for your driver then remove this line
         protected DateTime lastTECRead = DateTime.Now;
-        protected static TimeSpan TEMPERATURETTL = TimeSpan.FromMilliseconds(500); // In ms
+        private const int TemperatureCacheTtlMs = 500;
+        protected static TimeSpan TEMPERATURETTL = TimeSpan.FromMilliseconds(TemperatureCacheTtlMs);
 
         protected BackgroundWorker imagingWorker = null;
         protected ImageTakerThread imagetaker = null;
@@ -128,30 +129,18 @@ namespace ASCOM.HomeMade.SBIGCamera
         public void CommandBlind(string command, bool raw)
         {
             CheckConnected("CommandBlind");
-            // Call CommandString and return as soon as it finishes
-            this.CommandString(command, raw);
-            // or
             throw new ASCOM.MethodNotImplementedException("CommandBlind");
-            // DO NOT have both these sections!  One or the other
         }
 
         public bool CommandBool(string command, bool raw)
         {
             CheckConnected("CommandBool");
-            string ret = CommandString(command, raw);
-            // TODO decode the return string and return true or false
-            // or
             throw new ASCOM.MethodNotImplementedException("CommandBool");
-            // DO NOT have both these sections!  One or the other
         }
 
         public string CommandString(string command, bool raw)
         {
             CheckConnected("CommandString");
-            // it's a good idea to put all the low level communication with the device here,
-            // then all communication calls this function
-            // you need something to ensure that only one command is in progress at a time
-
             throw new ASCOM.MethodNotImplementedException("CommandString");
         }
 
