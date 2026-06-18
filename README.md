@@ -10,9 +10,9 @@ This driver bridges that gap. It started as a weekend project and grew into a fu
 
 ## Architecture
 
-![Architecture Diagram](ASCOM.HomeMade.SBIGCamera-architecture.html)
+![Architecture Diagram](ASCOM.HomeMade.SBIGCamera-architecture.png)
 
-The solution is structured as a layered stack. The full diagram is interactive HTML — open [`ASCOM.HomeMade.SBIGCamera-architecture.html`](ASCOM.HomeMade.SBIGCamera-architecture.html) in a browser.
+The solution is structured as a layered stack. An interactive HTML version is available at [`ASCOM.HomeMade.SBIGCamera-architecture.html`](ASCOM.HomeMade.SBIGCamera-architecture.html) — open it in a browser for the full detail.
 
 ### Layer Map
 
